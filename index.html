@@ -1,0 +1,2649 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard Financeiro — Controle de Caixa</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{
+  --bg:#0b1220;--surface:#111a2e;--surface-2:#16213a;--surface-3:#1c2942;
+  --border:#22304d;--text:#e8eefc;--muted:#8fa1c7;--accent:#4f8cff;
+  --green:#2ecc8f;--red:#ff5f6d;--amber:#ffb347;--purple:#a78bfa;
+  --radius:16px;--radius-sm:10px;--gap:16px;
+  --font:'Inter','Segoe UI',system-ui,-apple-system,sans-serif;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --chart-grid:#22304d;--chart-text:#8fa1c7;
+}
+[data-theme="light"]{
+  --bg:#f4f6fb;--surface:#ffffff;--surface-2:#f0f3fa;--surface-3:#e6ebf5;
+  --border:#dde3ef;--text:#131c2e;--muted:#5f708c;--accent:#2563eb;
+  --green:#0ea672;--red:#e11d48;--amber:#d97706;--purple:#7c3aed;
+  --shadow:0 8px 24px rgba(20,35,70,.10);
+  --chart-grid:#e3e8f2;--chart-text:#6b7b96;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:20px}
+::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+.app{max-width:1500px;margin:0 auto;padding:22px}
+
+.topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.brand{display:flex;align-items:center;gap:12px;margin-right:auto}
+.brand .logo{width:44px;height:44px;border-radius:13px;background:linear-gradient(135deg,var(--accent),var(--purple));display:grid;place-items:center;font-size:20px;box-shadow:0 6px 18px rgba(79,140,255,.35)}
+.brand h1{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.brand p{font-size:12px;color:var(--muted)}
+.save-status{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;padding:6px 12px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--muted)}
+.save-status.saved{border-color:var(--green);color:var(--green);background:rgba(46,204,143,.10)}
+
+.btn{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;font-weight:500;padding:9px 15px;border-radius:var(--radius-sm);cursor:pointer;transition:.18s;white-space:nowrap}
+.btn:hover{background:var(--surface-3);border-color:var(--accent);transform:translateY(-1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.excel{background:linear-gradient(135deg,#1d7044,#0ea672);border-color:#0ea672;color:#fff}
+.btn.excel:hover{filter:brightness(1.08);border-color:#0ea672}
+.btn.ghost{background:transparent}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.danger:hover{background:rgba(255,95,109,.12)}
+
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:5px;margin-bottom:14px;overflow-x:auto}
+.tab{flex:1;min-width:130px;background:transparent;border:0;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;padding:11px 16px;border-radius:10px;cursor:pointer;transition:.18s;white-space:nowrap}
+.tab:hover{color:var(--text);background:var(--surface-2)}
+.tab.active{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(79,140,255,.35)}
+
+.global-filters{
+  display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;margin-bottom:18px;
+  position:relative;
+}
+.global-filters::before{
+  content:'Filtros globais';
+  position:absolute;top:-9px;left:16px;
+  background:var(--bg);padding:0 8px;
+  font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;
+  color:var(--accent);
+}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.field select,.field input{background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:8px 11px;border-radius:var(--radius-sm);outline:none;transition:.15s;min-width:150px}
+.field select:focus,.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,140,255,.15)}
+.field input[type=search]{min-width:260px}
+.filter-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface-3);border-radius:20px;
+  font-size:11px;font-weight:600;padding:4px 10px;color:var(--muted);
+}
+.filter-badge strong{color:var(--accent)}
+
+.panel{display:none;animation:fade .25s ease}
+.panel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.grid{display:grid;gap:var(--gap)}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(210px,1fr));margin-bottom:var(--gap)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--accent);opacity:.9}
+.card.green::before{background:var(--green)}
+.card.red::before{background:var(--red)}
+.card.amber::before{background:var(--amber)}
+.card.purple::before{background:var(--purple)}
+.kpi-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.kpi-value{font-size:25px;font-weight:800;letter-spacing:-.8px;font-variant-numeric:tabular-nums}
+.kpi-sub{font-size:12px;color:var(--muted);margin-top:6px}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.card-head h3{font-size:14px;font-weight:700;letter-spacing:-.2px}
+.card-head span{font-size:12px;color:var(--muted)}
+
+.charts-row{grid-template-columns:3fr 2fr;margin-bottom:var(--gap)}
+@media(max-width:1050px){.charts-row{grid-template-columns:1fr}}
+
+.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);max-height:640px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+thead th{position:sticky;top:0;z-index:2;background:var(--surface-2);color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;text-align:right;padding:11px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+thead th:first-child{text-align:left;left:0;z-index:3}
+tbody td{padding:9px 12px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+tbody td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1;font-weight:600}
+tbody tr:hover td{background:var(--surface-2)}
+tbody tr:hover td:first-child{background:var(--surface-2)}
+tbody tr.total-row td{font-weight:800;background:var(--surface-3);border-top:2px solid var(--border)}
+tbody tr.total-row td:first-child{background:var(--surface-3)}
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
+.tag.C{background:rgba(46,204,143,.14);color:var(--green)}
+.tag.D{background:rgba(255,95,109,.14);color:var(--red)}
+.cat-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+textarea{width:100%;min-height:220px;resize:vertical;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:'SF Mono',Consolas,monospace;font-size:12px;line-height:1.6;padding:14px;border-radius:var(--radius-sm);outline:none}
+textarea:focus{border-color:var(--accent)}
+.note{background:var(--surface-2);border-left:3px solid var(--accent);border-radius:8px;padding:12px 15px;font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:16px}
+.note strong{color:var(--text)}
+.note code{background:var(--surface-3);padding:1px 6px;border-radius:5px;font-family:'SF Mono',Consolas,monospace;font-size:11.5px;color:var(--amber)}
+
+.dropzone{
+  border:2px dashed var(--border);border-radius:var(--radius);
+  padding:40px 20px;text-align:center;background:var(--surface-2);
+  cursor:pointer;transition:.2s;position:relative;
+}
+.dropzone:hover,.dropzone.dragover{border-color:var(--green);background:rgba(46,204,143,.06)}
+.dropzone .icon{font-size:44px;margin-bottom:12px}
+.dropzone h4{font-size:15px;font-weight:700;margin-bottom:6px}
+.dropzone p{font-size:12.5px;color:var(--muted)}
+.dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+svg text{font-family:var(--font)}
+.badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--surface-3);color:var(--muted)}
+
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--green);
+  padding:13px 18px;border-radius:12px;box-shadow:var(--shadow);
+  font-size:13px;font-weight:600;color:var(--text);
+  opacity:0;transform:translateY(20px);pointer-events:none;transition:.3s;
+  max-width:380px;
+}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.error{border-left-color:var(--red)}
+.toast.info{border-left-color:var(--accent)}
+
+.drag-overlay{
+  position:fixed;inset:0;z-index:9998;
+  background:rgba(11,18,32,.85);backdrop-filter:blur(6px);
+  display:none;place-items:center;border:3px dashed var(--green);
+}
+.drag-overlay.active{display:grid}
+.drag-overlay .msg{text-align:center;font-size:22px;font-weight:800;color:var(--green)}
+.drag-overlay .msg .big{font-size:60px;display:block;margin-bottom:20px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">💰</div>
+      <div><h1>Controle de Caixa</h1><p id="brandSub">Dashboard financeiro consolidado</p></div>
+    </div>
+    <span class="save-status" id="saveStatus">Dados originais</span>
+    <button class="btn excel" id="btnExcelTop">📊 Atualizar do Excel</button>
+    <button class="btn ghost" id="btnTheme">🌙</button>
+    <button class="btn" id="btnPrint">🖨️</button>
+    <button class="btn primary" id="btnExport">⬇️ CSV</button>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="geral">📊 Visão Geral</button>
+    <button class="tab" data-tab="mensal">📅 Mensal</button>
+    <button class="tab" data-tab="categorias">🏷️ Categorias</button>
+    <button class="tab" data-tab="mov">📋 Movimentações</button>
+    <button class="tab" data-tab="dados">⚙️ Dados</button>
+  </nav>
+
+  <div class="global-filters">
+    <div class="field"><label>Mês inicial</label><select id="fMesIni"></select></div>
+    <div class="field"><label>Mês final</label><select id="fMesFim"></select></div>
+    <div class="field"><label>Categoria</label><select id="fCat"><option value="todas">Todas</option></select></div>
+    <div class="field"><label>Tipo</label>
+      <select id="fTipo"><option value="todos">Todos</option><option value="receita">Somente Receitas</option><option value="despesa">Somente Despesas</option></select>
+    </div>
+    <div class="field"><label>Buscar (movimentações)</label><input type="search" id="fBusca" placeholder="Descrição, detalhe, valor..."></div>
+    <button class="btn ghost" id="btnReset" style="margin-left:auto">↺ Limpar filtros</button>
+    <div id="filterBadge" class="filter-badge" style="display:none"></div>
+  </div>
+
+  <section class="panel active" id="panel-geral">
+    <div class="grid kpis" id="kpiBox"></div>
+    <div class="card" style="margin-bottom:var(--gap)">
+      <div class="card-head"><h3>Receitas × Despesas por mês</h3><span>Barras: valores mensais · Linha: resultado</span></div>
+      <svg id="chartMensal" viewBox="0 0 900 340" style="width:100%;height:auto"></svg>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;margin-top:14px">
+        <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)"><i style="width:11px;height:11px;border-radius:4px;background:var(--green);display:block"></i>Receita</div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)"><i style="width:11px;height:11px;border-radius:4px;background:var(--red);display:block"></i>Despesa</div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)"><i style="width:11px;height:11px;border-radius:50%;background:var(--amber);display:block"></i>Resultado</div>
+      </div>
+    </div>
+    <div class="grid charts-row">
+      <div class="card"><div class="card-head"><h3>Top Despesas por Categoria</h3><span id="topCatSub"></span></div><svg id="chartCat" viewBox="0 0 700 320" style="width:100%;height:auto"></svg></div>
+      <div class="card"><div class="card-head"><h3>Saldo Acumulado</h3><span id="saldoSub"></span></div><svg id="chartSaldo" viewBox="0 0 700 320" style="width:100%;height:auto"></svg></div>
+    </div>
+    <div class="card" style="margin-top:var(--gap)">
+      <div class="card-head"><h3>Resumo Mensal Consolidado</h3><span>Período filtrado</span></div>
+      <div class="table-wrap"><table id="tblResumo"></table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-mensal">
+    <div class="note"><strong>Matriz Categoria × Mês.</strong> Reflete os filtros globais aplicados no topo.</div>
+    <div class="card">
+      <div class="card-head"><h3>Detalhamento Mensal por Categoria</h3><span id="matrizSub"></span></div>
+      <div class="table-wrap"><table id="tblMatriz"></table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-categorias">
+    <div class="grid charts-row" style="margin-bottom:var(--gap)">
+      <div class="card"><div class="card-head"><h3>Despesas por Categoria</h3></div><svg id="chartCatFull" viewBox="0 0 700 340" style="width:100%;height:auto"></svg></div>
+      <div class="card"><div class="card-head"><h3>Receitas por Categoria</h3></div><svg id="chartRecFull" viewBox="0 0 700 340" style="width:100%;height:auto"></svg></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>Ranking de Categorias</h3></div>
+      <div class="table-wrap"><table id="tblCat"></table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-mov">
+    <div class="card">
+      <div class="card-head"><h3>Histórico de Movimentação</h3><span id="movInfo"></span></div>
+      <div class="table-wrap"><table id="tblMov"></table></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-dados">
+    <div class="note">
+      <strong>🔄 Atualização em um clique:</strong> clique em <em>"Atualizar do Excel"</em> no topo,
+      ou arraste o <code>.xlsx</code> para qualquer lugar da página.
+    </div>
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:var(--gap);margin-bottom:var(--gap)">
+      <div class="card">
+        <div class="card-head"><h3>📊 Importar planilha Excel</h3></div>
+        <div class="dropzone" id="dropExcel">
+          <input type="file" id="fileExcel" accept=".xlsx,.xls,.csv">
+          <div class="icon">📄</div>
+          <h4>Arraste o arquivo .xlsx aqui</h4>
+          <p>ou clique para escolher</p>
+        </div>
+        <div id="excelInfo" style="margin-top:14px"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>📦 Informações de armazenamento</h3></div>
+        <div id="storageBox"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:var(--gap)">
+      <div class="card-head"><h3>📋 Colar dados manualmente</h3></div>
+      <textarea id="txtDados" spellcheck="false"></textarea>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn primary" id="btnAplicar">✓ Aplicar e salvar</button>
+        <button class="btn" id="btnRestaurar">↺ Restaurar original</button>
+        <button class="btn danger" id="btnLimpar">🗑️ Limpar tudo</button>
+        <span class="badge" id="txtInfo"></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h3>📈 Estatísticas do dataset</h3></div>
+      <div id="statsBox"></div>
+    </div>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+<div class="drag-overlay" id="dragOverlay"><div class="msg"><span class="big">📊</span>Solte o arquivo Excel aqui</div></div>
+
+<script>
+/* ============================================================
+   BASE COMPLETA — Controle de Caixa Unificado (Jan → Out/2026)
+   Formato: DATA|DESCRIÇÃO|VALOR|TIPO|DETALHAMENTO
+   ============================================================ */
+const EXTRATO_RAW = `
+2026-01-08|Transferência recebida NE|45000|C|08/01 18:38 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-08|02 OP. / TAR. BANCÁRIAS|42.9|D|Cobrança referente 08/01/ (02)
+2026-01-08|01 SALÁRIO / ENCARGOS|44814.46|D|SALÁRIO (01)
+2026-01-09|Transferência recebida NE|5000|C|09/01 19:56 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-09|02 OP. / TAR. BANCÁRIAS|3.3|D|Cobrança referente 09/01/2026 (02)
+2026-01-09|01 SALÁRIO / ENCARGOS|860|D|FOLHA NÃO IDENTIFICADA (01)
+2026-01-12|02 OP. / TAR. BANCÁRIAS|124.9|D|Cobrança referente 12/01/2026 (02)
+2026-01-12|06 CUSTOS ADM|364|D|12/01 11:43 NIC. BR - SISTEMA TMS (06)
+2026-01-12|01 SALÁRIO / ENCARGOS|1785.71|D|12/01 19:28 FLASH APP - AJUDA DE CUSTO (01)
+2026-01-13|Transferência recebida NE|2000|C|13/01 15:31 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-13|Transferência recebida NE|3000|C|13/01 11:13 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-13|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-01-13|04 OP. NLG|2170|D|13/01 11:14 GEORGE GABRIEL SORIANO PE - OPERAÇÃO DE FRETE (04)
+2026-01-13|04 OP. NLG|3640|D|13/01 15:47 WENDEL WESKLEY ARAUJO - OPERAÇÃO DE FRETE (04)
+2026-01-14|Transferência recebida NE|3000|C|14/01 18:17 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-14|04 OP. NLG|2940|D|(04) 14/01 18:18 49.847.311 HELVES LUA ARA - OPERAÇÃO DE FRETE
+2026-01-15|Transferência recebida NE|5000|C|15/01 15:43 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-15|06 CUSTOS ADM|476|D|(06) 15/01 15:46 Ezequias de Souza Coelho - NÃO IDENTIFICADO
+2026-01-15|04 OP. NLG|3150|D|(04) 15/01 18:49 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-01-16|Transferência recebida NE|5000|C|16/01 19:12 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-16|01 SALÁRIO / ENCARGOS|706.19|D|16/01 19:13 Flávio Cesar Ramos Nogueira - AJUDA DE CUSTO (01)
+2026-01-16|04 OP. NLG|930|D|(04) 16/01 19:13 GEORGE GABRIEL SORIANO PE - OPERAÇÃO DE FRETE
+2026-01-16|04 OP. NLG|1260|D|(04) 16/01 19:13 49.847.311 HELVES LUA ARA - OPERAÇÃO DE FRETE
+2026-01-16|06 CUSTOS ADM|1523.5|D|(06) EAS TECH SOLUTION LTDA - SISTEMA TMS LOG
+2026-01-16|04 OP. NLG|1560|D|(04) 16/01 19:13 WENDEL WESKLEY ARAUJO CRU - OPERAÇÃO DE FRETE
+2026-01-20|Transferência recebida NE|20000|C|20/01 14:31 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-20|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 20/01/2026 (02)
+2026-01-20|04 OP. NLG|47.26|D|20/01 14:34 AGENOR DA SILVA ALVES - OPERAÇÃO DE FRETE (04)
+2026-01-20|01 SALÁRIO / ENCARGOS|90|D|FOLHA NÃO IDENTIFICADA (01)
+2026-01-20|06 CUSTOS ADM|561.13|D|ALLIANZ SEGUROS AS - SEGURO DE CARGA (06)
+2026-01-20|06 CUSTOS ADM|561.13|D|ALLIANZ SEGUROS AS - SEGURO DE CARGA (06)
+2026-01-20|04 OP. NLG|2450|D|20/01 14:34 AGENOR DA SILVA ALVES - OPERAÇÃO DE FRETE (04)
+2026-01-21|Transferência recebida NE|70000|C|21/01 16:35 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-21|02 OP. / TAR. BANCÁRIAS|40.46|D|Tar. agrupadas - ocorrencia 21/01/2026 (02)
+2026-01-21|02 OP. / TAR. BANCÁRIAS|58.3|D|Cobrança referente 21/01/2026 (02)
+2026-01-21|04 OP. NLG|150|D|21/01 18:49 AGENOR DA SILVA ALVES - OPERAÇÃO DE FRETE (04)
+2026-01-21|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-01-21|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-01-21|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-01-21|04 OP. NLG|908|D|21/01 19:47 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-01-21|01 SALÁRIO / ENCARGOS|911.48|D|21/01 17:23 FLASH APP - AJUDA DE CUSTO (01)
+2026-01-21|01 SALÁRIO / ENCARGOS|1200|D|21/01 19:47 Flávio Cesar Ramos Noguei - SALÁRIO (01)
+2026-01-21|04 OP. NLG|1350|D|21/01 19:47 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-01-21|04 OP. NLG|2450|D|21/01 10:50 KENNEDY CICERO NUNES COEL - OPERAÇÃO DE FRETE (04)
+2026-01-21|04 OP. NLG|3850|D|21/01 19:47 RODOVIARIO CRISMARA - OPERAÇÃO DE FRETE (04)
+2026-01-21|03 IMPOSTOS|8051.02|D|21/01 19:47 CEF MATRIZ - 03 IMPOSTO ICMS (03)
+2026-01-21|01 SALÁRIO / ENCARGOS|18498.94|D|RFB-DARF CODIGO DE BARRAS - GUIA INSS MENSAL (01)
+2026-01-21|01 SALÁRIO / ENCARGOS|40745|D|SALÁRIO (01)
+2026-01-22|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 22/01/2026 (02)
+2026-01-22|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 22/01/2026 (02)
+2026-01-22|03 IMPOSTOS|499.38|D|22/01 19:49 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-01-22|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-01-22|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-01-22|01 SALÁRIO / ENCARGOS|696|D|RESCISÃO (01)
+2026-01-22|01 SALÁRIO / ENCARGOS|3338.27|D|FOLHA NÃO IDENTIFICADA (01)
+2026-01-23|Transferência recebida NE|10000|C|23/01 17:13 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-23|02 OP. / TAR. BANCÁRIAS|41.1|D|Tar. agrupadas - ocorrencia 23/01/2026 (02)
+2026-01-23|04 OP. NLG|112|D|23/01 17:15 KENNEDY CICERO NUNES COELH - OPERAÇÃO DE FRETE (04)
+2026-01-23|04 OP. NLG|283.09|D|23/01 11:51 AGIL DISTRIBUIDORA DE ALIM - DESCARGA OPERAÇÃO DE FRETE
+2026-01-23|04 OP. NLG|1050|D|23/01 17:15 KENNEDY CICERO NUNES COELH - OPERAÇÃO DE FRETE (04)
+2026-01-23|04 OP. NLG|1650|D|23/01 17:15 RODOVIARIO CRISMARA - OPERAÇÃO DE FRETE (04)
+2026-01-23|04 OP. NLG|3150|D|23/01 17:15 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-01-23|04 OP. NLG|3640|D|23/01 17:15 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-01-26|Transferência recebida NE|4000|C|26/01 14:40 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-26|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 26/01/2026 (02)
+2026-01-26|01 SALÁRIO / ENCARGOS|862.76|D|FOLHA NÃO IDENTIFICADA (01)
+2026-01-26|03 IMPOSTOS|900|D|24/01 18:31 SEFAZ BAHIA - 03 IMPOSTO ICMS GNRE (03)
+2026-01-26|04 OP. NLG|3000|D|26/01 14:42 WALISON SILVA DOS SANTOS - OPERAÇÃO DE FRETE (04)
+2026-01-27|Transferência recebida NE|5000|C|27/01 19:17 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-27|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 27/01/2026 (02)
+2026-01-27|02 OP. / TAR. BANCÁRIAS|10|D|Tar. agrupadas - ocorrencia 27/01/2026 (02)
+2026-01-27|01 SALÁRIO / ENCARGOS|43|D|RESCISÃO (01)
+2026-01-27|01 SALÁRIO / ENCARGOS|82.72|D|27/01 10:32 CEF MATRIZ - GUIA FGTS RECISÃO FUNCIONARIO MARX
+2026-01-27|01 SALÁRIO / ENCARGOS|119|D|27/01 19:18 FLASH APP - AJUDA DE CUSTO (01)
+2026-01-27|04 OP. NLG|2240|D|27/01 19:18 Antônio Celestino Torres R - OPERAÇÃO DE FRETE
+2026-01-28|02 OP. / TAR. BANCÁRIAS|10|D|Tar. agrupadas - ocorrencia 28/01/2026 (02)
+2026-01-28|04 OP. NLG|3150|D|28/01 19:18 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-01-29|Transferência recebida NE|10000|C|29/01 09:47 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-29|02 OP. / TAR. BANCÁRIAS|2.2|D|Cobrança referente 29/01/2026 (02)
+2026-01-29|02 OP. / TAR. BANCÁRIAS|20|D|Tar. agrupadas - ocorrencia 29/01/2026 (02)
+2026-01-29|01 SALÁRIO / ENCARGOS|172|D|FOLHA NÃO IDENTIFICADA (01)
+2026-01-29|01 SALÁRIO / ENCARGOS|476|D|29/01 09:48 FLASH APP - AJUDA DE CUSTO (01)
+2026-01-29|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-01-29|04 OP. NLG|2170|D|29/01 19:18 KENNEDY CICERO NUNES COELH - OPERAÇÃO DE FRETE (04)
+2026-01-29|04 OP. NLG|3640|D|29/01 09:48 JTL TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-01-30|Transferência recebida NE|10000|C|30/01 10:36 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-30|Transferência recebida NE|50000|C|30/01 18:38 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-01-30|06 CUSTOS ADM|60|D|30/01 15:02 Clinica Minha Saude - EXAMES ADMS (06)
+2026-01-30|02 OP. / TAR. BANCÁRIAS|81|D|Tar. agrupadas - ocorrencia 30/01/2026 (02)
+2026-01-30|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-01-30|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-01-30|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-01-30|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-01-30|04 OP. NLG|1234|D|30/01 19:05 KENNEDY CICERO NUNES COELH - OPERAÇÃO DE FRETE
+2026-01-30|04 OP. NLG|1346|D|30/01 19:05 Antônio Celestino Torres R - OPERAÇÃO DE FRETE
+2026-01-30|04 OP. NLG|1560|D|30/01 19:05 JTL TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-01-30|04 OP. NLG|1560|D|30/01 19:05 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-01-30|04 OP. NLG|2331.04|D|30/01 19:05 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-01-30|04 OP. NLG|2450|D|30/01 10:39 ROSICLEIA BATISTA DE SANT - OPERAÇÃO DE FRETE
+2026-01-30|04 OP. NLG|3000|D|30/01 19:05 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-01-30|04 OP. NLG|3640|D|30/01 19:05 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-01-30|04 OP. NLG|3640.01|D|30/01 10:39 EXPRESSO L A LTDA - OPERAÇÃO DE FRETE (04)
+2026-01-31|03 IMPOSTOS|900|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-01-31|04 OP. NLG|3640|D|31/01 14:24 ZERO 1 TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-02-02|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-02|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-02|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-02|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-02|04 OP. NLG|3000|D|02/02 16:15 EDMAR ADAO DE ALMEIDA - OPERAÇÃO DE FRETE (04)
+2026-02-02|04 OP. NLG|3150|D|01/02 08:38 Alberto Flávio Leite de S - OPERAÇÃO DE FRETE (04)
+2026-02-03|02 OP. / TAR. BANCÁRIAS|1.6|D|Tar. agrupadas - ocorrencia 03/02/2026 (02)
+2026-02-03|01 SALÁRIO / ENCARGOS|162|D|03/02 19:27 MARIA CLARA ANACLETO FLOR - AJUDA DE CUSTO
+2026-02-03|01 SALÁRIO / ENCARGOS|162|D|03/02 19:27 Levi Inácio da Silva - AJUDA DE CUSTO (01)
+2026-02-03|01 SALÁRIO / ENCARGOS|225|D|03/02 19:27 José Cláucio Silva Rodrig - AJUDA DE CUSTO
+2026-02-03|01 SALÁRIO / ENCARGOS|240|D|03/02 19:27 FLAVIO NOGUEIRA - AJUDA DE CUSTO (01)
+2026-02-03|01 SALÁRIO / ENCARGOS|500|D|03/02 19:27 Levi Inácio da Silva - AJUDA DE CUSTO (01)
+2026-02-03|01 SALÁRIO / ENCARGOS|500|D|03/02 19:27 MARIA CLARA ANACLETO FLOR - AJUDA DE CUSTO
+2026-02-03|01 SALÁRIO / ENCARGOS|500.01|D|03/02 19:27 José Cláucio Silva Rodrig - AJUDA DE CUSTO
+2026-02-03|01 SALÁRIO / ENCARGOS|500.01|D|03/02 19:27 FLAVIO NOGUEIRA - AJUDA DE CUSTO (01)
+2026-02-03|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-03|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-02-03|04 OP. NLG|3150|D|03/02 09:53 Robison Silva Ramos - OPERAÇÃO DE FRETE (04)
+2026-02-03|04 OP. NLG|3640|D|03/02 09:53 TR PLANTAO - OPERAÇÃO DE FRETE (04)
+2026-02-04|Transferência recebida NE|46036|C|04/02 12:36 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-04|Transferência recebida NE|1000|C|04/02 22:03 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-04|01 SALÁRIO / ENCARGOS|152|D|04/02 18:02 FLASH APP - AJUDA DE CUSTO (01)
+2026-02-04|02 OP. / TAR. BANCÁRIAS|1000|D|04/02 22:06 NORDESTE DISTRIBUIDORA - ENTROU E SAIU DA CONTA
+2026-02-04|01 SALÁRIO / ENCARGOS|13936|D|04/02 14:02 FLASH APP - V.A E V.T FEVEREIRO (01)
+2026-02-04|02 OP. / TAR. BANCÁRIAS|15000|D|04/02 09:22 NORDESTE COMERCIO E INDUS - ESTORNO DE SALDO (02)
+2026-02-04|01 SALÁRIO / ENCARGOS|32100|D|04/02 14:00 FLASH APP - V.A. E V.T. FEVEREIRO (01)
+2026-02-05|Transferência recebida NE|20000|C|05/02 12:20 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-05|02 OP. / TAR. BANCÁRIAS|95.61|D|Tar. agrupadas - ocorrencia 05/02/2026 (02)
+2026-02-05|01 SALÁRIO / ENCARGOS|200|D|05/02 19:44 LEONARDO CANDIDO FERREIRA - AJUDA DE CUSTO
+2026-02-05|01 SALÁRIO / ENCARGOS|388.91|D|05/02 19:44 MARIA CLARA ANACLETO FLOR - AJUDA DE CUSTO
+2026-02-05|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-05|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-02-05|04 OP. NLG|987.93|D|05/02 12:33 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-02-05|04 OP. NLG|1200.01|D|05/02 12:33 EDMAR ADAO DE ALMEIDA - OPERAÇÃO DE FRETE (04)
+2026-02-05|04 OP. NLG|1350|D|05/02 12:33 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-02-05|04 OP. NLG|1350|D|05/02 12:33 Alberto Flávio Leite de S - OPERAÇÃO DE FRETE
+2026-02-05|04 OP. NLG|1560|D|05/02 12:33 ZERO 1 TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-02-05|04 OP. NLG|1560|D|05/02 12:33 EXPRESSO L A LTDA - OPERAÇÃO DE FRETE (04)
+2026-02-05|04 OP. NLG|1560.01|D|05/02 12:33 TR PLANTAO - OPERAÇÃO DE FRETE (04)
+2026-02-05|04 OP. NLG|3640|D|05/02 12:33 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-02-05|04 OP. NLG|3640.01|D|05/02 12:33 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-02-06|Transferência recebida NE|110000|C|06/02 16:36 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-06|02 OP. / TAR. BANCÁRIAS|50.6|D|Cobrança referente 06/02/2026 (02)
+2026-02-06|02 OP. / TAR. BANCÁRIAS|86.17|D|Tar. agrupadas - ocorrencia 06/02/2026 (02)
+2026-02-06|01 SALÁRIO / ENCARGOS|160|D|06/02 19:25 LEONARDO CANDIDO FERREIRA - AJUDA DE CUSTO
+2026-02-06|04 OP. NLG|464.5|D|06/02 19:25 Robison Silva Ramos - OPERAÇÃO DE FRETE (04)
+2026-02-06|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-06|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-06|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-02-06|01 SALÁRIO / ENCARGOS|1044|D|06/02 19:25 Levi Inácio da Silva - SALÁRIO (01)
+2026-02-06|04 OP. NLG|1350|D|06/02 19:25 Robison Silva Ramos - OPERAÇÃO DE FRETE (04)
+2026-02-06|01 SALÁRIO / ENCARGOS|1371|D|06/02 19:25 MARIA CLARA ANACLETO FLORE - SALÁRIO
+2026-02-06|04 OP. NLG|1560|D|06/02 19:25 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-02-06|04 OP. NLG|3150|D|06/02 16:42 FABIO MARQUES FARIAS VITA - OPERAÇÃO DE FRETE
+2026-02-06|01 SALÁRIO / ENCARGOS|3300|D|06/02 19:25 FLAVIO NOGUEIRA - SALÁRIO (01)
+2026-02-06|01 SALÁRIO / ENCARGOS|3440|D|06/02 19:25 José Cláucio Silva Rodrigu - SALÁRIO (01)
+2026-02-06|04 OP. NLG|3640|D|06/02 19:25 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-02-06|04 OP. NLG|3640.01|D|06/02 19:25 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-02-06|01 SALÁRIO / ENCARGOS|60992.54|D|SALÁRIO (01)
+2026-02-09|02 OP. / TAR. BANCÁRIAS|2|D|Tar. agrupadas - ocorrencia 09/02/2026 (02)
+2026-02-09|02 OP. / TAR. BANCÁRIAS|3.3|D|Cobrança referente 09/02/2026 (02)
+2026-02-09|01 SALÁRIO / ENCARGOS|43|D|09/02 19:12 GIOVANNA SANTANA DA SILVA - REEMBOLSO (01)
+2026-02-09|01 SALÁRIO / ENCARGOS|45|D|09/02 19:12 GIOVANNA SANTANA DA SILVA - REEMBOLSO (01)
+2026-02-09|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-09|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-09|01 SALÁRIO / ENCARGOS|3185.71|D|FOLHA NÃO IDENTIFICADA (01)
+2026-02-09|02 OP. / TAR. BANCÁRIAS|18000|D|09/02 19:12 NORDESTE COM. E IND. - RETORNO DE SALDO (02)
+2026-02-10|Transferência recebida NE|5000|C|10/02 19:41 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-10|02 OP. / TAR. BANCÁRIAS|20|D|Tar. agrupadas - ocorrencia 10/02/2026 (02)
+2026-02-10|03 IMPOSTOS|1071.08|D|PREFEITURA DA CIDADE DO R - Cobrança CIN prefeitura do Recife
+2026-02-10|04 OP. NLG|1750|D|10/02 19:42 CARLOS LUCIANO VIEIRA FERR - OPERAÇÃO DE FRETE
+2026-02-10|04 OP. NLG|3150|D|10/02 19:42 57 582 949 JOSE ODILON TE - OPERAÇÃO DE FRETE
+2026-02-11|Transferência recebida NE|10000|C|11/02 19:37 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-11|02 OP. / TAR. BANCÁRIAS|45.45|D|Tar. agrupadas - ocorrencia 11/02/2026 (02)
+2026-02-11|04 OP. NLG|51.6|D|11/02 19:40 Elison Elias da Silva - DESCARGA OP DE FRETE
+2026-02-11|04 OP. NLG|450|D|11/02 19:40 Elison Elias da Silva - OPERAÇÃO DE FRETE (04)
+2026-02-11|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-11|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-11|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-11|06 CUSTOS ADM|647.32|D|DORT NORDESTE - EXAMES ADM (06)
+2026-02-11|04 OP. NLG|1050|D|11/02 19:40 ROSICLEIA BATISTA DE SANT - OPERAÇÃO DE FRETE
+2026-02-11|04 OP. NLG|1350|D|11/02 19:40 FABIO MARQUES FARIAS VITA - OPERAÇÃO DE FRETE
+2026-02-11|04 OP. NLG|1559.99|D|11/02 19:40 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-02-11|04 OP. NLG|1560|D|11/02 19:40 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-02-11|04 OP. NLG|1560.01|D|11/02 19:40 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-02-12|Transferência recebida NE|5000|C|12/02 18:53 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-12|02 OP. / TAR. BANCÁRIAS|17.42|D|Tar. agrupadas - ocorrencia 12/02/2026 (02)
+2026-02-12|04 OP. NLG|350|D|12/02 09:44 ROSICLEIA BATISTA DE SANT - OPERAÇÃO DE FRETE
+2026-02-12|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-12|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-12|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-02-12|04 OP. NLG|750|D|12/02 18:54 TRANSPORTES DO BOM - OPERAÇÃO DE FRETE (04)
+2026-02-12|04 OP. NLG|1750|D|12/02 18:54 TRANSPORTES DO BOM - OPERAÇÃO DE FRETE (04)
+2026-02-13|Transferência recebida NE|15000|C|13/02 17:11 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-13|02 OP. / TAR. BANCÁRIAS|31.41|D|Tar. agrupadas - ocorrencia 13/02/2026 (02)
+2026-02-13|01 SALÁRIO / ENCARGOS|200|D|13/02 17:15 LEONARDO CANDIDO FERREIRA - AJUDA DE CUSTO
+2026-02-13|01 SALÁRIO / ENCARGOS|204|D|13/02 17:15 LEONARDO CANDIDO FERREIRA - AJUDA DE CUSTO
+2026-02-13|04 OP. NLG|750|D|13/02 17:15 CARLOS LUCIANO VIEIRA FER - OPERAÇÃO DE FRETE
+2026-02-13|04 OP. NLG|1350|D|13/02 17:15 57 582 949 JOSE ODILON TE - OPERAÇÃO DE FRETE
+2026-02-13|04 OP. NLG|12000|D|13/02 18:20 49.141.262 GEOVA BEZERRA - OPERAÇÃO DE FRETE
+2026-02-18|Transferência recebida NE|1000|C|18/02 19:34 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-18|02 OP. / TAR. BANCÁRIAS|1.98|D|Tar. agrupadas - ocorrencia 18/02/2026 (02)
+2026-02-18|06 CUSTOS ADM|22.63|D|VIVO PE - CONTA TELEFÔNICA (06)
+2026-02-18|01 SALÁRIO / ENCARGOS|200|D|18/02 19:44 LEONARDO CANDIDO FERREIRA - AJUDA DE CUSTO
+2026-02-18|06 CUSTOS ADM|1471.96|D|VERTTICE GERENCIAMENTO DE RISC - GERENCIADORA DE RISCO (06)
+2026-02-18|06 CUSTOS ADM|1621|D|EAS TECH SOLUTION LTDA - SISTEMA TMS LOG (06)
+2026-02-19|Transferência recebida NE|3000|C|19/02 20:06 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-19|Transferência recebida NE|3000|C|19/02 09:18 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-19|02 OP. / TAR. BANCÁRIAS|12.42|D|Tar. agrupadas - ocorrencia 19/02/2026 (02)
+2026-02-19|01 SALÁRIO / ENCARGOS|45|D|19/02 09:44 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-02-19|04 OP. NLG|144|D|19/02 09:20 KDY TRANSPORTADORA - OPERAÇÃO DE FRETE (04)
+2026-02-19|04 OP. NLG|2450|D|19/02 09:20 KDY TRANSPORTADORA - OPERAÇÃO DE FRETE (04)
+2026-02-19|03 IMPOSTOS|2928|D|SEFAZ PE 193 E-FISCO - ICMS MENSAL (03)
+2026-02-20|Transferência recebida NE|50000|C|20/02 19:57 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-20|Transferência recebida NE|5000|C|20/02 20:48 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-20|02 OP. / TAR. BANCÁRIAS|29.77|D|Tar. agrupadas - ocorrencia 20/02/2026 (02)
+2026-02-20|02 OP. / TAR. BANCÁRIAS|62.7|D|Cobrança referente 20/02/2026 (02)
+2026-02-20|01 SALÁRIO / ENCARGOS|205.06|D|20/02 20:09 FLASH APP - AJUDA DE CUSTO (01)
+2026-02-20|01 SALÁRIO / ENCARGOS|287.77|D|20/02 20:09 Bruno Vital Pereira Duart - AJUDA DE CUSTO
+2026-02-20|04 OP. NLG|300|D|20/02 20:09 KDY TRANSPORTADORA - OPERAÇÃO DE FRETE (04)
+2026-02-20|04 OP. NLG|400|D|20/02 20:09 KDY TRANSPORTADORA - OPERAÇÃO DE FRETE (04)
+2026-02-20|06 CUSTOS ADM|426|D|FLASH TEC E PAGAMENTOS LTDA - UTILIZAÇÃO DO SISTEMA
+2026-02-20|06 CUSTOS ADM|863.8|D|ALLIANZ SEGUROS AS - SEGURADORA (06)
+2026-02-20|06 CUSTOS ADM|863.8|D|ALLIANZ SEGUROS AS - SEGURADORA (06)
+2026-02-20|04 OP. NLG|1050|D|20/02 20:09 KDY TRANSPORTADORA - OPERAÇÃO DE FRETE (04)
+2026-02-20|01 SALÁRIO / ENCARGOS|1120|D|20/02 20:09 José Cláucio Silva Rodrig - SALÁRIO (01)
+2026-02-20|01 SALÁRIO / ENCARGOS|1200|D|20/02 20:09 FLAVIO NOGUEIRA - SALÁRIO (01)
+2026-02-20|01 SALÁRIO / ENCARGOS|44672|D|SALÁRIO (01)
+2026-02-23|02 OP. / TAR. BANCÁRIAS|3.3|D|Cobrança referente 23/02/2026 (02)
+2026-02-23|01 SALÁRIO / ENCARGOS|2498|D|FOLHA NÃO IDENTIFICADA (01)
+2026-02-24|Transferência recebida NE|3000|C|24/02 19:10 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-24|02 OP. / TAR. BANCÁRIAS|16.89|D|Tar. agrupadas - ocorrencia 24/02/2026 (02)
+2026-02-24|01 SALÁRIO / ENCARGOS|696|D|24/02 13:27 Levi Inácio da Silva - AJUDA DE CUSTO (01)
+2026-02-24|04 OP. NLG|3150|D|24/02 19:11 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-02-25|Transferência recebida NE|25000|C|25/02 19:54 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-25|Transferência recebida NE|10000|C|25/02 14:59 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-25|02 OP. / TAR. BANCÁRIAS|30|D|Tar. agrupadas - ocorrencia 25/02/2026 (02)
+2026-02-25|01 SALÁRIO / ENCARGOS|404.47|D|25/02 15:00 FLASH APP - AJUDA DE CUSTO (01)
+2026-02-25|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-02-25|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-02-25|04 OP. NLG|1350|D|25/02 18:52 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-02-25|04 OP. NLG|3640|D|25/02 15:00 RODOGRATO TRANSPORTE DE C - OPERAÇÃO DE FRETE
+2026-02-25|04 OP. NLG|3640|D|25/02 18:52 NORTES EXPRESS - OPERAÇÃO DE FRETE (04)
+2026-02-25|03 IMPOSTOS|6272.93|D|RFB-DARF CODIGO DE BARRAS - PIS/ COFINS (03)
+2026-02-25|04 OP. NLG|15000|D|25/02 19:56 49.141.262 GEOVA BEZERRA J - OPERAÇÃO DE FRETE
+2026-02-26|Transferência recebida NE|5000|C|26/02 20:00 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-26|02 OP. / TAR. BANCÁRIAS|15.94|D|Tar. agrupadas - ocorrencia 26/02/2026 (02)
+2026-02-26|04 OP. NLG|600|D|26/02 19:42 Elison Elias da Silva - OPERAÇÃO DE FRETE (04)
+2026-02-26|04 OP. NLG|3150|D|26/02 20:00 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-02-27|Transferência recebida NE|60000|C|27/02 19:08 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-02-27|02 OP. / TAR. BANCÁRIAS|30|D|Tar. agrupadas - ocorrencia 27/02/2026 (02)
+2026-02-27|04 OP. NLG|1560|D|27/02 19:11 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-02-27|04 OP. NLG|1560|D|27/02 19:11 NORTES EXPRESS - OPERAÇÃO DE FRETE (04)
+2026-02-27|04 OP. NLG|9000|D|27/02 19:11 49.141.262 GEOVA BEZERRA - OPERAÇÃO DE FRETE
+2026-02-27|01 SALÁRIO / ENCARGOS|10222.86|D|27/02 19:11 CEF MATRIZ - GUIA FGTS MENSAL (01)
+2026-02-27|01 SALÁRIO / ENCARGOS|34529.58|D|RFB-DARF CODIGO DE BARRAS - GUIA INSS MENSAL (01)
+2026-03-02|03 IMPOSTOS|0.12|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-03-02|03 IMPOSTOS|0.12|D|GNRE ON LINE - ICMS SEFAZ BP (03)
+2026-03-03|Transferência recebida NE|52500|C|03/03 20:03 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-03|Transferência recebida NE|3000|C|03/03 18:47 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-03|04 OP. NLG|3150|D|03/03 18:48 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-03-03|04 OP. NLG|3150|D|03/03 18:48 PAULO BEZERRA DA SILVA - OPERAÇÃO DE FRETE (04)
+2026-03-03|04 OP. NLG|4640|D|03/03 18:48 ERICK HENRIQUE DAMASCENO - OPERAÇÃO DE FRETE (04)
+2026-03-04|Transferência recebida NE|4000|C|04/03 09:58 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-04|Transferência recebida NE|9000|C|04/03 19:23 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-04|02 OP. / TAR. BANCÁRIAS|19.74|D|Tar. agrupadas - ocorrencia 04/03/2026 (02)
+2026-03-04|06 CUSTOS ADM|39.96|D|HOSTGATOR BRASIL LTDA - HOSPEDAGEM EMAIL (06)
+2026-03-04|01 SALÁRIO / ENCARGOS|45|D|04/03 19:24 Rafael Thiago das neves ma - REEMBOLSO EXAME ADM
+2026-03-04|04 OP. NLG|82|D|04/03 19:24 Elison Elias da Silva - OPERAÇÃO DE FRETE (04)
+2026-03-04|01 SALÁRIO / ENCARGOS|189|D|04/03 10:01 Levi Inácio da Silva - AJUDA DE CUSTO (01)
+2026-03-04|01 SALÁRIO / ENCARGOS|240|D|04/03 10:01 FLAVIO NOGUEIRA - AJUDA DE CUSTO (01)
+2026-03-04|04 OP. NLG|266|D|04/03 19:24 ERICK HENRIQUE DAMASCENO - OPERAÇÃO DE FRETE
+2026-03-04|01 SALÁRIO / ENCARGOS|500|D|04/03 10:01 Levi Inácio da Silva - AJUDA DE CUSTO (01)
+2026-03-04|01 SALÁRIO / ENCARGOS|500|D|04/03 10:01 FLAVIO NOGUEIRA - AJUDA DE CUSTO (01)
+2026-03-04|04 OP. NLG|504|D|04/03 19:23 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-03-04|04 OP. NLG|517.04|D|04/03 19:24 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-03-04|04 OP. NLG|1350|D|04/03 19:23 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-03-04|04 OP. NLG|1350|D|04/03 19:24 PAULO BEZERRA DA SILVA - OPERAÇÃO DE FRETE (04)
+2026-03-04|04 OP. NLG|2450|D|04/03 19:23 JOSE SANTOS DE SANTANA - OPERAÇÃO DE FRETE (04)
+2026-03-04|04 OP. NLG|3150|D|04/03 09:55 EMR TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-03-04|04 OP. NLG|3150|D|04/03 19:45 MCEL - OPERAÇÃO DE FRETE (04)
+2026-03-04|01 SALÁRIO / ENCARGOS|51545|D|04/03 10:01 FLASH APP - V.A E V.T. MARÇO (01)
+2026-03-05|Transferência recebida NE|91000|C|05/03 19:12 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-05|01 SALÁRIO / ENCARGOS|45|D|05/03 19:24 DOUGLAS ALVES DOS SANTOS - REEMBOLSO (01)
+2026-03-05|02 OP. / TAR. BANCÁRIAS|53.49|D|Tar. agrupadas - ocorrencia 05/03/2026 (02)
+2026-03-05|02 OP. / TAR. BANCÁRIAS|59.4|D|Cobrança referente 05/03/2026 (02)
+2026-03-05|04 OP. NLG|252|D|05/03 19:23 ERICK HENRIQUE DAMASCENO - OPERAÇÃO DE FRETE
+2026-03-05|01 SALÁRIO / ENCARGOS|1094.11|D|05/03 19:24 Levi Inácio da Silva - SALÁRIO (01)
+2026-03-05|04 OP. NLG|1160|D|05/03 19:23 ERICK HENRIQUE DAMASCENO - OPERAÇÃO DE FRETE
+2026-03-05|04 OP. NLG|1350|D|05/03 19:23 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-03-05|04 OP. NLG|1560|D|05/03 19:23 RODOGRATO TRANSPORTE DE C - OPERAÇÃO DE FRETE
+2026-03-05|01 SALÁRIO / ENCARGOS|3040|D|05/03 19:25 José Cláucio Silva Rodrig - SALÁRIO (01)
+2026-03-05|04 OP. NLG|3150|D|05/03 19:24 P. SILVA NETO - OPERAÇÃO DE FRETE (04)
+2026-03-05|01 SALÁRIO / ENCARGOS|3300|D|05/03 19:24 FLAVIO CESAR RAMOS NOGUEI - SALÁRIO (01)
+2026-03-05|01 SALÁRIO / ENCARGOS|73998.8|D|SALÁRIO (01)
+2026-03-06|Transferência recebida NE|15000|C|06/03 19:53 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-06|02 OP. / TAR. BANCÁRIAS|61.89|D|Tar. agrupadas - ocorrencia 06/03/2026 (02)
+2026-03-06|04 OP. NLG|259.2|D|06/03 19:54 JOSE SANTOS DE SANTANA - OPERAÇÃO DE FRETE (04)
+2026-03-06|04 OP. NLG|440|D|06/03 19:54 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE (04)
+2026-03-06|04 OP. NLG|504|D|06/03 11:13 CARLOS AUGUSTO FERREIRA D - OPERAÇÃO DE FRETE (04)
+2026-03-06|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-03-06|04 OP. NLG|1050|D|06/03 19:54 JOSE SANTOS DE SANTANA - OPERAÇÃO DE FRETE (04)
+2026-03-06|04 OP. NLG|1350|D|06/03 19:54 EMR TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-03-06|04 OP. NLG|3150|D|06/03 19:54 LEONEL CARVALHO DE MACEDO - OPERAÇÃO DE FRETE
+2026-03-06|04 OP. NLG|3640|D|06/03 19:54 PAULO SERGIO FERREIRA - OPERAÇÃO DE FRETE (04)
+2026-03-06|04 OP. NLG|4410|D|06/03 19:54 JOEL EVARISTO COELHO - OPERAÇÃO DE FRETE (04)
+2026-03-09|Transferência recebida NE|1000|C|07/03 22:55 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-09|Transferência recebida NE|5000|C|09/03 18:58 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-09|02 OP. / TAR. BANCÁRIAS|10|D|Tar. agrupadas - ocorrencia 09/03/2026 (02)
+2026-03-09|03 IMPOSTOS|900|D|07/03 22:56 SEFAZ BAHIA - 03 IMPOSTO ICMS GNRE (03)
+2026-03-09|03 IMPOSTOS|900|D|07/03 22:56 SEFAZ BAHIA - 03 IMPOSTO ICMS GNRE (03)
+2026-03-09|01 SALÁRIO / ENCARGOS|2000|D|09/03 19:00 Everton Felipe de Lima As - SALÁRIO (01)
+2026-03-10|Transferência recebida NE|25000|C|10/03 19:16 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-10|01 SALÁRIO / ENCARGOS|45|D|10/03 09:59 Bruno Vital Pereira Duart - REEMBOLSO (01)
+2026-03-10|02 OP. / TAR. BANCÁRIAS|105.13|D|Tar. agrupadas - ocorrencia 10/03/2026 (02)
+2026-03-10|06 CUSTOS ADM|152|D|DORT NORDESTE - EXAMES ADM (06)
+2026-03-10|04 OP. NLG|756|D|10/03 19:31 MCEL - OPERAÇÃO DE FRETE (04)
+2026-03-10|04 OP. NLG|770.5|D|10/03 19:31 P. SILVA NETO - OPERAÇÃO DE FRETE (04)
+2026-03-10|04 OP. NLG|932|D|10/03 19:31 JOEL EVARISTO COELHO - OPERAÇÃO DE FRETE (04)
+2026-03-10|04 OP. NLG|991.69|D|10/03 19:31 LEONEL CARVALHO DE MACEDO - OPERAÇÃO DE FRETE
+2026-03-10|01 SALÁRIO / ENCARGOS|1301.33|D|10/03 19:31 FLASH APP - AJUDA DE CUSTO PASSAGEM (01)
+2026-03-10|04 OP. NLG|1350|D|10/03 19:31 MCEL - OPERAÇÃO DE FRETE (04)
+2026-03-10|04 OP. NLG|1350|D|10/03 19:31 P. SILVA NETO - OPERAÇÃO DE FRETE (04)
+2026-03-10|04 OP. NLG|1350|D|10/03 19:31 LEONEL CARVALHO DE MACEDO - OPERAÇÃO DE FRETE
+2026-03-10|04 OP. NLG|1560|D|10/03 19:31 PAULO SERGIO FERREIRA - OPERAÇÃO DE FRETE (04)
+2026-03-10|04 OP. NLG|1890|D|10/03 19:31 JOEL EVARISTO COELHO - OPERAÇÃO DE FRETE (04)
+2026-03-10|04 OP. NLG|3150|D|10/03 19:31 Ediclecio Francisco da Si - OPERAÇÃO DE FRETE (04)
+2026-03-10|04 OP. NLG|5200|D|10/03 19:31 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-03-11|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 11/03/2026 (02)
+2026-03-11|02 OP. / TAR. BANCÁRIAS|11|D|Tar. agrupadas - ocorrencia 11/03/2026 (02)
+2026-03-11|01 SALÁRIO / ENCARGOS|45|D|11/03 19:11 Luiz André Lima de Araújo - REEMBOLSO (01)
+2026-03-11|01 SALÁRIO / ENCARGOS|268.01|D|11/03 19:11 CEF MATRIZ - GUIA RECISÓRIA (01)
+2026-03-11|01 SALÁRIO / ENCARGOS|1360.29|D|RESCISÃO (01)
+2026-03-11|04 OP. NLG|5200|D|11/03 19:11 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-03-12|01 SALÁRIO / ENCARGOS|459.33|D|12/03 18:12 FLASH APP - AJUDA DE CUSTO (01)
+2026-03-13|Transferência recebida NE|10000|C|13/03 11:33 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-13|Transferência recebida NE|13000|C|13/03 17:53 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-13|02 OP. / TAR. BANCÁRIAS|44.95|D|Tar. agrupadas - ocorrencia 13/03/2026 (02)
+2026-03-13|04 OP. NLG|500|D|13/03 18:00 Ediclecio Francisco da Si - OPERAÇÃO DE FRETE (04)
+2026-03-13|04 OP. NLG|1350|D|13/03 18:00 Ediclecio Francisco da Si - OPERAÇÃO DE FRETE (04)
+2026-03-13|03 IMPOSTOS|1728|D|SEFAZ PE 193 E-FISCO - ICMS MENSAL (03)
+2026-03-13|04 OP. NLG|3150|D|13/03 11:33 Greisson Victor da Silva - OPERAÇÃO DE FRETE (04)
+2026-03-13|04 OP. NLG|5600|D|13/03 11:33 RENATO TAVARES DE FIGUEIR - OPERAÇÃO DE FRETE
+2026-03-13|04 OP. NLG|9000|D|13/03 18:00 49.141.262 GEOVA BEZERRA - OPERAÇÃO DE FRETE
+2026-03-16|Transferência recebida NE|3000|C|16/03 18:43 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-16|02 OP. / TAR. BANCÁRIAS|16.15|D|Tar. agrupadas - ocorrencia 16/03/2026 (02)
+2026-03-16|04 OP. NLG|622|D|16/03 18:47 Greisson Victor da Silva - OPERAÇÃO DE FRETE (04)
+2026-03-16|06 CUSTOS ADM|1141.79|D|VERTTICE GERENCIAMENTO DE RISC - GERENCIADORA DE RISCO (06)
+2026-03-16|04 OP. NLG|1350|D|16/03 18:47 Greisson Victor da Silva - OPERAÇÃO DE FRETE (04)
+2026-03-16|06 CUSTOS ADM|1621|D|EAS TECH SOLUTION LTDA - SISTEMA TMS LOG (06)
+2026-03-17|Transferência recebida NE|400|C|17/03 10:44 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-17|Transferência recebida NE|3000|C|17/03 19:17 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-17|02 OP. / TAR. BANCÁRIAS|14.09|D|Tar. agrupadas - ocorrencia 17/03/2026 (02)
+2026-03-17|06 CUSTOS ADM|61.35|D|VIVO PE - CONTA TELEFÔNICA (06)
+2026-03-17|04 OP. NLG|414|D|17/03 10:56 josenildo silva - OPERAÇÃO DE FRETE (04)
+2026-03-17|04 OP. NLG|2400|D|17/03 19:22 RENATO TAVARES DE FIGUEIR - OPERAÇÃO DE FRETE
+2026-03-18|01 SALÁRIO / ENCARGOS|328.09|D|18/03 19:26 FLASH APP - AJUDA DE CUSTO MIKAEL (01)
+2026-03-20|Transferência recebida NE|10000|C|20/03 15:21 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-20|Transferência recebida NE|105000|C|20/03 17:19 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-20|02 OP. / TAR. BANCÁRIAS|27.89|D|Tar. agrupadas - ocorrencia 20/03/2026 (02)
+2026-03-20|01 SALÁRIO / ENCARGOS|45|D|20/03 18:37 Levi Inácio da Silva - REEMBOLSO (01)
+2026-03-20|02 OP. / TAR. BANCÁRIAS|74.8|D|Cobrança referente 20/03/2026 (02)
+2026-03-20|06 CUSTOS ADM|644.28|D|ALLIANZ SEGUROS AS - SEGURADORA (06)
+2026-03-20|06 CUSTOS ADM|644.28|D|ALLIANZ SEGUROS AS - SEGURADORA (06)
+2026-03-20|01 SALÁRIO / ENCARGOS|696|D|20/03 18:37 Levi Inácio da Silva - SALÁRIO (01)
+2026-03-20|01 SALÁRIO / ENCARGOS|1200|D|20/03 18:37 FLAVIO CESAR RAMOS NOGUEI - SALÁRIO (01)
+2026-03-20|04 OP. NLG|3220|D|20/03 15:28 J R COIMBRA TRANSPORTES - OPERAÇÃO DE FRETE
+2026-03-20|04 OP. NLG|3640|D|20/03 15:28 Angelo Antonio Chiarelle - OPERAÇÃO DE FRETE
+2026-03-20|01 SALÁRIO / ENCARGOS|10975.09|D|20/03 18:37 CEF MATRIZ - GUIA FGTS MENSAL (01)
+2026-03-20|01 SALÁRIO / ENCARGOS|37875.89|D|RFB-DARF CODIGO DE BARRAS - GUIA INSS MENSAL (01)
+2026-03-20|01 SALÁRIO / ENCARGOS|53341|D|SALÁRIO (01)
+2026-03-23|Transferência recebida NE|1000|C|21/03 14:27 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-23|Transferência recebida NE|5000|C|23/03 18:20 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-23|02 OP. / TAR. BANCÁRIAS|39.72|D|Tar. agrupadas - ocorrencia 23/03/2026 (02)
+2026-03-23|04 OP. NLG|452.67|D|23/03 18:21 Angelo Antonio Chiarelle - OPERAÇÃO DE FRETE
+2026-03-23|04 OP. NLG|530|D|23/03 18:21 62.117.754 NERIVAN DA SIL - OPERAÇÃO DE FRETE (04)
+2026-03-23|04 OP. NLG|1380|D|23/03 18:21 J R COIMBRA TRANSPORTES - OPERAÇÃO DE FRETE
+2026-03-23|04 OP. NLG|1500|D|23/03 18:21 62.117.754 NERIVAN DA SIL - OPERAÇÃO DE FRETE (04)
+2026-03-23|04 OP. NLG|3500|D|21/03 14:28 62.117.754 NERIVAN DA SIL - OPERAÇÃO DE FRETE
+2026-03-24|01 SALÁRIO / ENCARGOS|20|D|24/03 10:07 JOHN LENNON BARBOSA DE ME - REEMBOLSO (01)
+2026-03-24|01 SALÁRIO / ENCARGOS|180|D|24/03 17:46 FLASH APP - AJUDA DE CUSTO Wesley (01)
+2026-03-25|Transferência recebida NE|10000|C|25/03 20:06 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-25|02 OP. / TAR. BANCÁRIAS|15.62|D|Tar. agrupadas - ocorrencia 25/03/2026 (02)
+2026-03-25|01 SALÁRIO / ENCARGOS|20|D|25/03 16:50 JOHN LENNON BARBOSA DE ME - REEMBOLSO (01)
+2026-03-25|04 OP. NLG|568.5|D|25/03 20:07 Angelo Antonio Chiarelle - OPERAÇÃO DE FRETE
+2026-03-25|04 OP. NLG|1560|D|25/03 20:07 Angelo Antonio Chiarelle - OPERAÇÃO DE FRETE
+2026-03-25|03 IMPOSTOS|5277.94|D|RFB-DARF CODIGO DE BARRAS - PIS/ COFINS (03)
+2026-03-26|02 OP. / TAR. BANCÁRIAS|10|D|Tar. agrupadas - ocorrencia 26/03/2026 (02)
+2026-03-26|04 OP. NLG|3500|D|26/03 10:14 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-03-27|Transferência recebida NE|10000|C|27/03 08:46 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-27|Transferência recebida NE|1000|C|27/03 18:31 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-27|02 OP. / TAR. BANCÁRIAS|40|D|Tar. agrupadas - ocorrencia 27/03/2026 (02)
+2026-03-27|04 OP. NLG|1500|D|27/03 19:13 LEONEL CARVALHO DE MACEDO - OPERAÇÃO DE FRETE
+2026-03-27|04 OP. NLG|2800|D|27/03 19:13 Robison Silva Ramos - OPERAÇÃO DE FRETE (04)
+2026-03-27|04 OP. NLG|3500|D|27/03 08:47 LEONEL CARVALHO DE MACEDO - OPERAÇÃO DE FRETE
+2026-03-27|04 OP. NLG|3500|D|27/03 19:13 EVANDRO MANOEL DA SILVA - OPERAÇÃO DE FRETE
+2026-03-30|Dep dinheiro banco|720|C|4844-20-SOP CIDADE UNIVERSITARIA - RECEITA DESCARGA
+2026-03-31|Transferência recebida NE|5000|C|31/03 19:47 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-03-31|02 OP. / TAR. BANCÁRIAS|32.28|D|Tar. agrupadas - ocorrencia 31/03/2026 (02)
+2026-03-31|04 OP. NLG|477|D|31/03 19:48 Robison Silva Ramos - OPERAÇÃO DE FRETE (04)
+2026-03-31|04 OP. NLG|764|D|31/03 19:48 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-03-31|04 OP. NLG|1200|D|31/03 19:48 Robison Silva Ramos - OPERAÇÃO DE FRETE (04)
+2026-03-31|04 OP. NLG|1500|D|31/03 19:48 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-04-01|02 OP. / TAR. BANCÁRIAS|57686.5|D|01/04 19:42 NORDESTE DISTRIBUIDORA (02)
+2026-04-01|Transferência recebida NE|57686.5|C|01/04 19:38 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-01|01 SALÁRIO / ENCARGOS|57686.5|D|01/04 19:46 FLASH APP - V.A E V.T. ABRIL (01)
+2026-04-01|Transferência recebida NE|57686.5|C|01/04 19:44 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-07|02 OP. / TAR. BANCÁRIAS|64.9|D|Cobrança referente 07/04/2026 (02)
+2026-04-07|Transferência recebida NE|95000|C|07/04 19:00 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-07|04 OP. NLG|504|D|07/04 19:01 EVANDRO MANOEL DA SILVA - OPERAÇÃO DE FRETE (04)
+2026-04-07|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-07|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-07|04 OP. NLG|1500|D|07/04 19:01 EVANDRO MANOEL DA SILVA - OPERAÇÃO DE FRETE
+2026-04-07|04 OP. NLG|1500.01|D|07/04 19:01 EVANDRO MANOEL DA SILVA - OPERAÇÃO DE FRETE
+2026-04-07|01 SALÁRIO / ENCARGOS|90893.09|D|SALÁRIO (01)
+2026-04-08|Transferência recebida NE|6000|C|08/04 20:14 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-08|04 OP. NLG|3640|D|08/04 20:16 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-04-09|Transferência recebida NE|6000|C|09/04 16:18 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-09|01 SALÁRIO / ENCARGOS|3300|D|09/04 16:19 FLAVIO CESAR RAMOS NOGUEI - SALÁRIO (01)
+2026-04-09|04 OP. NLG|3640|D|09/04 16:19 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-04-10|Transferência recebida NE|6000|C|10/04 19:24 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-10|01 SALÁRIO / ENCARGOS|160|D|10/04 19:26 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-04-10|04 OP. NLG|1560|D|10/04 19:26 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-04-10|01 SALÁRIO / ENCARGOS|4589.77|D|10/04 19:26 FLAVIO CESAR RAMOS NOGUEI - RESCISÃO (01)
+2026-04-13|Transferência recebida NE|3000|C|13/04 18:26 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-13|03 IMPOSTOS|600|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-13|04 OP. NLG|1560|D|13/04 18:27 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-04-13|04 OP. NLG|2240|D|13/04 18:27 Antônio Celestino Torres - OPERAÇÃO DE FRETE
+2026-04-14|Transferência recebida NE|5000|C|14/04 09:51 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-14|Transferência recebida NE|6000|C|14/04 18:56 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-14|02 OP. / TAR. BANCÁRIAS|12|D|Tar. agrupadas - ocorrencia 14/04/2026 (02)
+2026-04-14|01 SALÁRIO / ENCARGOS|15|D|14/04 18:59 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-04-14|06 CUSTOS ADM|39.96|D|HOSTGATOR BRASIL LTDA - HOSPEDAGEM DE EMAIL
+2026-04-14|01 SALÁRIO / ENCARGOS|45|D|14/04 18:59 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-04-14|06 CUSTOS ADM|205.29|D|VIVO PE - CONTA TELEFÔNICA (06)
+2026-04-14|06 CUSTOS ADM|812|D|14/04 18:59 PORTAL RNTRC - INCLUSÃO VEÍCULOS ANTT NLG (06)
+2026-04-14|04 OP. NLG|825|D|14/04 18:59 Antônio Celestino Torres - OPERAÇÃO DE FRETE
+2026-04-14|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-14|03 IMPOSTOS|900|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-14|04 OP. NLG|3640|D|14/04 18:59 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-04-15|Transferência recebida NE|15000|C|15/04 19:14 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-15|02 OP. / TAR. BANCÁRIAS|21.28|D|Tar. agrupadas - ocorrencia 15/04/2026 (02)
+2026-04-15|06 CUSTOS ADM|38.81|D|DORT NORDESTE - EXAMES ADM (06)
+2026-04-15|01 SALÁRIO / ENCARGOS|180|D|15/04 19:15 ISAIAS BATISTA DA SILVA - REEMBOLSO (01)
+2026-04-15|03 IMPOSTOS|600|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-15|04 OP. NLG|960|D|15/04 19:15 Antônio Celestino Torres - OPERAÇÃO DE FRETE
+2026-04-15|06 CUSTOS ADM|1621|D|EAS TECH SOLUTION LTDA - SISTEMA TMS LOG
+2026-04-15|06 CUSTOS ADM|2301.96|D|VERTTICE GERENCIAMENTO DE RISC - GERENCIADORA DE RISCO
+2026-04-15|04 OP. NLG|3640|D|15/04 19:15 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-04-15|03 IMPOSTOS|8227.3|D|SEFAZ PE 193 E-FISCO - ICMS MENSAL (03)
+2026-04-16|Transferência recebida NE|1000|C|16/04 18:08 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-16|02 OP. / TAR. BANCÁRIAS|7.42|D|Tar. agrupadas - ocorrencia 16/04/2026 (02)
+2026-04-16|01 SALÁRIO / ENCARGOS|30|D|16/04 19:59 JOSE EDEILSON DA SILVA AS - REEMBOLSO (01)
+2026-04-16|01 SALÁRIO / ENCARGOS|45|D|16/04 19:59 JOSE EDEILSON DA SILVA AS - REEMBOLSO (01)
+2026-04-16|01 SALÁRIO / ENCARGOS|132|D|16/04 19:59 JOSE EDEILSON DA SILVA AS - REEMBOLSO (01)
+2026-04-16|06 CUSTOS ADM|750|D|16/04 19:59 Wagner Costa Araujo - REPARO PORTARIA ISM (06)
+2026-04-17|Transferência recebida NE|40000|C|17/04 17:21 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/04/2026 (02)
+2026-04-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/04/2026 (02)
+2026-04-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/04/2026 (02)
+2026-04-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/04/2026 (02)
+2026-04-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/04/2026 (02)
+2026-04-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/04/2026 (02)
+2026-04-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/04/2026 (02)
+2026-04-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/04/2026 (02)
+2026-04-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/04/2026 (02)
+2026-04-17|01 SALÁRIO / ENCARGOS|3|D|17/04 17:43 ABIMAEL RAIMUNDO LEONARDO - REEMBOLSO (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|7|D|17/04 17:43 FABIO JOSE SOTERO NUNES - REEMBOLSO (01)
+2026-04-17|02 OP. / TAR. BANCÁRIAS|13|D|Tar. agrupadas - ocorrencia 17/04/2026 (02)
+2026-04-17|01 SALÁRIO / ENCARGOS|15|D|17/04 17:43 José Mikael lima da Silva - REEMBOLSO (01)
+2026-04-17|04 OP. NLG|60|D|17/04 17:43 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-04-17|01 SALÁRIO / ENCARGOS|384.04|D|17/04 17:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-17|03 IMPOSTOS|600|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-17|01 SALÁRIO / ENCARGOS|649.63|D|17/04 17:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|666.51|D|17/04 17:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|674.56|D|17/04 17:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|683.02|D|17/04 17:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|683.48|D|17/04 17:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|690.14|D|17/04 17:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|810.11|D|17/04 17:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|1130.21|D|17/04 17:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|1293.84|D|RESCISÃO (01)
+2026-04-17|04 OP. NLG|1560|D|17/04 17:43 CIA VERDE - OPERAÇÃO DE FRETE (04)
+2026-04-17|01 SALÁRIO / ENCARGOS|3365.55|D|RESCISÃO (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|3375.57|D|RESCISÃO (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|3391.59|D|RESCISÃO (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|3393.56|D|RESCISÃO (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|3456.55|D|RESCISÃO (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|3493.56|D|RESCISÃO (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|3618.87|D|RESCISÃO (01)
+2026-04-17|01 SALÁRIO / ENCARGOS|3957.96|D|RESCISÃO (01)
+2026-04-20|Transferência recebida NE|120000|C|20/04 18:25 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-20|02 OP. / TAR. BANCÁRIAS|41.87|D|Tar. agrupadas - ocorrencia 20/04/2026 (02)
+2026-04-20|02 OP. / TAR. BANCÁRIAS|59.4|D|Cobrança referente 20/04/2026 (02)
+2026-04-20|03 IMPOSTOS|300|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-20|03 IMPOSTOS|300|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-20|01 SALÁRIO / ENCARGOS|450|D|20/04 18:26 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-04-20|04 OP. NLG|750|D|20/04 18:26 Wagner Costa Araujo - OPERAÇÃO DE FRETE (04)
+2026-04-20|03 IMPOSTOS|780|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-20|03 IMPOSTOS|816|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-20|06 CUSTOS ADM|1296.88|D|ALLIANZ SEGUROS S A - SEGURADORA (06)
+2026-04-20|06 CUSTOS ADM|1296.88|D|ALLIANZ SEGUROS S A - SEGURADORA (06)
+2026-04-20|04 OP. NLG|2240|D|20/04 18:26 MARIA VITÓRIA FERREIRA DA - OPERAÇÃO DE FRETE
+2026-04-20|04 OP. NLG|3290|D|20/04 18:26 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-04-20|04 OP. NLG|3500|D|20/04 18:26 COMTRAP - OPERAÇÃO DE FRETE (04)
+2026-04-20|03 IMPOSTOS|7179.88|D|RFB-DARF CODIGO DE BARRAS AC GESTÃO (03)
+2026-04-20|01 SALÁRIO / ENCARGOS|44302.77|D|RFB-DARF CODIGO DE BARRAS - GUIA INSS MENSAL (01)
+2026-04-20|01 SALÁRIO / ENCARGOS|45257|D|SALÁRIO (01)
+2026-04-22|Transferência recebida NE|5000|C|22/04 21:03 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-22|02 OP. / TAR. BANCÁRIAS|13.24|D|Tar. agrupadas - ocorrencia 22/04/2026 (02)
+2026-04-22|04 OP. NLG|378|D|22/04 19:13 MARIA VITÓRIA FERREIRA DA - OPERAÇÃO DE FRETE
+2026-04-22|01 SALÁRIO / ENCARGOS|652.84|D|22/04 21:04 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-22|04 OP. NLG|960|D|22/04 19:13 MARIA VITÓRIA FERREIRA DA - OPERAÇÃO DE FRETE
+2026-04-23|Transferência recebida NE|32000|C|23/04 17:55 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-23|02 OP. / TAR. BANCÁRIAS|4.4|D|Cobrança referente 23/04/2026 (02)
+2026-04-23|02 OP. / TAR. BANCÁRIAS|12|D|Tar. agrupadas - ocorrencia 23/04/2026 (02)
+2026-04-23|01 SALÁRIO / ENCARGOS|100|D|23/04 18:20 VICTOR JOSE FERREIRA DE F - DIÁRIA TERCEIRO
+2026-04-23|01 SALÁRIO / ENCARGOS|100|D|23/04 18:20 João Paulo Candido da Sil - DIÁRIA TERCEIRO
+2026-04-23|01 SALÁRIO / ENCARGOS|172.1|D|23/04 18:20 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-23|01 SALÁRIO / ENCARGOS|243.36|D|23/04 18:20 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-23|01 SALÁRIO / ENCARGOS|543.72|D|23/04 18:20 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-23|01 SALÁRIO / ENCARGOS|548.66|D|23/04 18:20 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-23|01 SALÁRIO / ENCARGOS|605.23|D|23/04 18:20 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-23|03 IMPOSTOS|780|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-23|01 SALÁRIO / ENCARGOS|1299|D|23/04 18:20 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-04-23|04 OP. NLG|3360|D|23/04 18:20 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-04-23|01 SALÁRIO / ENCARGOS|10604.92|D|RESCISÃO (01)
+2026-04-23|01 SALÁRIO / ENCARGOS|12442.33|D|23/04 18:20 CEF MATRIZ - GUIA FGTS MENSAL (01)
+2026-04-24|Transferência recebida NE|11000|C|24/04 18:04 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-24|02 OP. / TAR. BANCÁRIAS|2.2|D|Cobrança referente 24/04/2026 (02)
+2026-04-24|01 SALÁRIO / ENCARGOS|14|D|24/04 18:05 FABIO JOSE SOTERO NUNES - REEMBOLSO (01)
+2026-04-24|02 OP. / TAR. BANCÁRIAS|43.84|D|Tar. agrupadas - ocorrencia 24/04/2026 (02)
+2026-04-24|04 OP. NLG|556.5|D|24/04 18:05 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-04-24|04 OP. NLG|742|D|24/04 18:05 COMTRAP - OPERAÇÃO DE FRETE (04)
+2026-04-24|03 IMPOSTOS|816|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-24|04 OP. NLG|1410|D|24/04 18:05 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-04-24|04 OP. NLG|1500|D|24/04 18:05 COMTRAP - OPERAÇÃO DE FRETE (04)
+2026-04-24|04 OP. NLG|3500|D|24/04 18:05 Melquiades Fragoso de Mel - OPERAÇÃO DE FRETE
+2026-04-24|03 IMPOSTOS|5234.76|D|RFB-DARF CODIGO DE BARRAS - PIS/ COFINS (03)
+2026-04-24|01 SALÁRIO / ENCARGOS|12108.14|D|RESCISÃO (01)
+2026-04-28|Transferência recebida NE|10000|C|28/04 16:41 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-28|01 SALÁRIO / ENCARGOS|120|D|28/04 16:42 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-04-28|01 SALÁRIO / ENCARGOS|125|D|28/04 16:42 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-04-28|03 IMPOSTOS|408|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-28|03 IMPOSTOS|408|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-04-28|04 OP. NLG|751.62|D|28/04 16:42 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-04-28|04 OP. NLG|1440|D|28/04 16:42 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-04-28|04 OP. NLG|3500|D|28/04 16:42 JOEL EVARISTO COELHO - OPERAÇÃO DE FRETE (04)
+2026-04-28|04 OP. NLG|3500|D|28/04 16:42 FILEPA TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-04-29|Transferência recebida NE|10000|C|29/04 13:04 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-29|02 OP. / TAR. BANCÁRIAS|39.85|D|Tar. agrupadas - ocorrencia 28/04/2026 (02)
+2026-04-29|04 OP. NLG|500|D|29/04 13:08 Melquiades Fragoso de Mel - OPERAÇÃO DE FRETE
+2026-04-29|04 OP. NLG|710.51|D|29/04 13:08 Melquiades Fragoso de Mel - OPERAÇÃO DE FRETE
+2026-04-29|01 SALÁRIO / ENCARGOS|900|D|29/04 13:08 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-04-29|04 OP. NLG|1500|D|29/04 13:08 Melquiades Fragoso de Mel - OPERAÇÃO DE FRETE
+2026-04-29|04 OP. NLG|3640|D|29/04 13:08 FR SOLUCOES - OPERAÇÃO DE FRETE (04)
+2026-04-30|Transferência recebida NE|12000|C|30/04 17:19 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-04-30|02 OP. / TAR. BANCÁRIAS|40.89|D|Tar. agrupadas - ocorrencia 29/04/2026 (02)
+2026-04-30|04 OP. NLG|500|D|30/04 21:18 Victor Marques de Souza - OPERAÇÃO DE FRETE (04)
+2026-04-30|04 OP. NLG|1560|D|30/04 21:18 FR SOLUCOES - OPERAÇÃO DE FRETE (04)
+2026-04-30|03 IMPOSTOS|10820.97|D|RFB-DARF CODIGO DE BARRAS - IRPJ/ CSLL (03)
+2026-05-04|Transferência recebida NE|48000|C|04/05 19:44 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-04|02 OP. / TAR. BANCÁRIAS|14.95|D|Tar. agrupadas - ocorrencia 30/04/2026 (02)
+2026-05-04|04 OP. NLG|481.04|D|04/05 21:30 FILEPA TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-05-04|04 OP. NLG|638.73|D|04/05 21:30 JOEL EVARISTO COELHO - OPERAÇÃO DE FRETE
+2026-05-04|04 OP. NLG|1000|D|04/05 21:30 FILEPA TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-05-04|04 OP. NLG|1500|D|04/05 21:30 JOEL EVARISTO COELHO - OPERAÇÃO DE FRETE
+2026-05-05|04 OP. NLG|1500|D|05/05 15:04 FILEPA TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-05-05|01 SALÁRIO / ENCARGOS|44441|D|05/05 15:04 FLASH APP - V.A E V.T. MAIO (01)
+2026-05-06|Transferência recebida NE|5000|C|06/05 18:34 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-06|01 SALÁRIO / ENCARGOS|12|D|06/05 18:36 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-06|03 IMPOSTOS|204|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-05-06|03 IMPOSTOS|204|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-05-06|03 IMPOSTOS|204|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-05-06|03 IMPOSTOS|204|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-05-06|01 SALÁRIO / ENCARGOS|369.26|D|06/05 18:36 ELIDIANA DA SILVA SALES (GALEGO) - REEMBOLSO
+2026-05-06|01 SALÁRIO / ENCARGOS|600|D|06/05 18:36 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-06|04 OP. NLG|3500|D|06/05 18:36 SOLV SOLUCOES EM LOGISTIC - OPERAÇÃO DE FRETE
+2026-05-08|Transferência recebida NE|4000|C|08/05 13:30 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-08|Transferência recebida NE|72000|C|08/05 15:43 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-08|Transferência recebida NE|1000|C|08/05 16:10 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-08|01 SALÁRIO / ENCARGOS|15|D|08/05 16:06 FABIO JOSE SOTERO NUNES - REEMBOLSO (01)
+2026-05-08|02 OP. / TAR. BANCÁRIAS|18.27|D|Tar. agrupadas - ocorrencia 08/05/2026 (02)
+2026-05-08|01 SALÁRIO / ENCARGOS|45|D|08/05 16:12 Liani Marlene da Silva - REEMBOLSO (01)
+2026-05-08|02 OP. / TAR. BANCÁRIAS|48.4|D|Cobrança referente 08/05/2026 (02)
+2026-05-08|04 OP. NLG|344.5|D|08/05 16:06 SOLV SOLUCOES EM LOGISTIC - OPERAÇÃO DE FRETE
+2026-05-08|01 SALÁRIO / ENCARGOS|390.66|D|08/05 16:12 TAMIRES SANTANA DE OLIVEIR - PENSÃO ALIMENTICIA FUNCIONÁRIO
+2026-05-08|06 CUSTOS ADM|507.26|D|DORT NORDESTE - EXAMES ADM (06)
+2026-05-08|04 OP. NLG|1500|D|08/05 16:06 SOLV SOLUCOES EM LOGISTIC - OPERAÇÃO DE FRETE
+2026-05-08|04 OP. NLG|3360|D|08/05 13:31 LEONEL CARVALHO DE MACEDO - OPERAÇÃO DE FRETE
+2026-05-08|01 SALÁRIO / ENCARGOS|70327.53|D|SALÁRIO (01)
+2026-05-11|Cobrança|5700|C|TERROIR DO SÃO FRANCISCO
+2026-05-11|02 OP. / TAR. BANCÁRIAS|1.99|D|Tar. agrupadas - ocorrencia 08/05/2026 (02)
+2026-05-11|01 SALÁRIO / ENCARGOS|45|D|11/05 18:06 IVAN PEREIRA DA SILVA FIL - REEMBOLSO (01)
+2026-05-11|01 SALÁRIO / ENCARGOS|45|D|11/05 18:06 OZEAS BATISTA DE ARAUJO - REEMBOLSO (01)
+2026-05-11|03 IMPOSTOS|600|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-05-11|04 OP. NLG|1440|D|11/05 18:06 LEONEL CARVALHO DE MACEDO - OPERAÇÃO DE FRETE
+2026-05-12|02 OP. / TAR. BANCÁRIAS|12|D|Tar. agrupadas - ocorrencia 11/05/2026 (02)
+2026-05-12|06 CUSTOS ADM|39.96|D|HOSTGATOR BRASIL LTDA - HOSPEDAGEM DE EMAIL (06)
+2026-05-13|02 OP. / TAR. BANCÁRIAS|2|D|Tar. agrupadas - ocorrencia 13/05/2026 (02)
+2026-05-13|01 SALÁRIO / ENCARGOS|45|D|13/05 18:06 Brenda Camily de Lima Alv - REEMBOLSO (01)
+2026-05-13|01 SALÁRIO / ENCARGOS|45|D|13/05 18:06 RITA DE CASSIA DOS SANTOS - REEMBOLSO (01)
+2026-05-13|01 SALÁRIO / ENCARGOS|2074|D|13/05 18:06 FLASH APP - AJUDA DE CUSTO (01)
+2026-05-14|02 OP. / TAR. BANCÁRIAS|1|D|Tar. agrupadas - ocorrencia 14/05/2026 (02)
+2026-05-14|01 SALÁRIO / ENCARGOS|88|D|14/05 18:00 JAIR FELIX DA SILVA - REEMBOLSO (01)
+2026-05-15|Transferência recebida NE|8000|C|15/05 18:38 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-15|01 SALÁRIO / ENCARGOS|100|D|15/05 18:39 THIAGO SOARES DA SILVA - DIÁRIA TERCEIRO
+2026-05-15|06 CUSTOS ADM|239.94|D|VIVO PE - CONTA TELEFÔNICA (06)
+2026-05-15|06 CUSTOS ADM|1621|D|EAS TECH SOLUTION LTDA - SISTEMA TMS LOG (06)
+2026-05-15|06 CUSTOS ADM|2668|D|VERTTICE GERENCIAMENTO DE RISC - GERENCIADORA DE RISCO
+2026-05-15|03 IMPOSTOS|4982.4|D|SEFAZ PE 193 E-FISCO - ICMS MENSAL (03)
+2026-05-18|02 OP. / TAR. BANCÁRIAS|1|D|Tar. agrupadas - ocorrencia 15/05/2026 (02)
+2026-05-18|02 OP. / TAR. BANCÁRIAS|2|D|Tar. agrupadas - ocorrencia 18/05/2026 (02)
+2026-05-18|01 SALÁRIO / ENCARGOS|6|D|18/05 17:04 Abimael Raimundo Leonardo - REEMBOLSO (01)
+2026-05-18|01 SALÁRIO / ENCARGOS|35|D|18/05 17:04 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-19|02 OP. / TAR. BANCÁRIAS|3.36|D|Tar. agrupadas - ocorrencia 19/05/2026 (02)
+2026-05-19|01 SALÁRIO / ENCARGOS|140|D|19/05 18:10 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-19|01 SALÁRIO / ENCARGOS|200|D|19/05 18:10 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-20|Transferência recebida NE|100000|C|20/05 17:27 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-20|Transferência recebida NE|1000|C|20/05 19:12 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-20|02 OP. / TAR. BANCÁRIAS|1|D|Tar. agrupadas - ocorrencia 20/05/2026 (02)
+2026-05-20|02 OP. / TAR. BANCÁRIAS|62.7|D|Cobrança referente 20/05/2026 (02)
+2026-05-20|01 SALÁRIO / ENCARGOS|70|D|20/05 17:28 JOSE RODRIGUES DE CARVALH - REEMBOLSO (01)
+2026-05-20|01 SALÁRIO / ENCARGOS|300|D|20/05 18:32 FLASH APP - AJUDA DE CUSTO (01)
+2026-05-20|01 SALÁRIO / ENCARGOS|639.26|D|20/05 17:28 CEF MATRIZ - GUIA FGTS CONSIGNADO (01)
+2026-05-20|01 SALÁRIO / ENCARGOS|10851.15|D|20/05 17:28 CEF MATRIZ - GUIA FGTS MENSAL (01)
+2026-05-20|01 SALÁRIO / ENCARGOS|40856.43|D|RFB-DARF CODIGO DE BARRAS - GUIA INSS MENSAL (01)
+2026-05-20|01 SALÁRIO / ENCARGOS|47463|D|SALÁRIO (01)
+2026-05-21|Transferência recebida NE|100|C|21/05 18:37 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-21|02 OP. / TAR. BANCÁRIAS|8.94|D|Tar. agrupadas - ocorrencia 21/05/2026 (02)
+2026-05-21|01 SALÁRIO / ENCARGOS|60|D|21/05 18:38 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-21|01 SALÁRIO / ENCARGOS|100|D|21/05 18:38 ROGERIO GOMES FERRAZ - DIÁRIA TERCEIRO
+2026-05-21|01 SALÁRIO / ENCARGOS|100|D|21/05 18:38 THIAGO SOARES DA SILVA - DIÁRIA TERCEIRO
+2026-05-21|01 SALÁRIO / ENCARGOS|600|D|21/05 18:38 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-22|Transferência recebida NE|10000|C|22/05 17:38 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-22|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 22/05/2026 (02)
+2026-05-22|01 SALÁRIO / ENCARGOS|621.17|D|22/05 17:59 CEF MATRIZ - GUIA RESCISÃO (01)
+2026-05-22|06 CUSTOS ADM|673.74|D|ALLIANZ SEGUROS S/A - SEGURADORA (06)
+2026-05-22|06 CUSTOS ADM|673.74|D|ALLIANZ SEGUROS S/A - SEGURADORA (06)
+2026-05-22|01 SALÁRIO / ENCARGOS|3058.46|D|RESCISÃO (01)
+2026-05-25|Transferência recebida NE|10000|C|25/05 18:12 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-05-25|03 IMPOSTOS|3626.23|D|RFB-DARF CODIGO DE BARRAS - PIS/ COFINS (03)
+2026-05-26|Transferência recebida|1982|C|26/05 09:59 65697260000103 REPOM S.A
+2026-05-26|01 SALÁRIO / ENCARGOS|74.53|D|26/05 15:42 JOSE RODRIGUES DE CARVALH - REEMBOLSO (01)
+2026-05-26|02 OP. / TAR. BANCÁRIAS|76.13|D|Tar. agrupadas - ocorrencia 26/05/2026 (02)
+2026-05-26|01 SALÁRIO / ENCARGOS|110|D|26/05 15:43 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|150|D|26/05 15:42 Israel Danilo Ribeiro de - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|150|D|26/05 15:43 Eduardo Francisco de Barr - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|225|D|26/05 15:41 FELIPE NASCIMENTO DE OLIV - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|225|D|26/05 15:42 ALEXANDRE GOMES DA COSTA - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|225|D|26/05 15:43 JOSE AMARO FERREIRA DOS S - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|225|D|26/05 15:43 Rafael Thiago das neves m - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|225|D|26/05 15:43 João Sebastião dos Anjos - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|250|D|26/05 15:42 JONATHAN MANOEL JOSE DA S - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|250|D|26/05 15:43 Everton Felipe de Lima As - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|250|D|26/05 15:44 Luiz André Lima de Araújo - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|250|D|26/05 15:44 ADRIAN HENRIQUE FELIX DOS - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:41 ISAIAS BATISTA DA SILVA - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:42 WEDSON FELIPE DOS SANTOS - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:42 Jerffeson Félix dos Santo - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:42 MANOEL DE ARAUJO LIRA BEZ - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:42 Abimael Raimundo Leonardo - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:42 Claudio Antonio Dos Santo - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:43 DAVI VANDERLEI CUNHA - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:43 OZEAS BATISTA DE ARAUJO - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:43 Bruno Vital Pereira Duart - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|300|D|26/05 15:43 EDIVALDO FRANCISCO DO NAS - DIÁRIA (01)
+2026-05-26|01 SALÁRIO / ENCARGOS|390.46|D|26/05 15:42 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-26|06 CUSTOS ADM|396|D|JUCEPE ARRECADACAO - PG TROCA DE ENDEREÇO (06)
+2026-05-26|01 SALÁRIO / ENCARGOS|911.61|D|26/05 15:41 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-05-26|04 OP. NLG|3500|D|26/05 15:41 Robison Silva Ramos - OPERAÇÃO DE FRETE (04)
+2026-05-27|Transferência recebida|198|C|27/05 15:33 65697260000103 REPOM S.A
+2026-05-27|Transferência recebida|135.39|C|27/05 21:11 65697260000103 REPOM S.A
+2026-05-27|02 OP. / TAR. BANCÁRIAS|12.13|D|Tar. agrupadas - ocorrencia 27/05/2026 (02)
+2026-05-27|01 SALÁRIO / ENCARGOS|170|D|27/05 16:55 FLASH APP - AJUDA DE CUSTO (01)
+2026-05-27|01 SALÁRIO / ENCARGOS|216|D|27/05 16:55 JAIR FELIX DA SILVA - REEMBOLSO (01)
+2026-05-27|04 OP. NLG|1500|D|27/05 16:55 Robison Silva Ramos - OPERAÇÃO DE FRETE (04)
+2026-05-28|02 OP. / TAR. BANCÁRIAS|2.37|D|Tar. agrupadas - ocorrencia 28/05/2026 (02)
+2026-05-28|01 SALÁRIO / ENCARGOS|240|D|28/05 16:58 THIAGO SOARES DA SILVA - DIÁRIA TERCEIRO
+2026-05-29|Transferência recebida|630|C|35028430000104 Alves E San - RECEITA DE DESCARGA
+2026-06-01|Transferência recebida NE|2500|C|01/06 16:41 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-01|01 SALÁRIO / ENCARGOS|23|D|01/06 16:42 FABIO JOSE SOTERO NUNES - REEMBOLSO (01)
+2026-06-01|04 OP. NLG|3500|D|01/06 16:42 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-06-02|Transferência recebida NE|48000|C|02/06 19:05 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-02|01 SALÁRIO / ENCARGOS|130|D|02/06 19:06 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-02|01 SALÁRIO / ENCARGOS|620|D|02/06 19:06 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-02|01 SALÁRIO / ENCARGOS|46929.5|D|02/06 19:06 FLASH APP - V.A. E V.T. JUNHO (01)
+2026-06-05|Transferência recebida NE|7000|C|05/06 18:18 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-05|Transferência recebida NE|8000|C|05/06 19:00 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-04|Transferência recebida NE|12000|C|04/06 19:45 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-05|Transferência recebida NE|71000|C|05/06 18:14 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-05|02 OP. / TAR. BANCÁRIAS|51.7|D|Cobrança referente 05/06/2026 (02)
+2026-06-05|03 IMPOSTOS|150|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-06-05|03 IMPOSTOS|150|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-06-05|03 IMPOSTOS|150|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-06-05|03 IMPOSTOS|204|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-06-05|01 SALÁRIO / ENCARGOS|264.02|D|04/06 19:46 MARCOS VINICIUS DE ANDRAD - REEMBOLSO
+2026-06-05|03 IMPOSTOS|816|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-06-05|03 IMPOSTOS|816|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-06-05|03 IMPOSTOS|816|D|GNRE ON LINE SEFAZ BA - 03 IMPOSTO ICMS GNRE (03)
+2026-06-05|04 OP. NLG|2280|D|05/06 18:16 JOSEMARIO SILVERIO SILVA - OPERAÇÃO DE FRETE
+2026-06-05|04 OP. NLG|2660|D|05/06 10:18 JEAN CARIBE BASTOS - OPERAÇÃO DE FRETE (04)
+2026-06-05|04 OP. NLG|3500|D|04/06 19:46 TRANSPORTES FADANNI - OPERAÇÃO DE FRETE (04)
+2026-06-05|04 OP. NLG|3570|D|04/06 19:46 EXCELENCIA PRESTACAO DE S - OPERAÇÃO DE FRETE
+2026-06-05|04 OP. NLG|3570|D|05/06 18:16 VILDOMAR FONSECA RUBEN - OPERAÇÃO DE FRETE
+2026-06-05|01 SALÁRIO / ENCARGOS|78871.22|D|SALÁRIO (01)
+2026-06-08|Transferência recebida NE|9000|C|08/06 18:38 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-08|02 OP. / TAR. BANCÁRIAS|34.98|D|Tar. agrupadas - ocorrencia 08/06/2026 (02)
+2026-06-08|01 SALÁRIO / ENCARGOS|421.46|D|08/06 12:05 TAMIRES SANTANA DE OLIVEI - PENSÃO ALIMENTICIA (01)
+2026-06-08|04 OP. NLG|504|D|08/06 18:39 EXCELENCIA PRESTACAO DE S - OPERAÇÃO DE FRETE
+2026-06-08|04 OP. NLG|1530|D|08/06 18:39 EXCELENCIA PRESTACAO DE S - OPERAÇÃO DE FRETE
+2026-06-08|04 OP. NLG|3570|D|08/06 18:39 MATHEUS DE MACEDO FONSECA - OPERAÇÃO DE FRETE
+2026-06-08|04 OP. NLG|3570|D|08/06 18:39 COMTRAP - OPERAÇÃO DE FRETE (04)
+2026-06-09|Transferência recebida NE|10500|C|09/06 18:47 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-09|01 SALÁRIO / ENCARGOS|65|D|09/06 18:47 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-06-09|01 SALÁRIO / ENCARGOS|66|D|09/06 18:47 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-09|01 SALÁRIO / ENCARGOS|160|D|09/06 18:47 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-09|01 SALÁRIO / ENCARGOS|188|D|09/06 18:47 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-09|04 OP. NLG|222|D|09/06 18:47 JEAN CARIBE BASTOS - OPERAÇÃO DE FRETE (04)
+2026-06-09|04 OP. NLG|769.56|D|09/06 18:47 VILDOMAR FONSECA RUBEN - OPERAÇÃO DE FRETE
+2026-06-09|04 OP. NLG|1140|D|09/06 18:47 JEAN CARIBE BASTOS - OPERAÇÃO DE FRETE (04)
+2026-06-09|04 OP. NLG|1530|D|09/06 18:47 VILDOMAR FONSECA RUBEN - OPERAÇÃO DE FRETE
+2026-06-09|04 OP. NLG|3640|D|09/06 18:47 VILDOMAR FONSECA RUBEN - OPERAÇÃO DE FRETE
+2026-06-10|Transferência recebida NE|5000|C|10/06 17:53 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-10|02 OP. / TAR. BANCÁRIAS|33.05|D|Tar. agrupadas - ocorrencia 09/06/2026 (02)
+2026-06-10|02 OP. / TAR. BANCÁRIAS|46.07|D|Tar. agrupadas - ocorrencia 10/06/2026 (02)
+2026-06-10|06 CUSTOS ADM|76|D|DORT NORDESTE - EXAME ADM (06)
+2026-06-10|04 OP. NLG|500|D|10/06 17:54 TRANSPORTES FADANNI - OPERAÇÃO DE FRETE (04)
+2026-06-10|04 OP. NLG|513|D|10/06 17:54 COMTRAP - OPERAÇÃO DE FRETE (04)
+2026-06-10|04 OP. NLG|612|D|10/06 17:54 TRANSPORTES FADANNI - OPERAÇÃO DE FRETE (04)
+2026-06-10|04 OP. NLG|1500|D|10/06 17:54 TRANSPORTES FADANNI - OPERAÇÃO DE FRETE (04)
+2026-06-10|04 OP. NLG|1530|D|10/06 17:54 COMTRAP - OPERAÇÃO DE FRETE (04)
+2026-06-10|04 OP. NLG|2450|D|10/06 12:16 NICOLAS VARGENS DE OLIVEI - OPERAÇÃO DE FRETE
+2026-06-11|Transferência recebida NE|6000|C|11/06 09:25 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-11|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 11/06/2026 (02)
+2026-06-11|02 OP. / TAR. BANCÁRIAS|29.83|D|Tar. agrupadas - ocorrencia 11/06/2026 (02)
+2026-06-11|06 CUSTOS ADM|39.96|D|HOSTGATOR BRASIL LTDA - HOSPEDAGEM DE EMAIL (06)
+2026-06-11|01 SALÁRIO / ENCARGOS|53.98|D|11/06 19:08 RITA DE CASSIA DOS SANTOS - REEMBOLSO (01)
+2026-06-11|04 OP. NLG|216|D|11/06 19:08 NICOLAS VARGENS DE OLIVEI - OPERAÇÃO DE FRETE
+2026-06-11|01 SALÁRIO / ENCARGOS|228|D|11/06 19:08 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-11|01 SALÁRIO / ENCARGOS|418.14|D|11/06 09:26 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-06-11|04 OP. NLG|450|D|11/06 19:08 MATHEUS DE MACEDO FONSECA - OPERAÇÃO DE FRETE
+2026-06-11|06 CUSTOS ADM|812|D|11/06 19:08 PORTAL RNTRC - INCLUSÃO VEÍCULOS ANTT NLG
+2026-06-11|04 OP. NLG|1050|D|11/06 19:08 NICOLAS VARGENS DE OLIVEI - OPERAÇÃO DE FRETE
+2026-06-11|01 SALÁRIO / ENCARGOS|1144.56|D|RESCISÃO (01)
+2026-06-11|04 OP. NLG|1530|D|11/06 19:08 MATHEUS DE MACEDO FONSECA - OPERAÇÃO DE FRETE
+2026-06-12|Transferência recebida NE|5000|C|12/06 16:59 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-12|01 SALÁRIO / ENCARGOS|16.11|D|12/06 17:01 GILVANCY ALVES DE SOUZA - REEMBOLSO (01)
+2026-06-12|02 OP. / TAR. BANCÁRIAS|16.51|D|Tar. agrupadas - ocorrencia 12/06/2026 (02)
+2026-06-12|01 SALÁRIO / ENCARGOS|543.52|D|12/06 17:01 FLASH APP (01)
+2026-06-12|04 OP. NLG|557.12|D|12/06 17:01 VILDOMAR FONSECA RUBEN - OPERAÇÃO DE FRETE
+2026-06-12|01 SALÁRIO / ENCARGOS|783.71|D|12/06 17:01 FLASH APP (01)
+2026-06-12|04 OP. NLG|1560|D|12/06 17:01 VILDOMAR FONSECA RUBEN - OPERAÇÃO DE FRETE
+2026-06-15|Transferência recebida NE|7000|C|15/06 17:19 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-15|02 OP. / TAR. BANCÁRIAS|14.45|D|Tar. agrupadas - ocorrencia 15/06/2026 (02)
+2026-06-15|06 CUSTOS ADM|263.93|D|VIVO PE - CONTA TELEFÔNICA (06)
+2026-06-15|01 SALÁRIO / ENCARGOS|312|D|15/06 17:22 FLASH APP - AJUDA DE CUSTO GALEGO (01)
+2026-06-15|06 CUSTOS ADM|362|D|15/06 17:22 PORTAL RNTRC - MUDANÇA DE ENDEREÇO (06)
+2026-06-15|01 SALÁRIO / ENCARGOS|450|D|15/06 17:22 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-15|06 CUSTOS ADM|615|D|15/06 17:22 VERTICE GERENCIAMENTO DE - GERENCIADORA DE RISCO
+2026-06-15|03 IMPOSTOS|1612.8|D|SEFAZ PE 193 E-FISCO - ICMS MENSAL (03)
+2026-06-15|06 CUSTOS ADM|1621|D|EAS TECH SOLUTION LTDA - SISTEMA TMS LOG (06)
+2026-06-15|04 OP. NLG|3500|D|15/06 17:22 WELLINGTON DE JESUS LIMA - OPERAÇÃO DE FRETE
+2026-06-17|Transferência recebida NE|10000|C|17/06 18:39 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-17|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 17/06/2026 (02)
+2026-06-17|02 OP. / TAR. BANCÁRIAS|11|D|Tar. agrupadas - ocorrencia 17/06/2026 (02)
+2026-06-17|01 SALÁRIO / ENCARGOS|52|D|17/06 18:41 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-06-17|01 SALÁRIO / ENCARGOS|990.42|D|17/06 18:41 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-06-17|04 OP. NLG|3500|D|17/06 18:41 TR MANUELLA - OPERAÇÃO DE FRETE (04)
+2026-06-17|01 SALÁRIO / ENCARGOS|4880.2|D|RESCISÃO (01)
+2026-06-18|Transferência recebida NE|55000|C|18/06 18:20 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-18|02 OP. / TAR. BANCÁRIAS|18.08|D|Tar. agrupadas - ocorrencia 18/06/2026 (02)
+2026-06-18|01 SALÁRIO / ENCARGOS|51|D|18/06 18:21 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-06-18|04 OP. NLG|216|D|18/06 18:21 WELLINGTON DE JESUS LIMA - OPERAÇÃO DE FRETE
+2026-06-18|04 OP. NLG|500|D|18/06 18:21 WELLINGTON DE JESUS LIMA - OPERAÇÃO DE FRETE
+2026-06-18|04 OP. NLG|1500|D|18/06 18:21 WELLINGTON DE JESUS LIMA - OPERAÇÃO DE FRETE
+2026-06-19|Transferência recebida NE|52000|C|19/06 18:55 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-19|01 SALÁRIO / ENCARGOS|36.4|D|19/06 19:11 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-06-19|02 OP. / TAR. BANCÁRIAS|62.7|D|Cobrança referente 19/06/2026 (02)
+2026-06-19|04 OP. NLG|318|D|19/06 19:11 ROBISON SILVA RAMOS - OPERAÇÃO DE FRETE (04)
+2026-06-19|01 SALÁRIO / ENCARGOS|441|D|19/06 19:11 GILVANCY ALVES DE SOUZA - AJUDA DE CUSTO (01)
+2026-06-19|01 SALÁRIO / ENCARGOS|639.26|D|19/06 19:11 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-06-19|04 OP. NLG|1500|D|19/06 19:11 ROBISON SILVA RAMOS - OPERAÇÃO DE FRETE (04)
+2026-06-19|01 SALÁRIO / ENCARGOS|11523.46|D|19/06 19:11 CEF MATRIZ - GUIA FGTS MENSAL (01)
+2026-06-19|01 SALÁRIO / ENCARGOS|40578.69|D|RFB-DARF CODIGO DE BARRAS - GUIA INSS MENSAL (01)
+2026-06-19|01 SALÁRIO / ENCARGOS|49079|D|SALÁRIO (01)
+2026-06-22|Transferência recebida NE|3000|C|22/06 17:22 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-22|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 22/06/2026 (02)
+2026-06-22|02 OP. / TAR. BANCÁRIAS|5.36|D|Tar. agrupadas - ocorrencia 19/06/2026 (02)
+2026-06-22|01 SALÁRIO / ENCARGOS|16.5|D|22/06 17:22 DAVI VANDERLEI CUNHA - REEMBOLSO (01)
+2026-06-22|02 OP. / TAR. BANCÁRIAS|18.8|D|Tar. agrupadas - ocorrencia 22/06/2026 (02)
+2026-06-22|01 SALÁRIO / ENCARGOS|20.3|D|22/06 17:22 Rafael Thiago das neves m - REEMBOLSO (01)
+2026-06-22|01 SALÁRIO / ENCARGOS|80|D|22/06 17:22 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-22|01 SALÁRIO / ENCARGOS|378|D|22/06 17:22 FLASH APP - AJUDA DE CUSTO ROBSON (01)
+2026-06-22|01 SALÁRIO / ENCARGOS|500|D|BÔNUS JOSE RODRIGUES (01)
+2026-06-22|06 CUSTOS ADM|644.28|D|ALLIANZ SEGUROS S A - SEGURADORA (06)
+2026-06-22|06 CUSTOS ADM|644.28|D|ALLIANZ SEGUROS S A - SEGURADORA (06)
+2026-06-22|01 SALÁRIO / ENCARGOS|696.77|D|22/06 17:22 IVAN PEREIRA DA SILVA FIL - REAJUSTE SALÁRIO
+2026-06-22|06 CUSTOS ADM|900|D|22/06 17:22 Jefferson Roberto de Aqui - MANUTENÇÃO DE EQUIPAMENTO
+2026-06-25|Transferência recebida|175|C|25/06 11:16 33092209826 Adriano de Sou - RECEITA DE DESCARGA
+2026-06-25|Transferência recebida NE|1000|C|25/06 17:25 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-25|02 OP. / TAR. BANCÁRIAS|3|D|Tar. agrupadas - ocorrencia 25/06/2026 (02)
+2026-06-25|01 SALÁRIO / ENCARGOS|58|D|25/06 17:26 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-06-25|01 SALÁRIO / ENCARGOS|60|D|25/06 17:26 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-25|01 SALÁRIO / ENCARGOS|100|D|25/06 17:26 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-25|03 IMPOSTOS|1196.62|D|RFB-DARF CODIGO DE BARRAS - PIS/ COFINS (03)
+2026-06-26|Transferência recebida NE|3000|C|26/06 17:10 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-26|02 OP. / TAR. BANCÁRIAS|14.46|D|Tar. agrupadas - ocorrencia 26/06/2026 (02)
+2026-06-26|01 SALÁRIO / ENCARGOS|49|D|26/06 17:13 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-06-26|01 SALÁRIO / ENCARGOS|350|D|26/06 17:11 JAIR FELIX DA SILVA - REEMBOLSO (01)
+2026-06-26|04 OP. NLG|2240|D|26/06 17:20 CICERO BERNADINO DE SENA - OPERAÇÃO DE FRETE
+2026-06-29|Transferência recebida NE|7000|C|29/06 16:43 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-29|02 OP. / TAR. BANCÁRIAS|18.37|D|Tar. agrupadas - ocorrencia 29/06/2026 (02)
+2026-06-29|01 SALÁRIO / ENCARGOS|30|D|29/06 16:44 WEDSON FELIPE DOS SANTOS - REEMBOLSO (01)
+2026-06-29|01 SALÁRIO / ENCARGOS|45.1|D|29/06 16:44 EDNALDO LAURENTINO DE OLI - REEMBOLSO (01)
+2026-06-29|01 SALÁRIO / ENCARGOS|160|D|29/06 16:44 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-06-29|04 OP. NLG|484.4|D|29/06 16:44 CICERO BERNADINO DE SENA - OPERAÇÃO DE FRETE
+2026-06-29|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS GNRE PB (03)
+2026-06-29|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS GNRE PB (03)
+2026-06-29|04 OP. NLG|2660|D|29/06 16:44 GESUALDO JOSE PEREIRA FIL - OPERAÇÃO DE FRETE
+2026-06-29|04 OP. NLG|2724.4|D|29/06 16:44 CICERO BERNADINO DE SENA - OPERAÇÃO DE FRETE
+2026-06-30|Transferência recebida NE|3500|C|30/06 19:17 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-06-30|01 SALÁRIO / ENCARGOS|23.3|D|30/06 19:18 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-06-30|01 SALÁRIO / ENCARGOS|30|D|30/06 19:18 WEDSON FELIPE DOS SANTOS - REEMBOLSO (01)
+2026-06-30|01 SALÁRIO / ENCARGOS|51.68|D|30/06 19:18 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-06-30|01 SALÁRIO / ENCARGOS|100|D|30/06 19:18 THIAGO SOARES DA SILVA - DIÁRIA TERCEIRO
+2026-06-30|01 SALÁRIO / ENCARGOS|100|D|30/06 19:18 ELDER LOPES DE LIMA - DIÁRIA TERCEIRO
+2026-06-30|01 SALÁRIO / ENCARGOS|150|D|30/06 19:18 ALEXSANDRO FERREIRA NERY - DIÁRIA TERCEIRO
+2026-06-30|03 IMPOSTOS|504|D|GNRE ON LINE - ICMS GNRE PB (03)
+2026-06-30|04 OP. NLG|2724|D|30/06 19:18 CICERO BERNADINO DE SENA - OPERAÇÃO DE FRETE
+2026-07-01|02 OP. / TAR. BANCÁRIAS|16.48|D|Tar. agrupadas - ocorrencia 30/06/2026 (02)
+2026-07-02|Transferência recebida NE|49000|C|02/07 19:14 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-02|Transferência recebida NE|5000|C|02/07 19:33 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-02|01 SALÁRIO / ENCARGOS|30.75|D|02/07 19:54 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-07-02|01 SALÁRIO / ENCARGOS|51.68|D|02/07 19:54 RITA DE CASSIA DOS SANTOS - REEMBOLSO (01)
+2026-07-02|01 SALÁRIO / ENCARGOS|66.94|D|02/07 19:54 Beatriz Marilia Correia d - REEMBOLSO (01)
+2026-07-02|01 SALÁRIO / ENCARGOS|88.72|D|02/07 19:54 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-02|01 SALÁRIO / ENCARGOS|100|D|02/07 19:54 ELDER LOPES DE LIMA - DIÁRIA TERCEIRO
+2026-07-02|04 OP. NLG|105.6|D|02/07 19:54 GESUALDO JOSE PEREIRA FIL - OPERAÇÃO DE FRETE
+2026-07-02|06 CUSTOS ADM|818.5|D|FLASH TEC E PAGAMENTOS LTDA. - UTILIZAÇÃO SISTEMA FLASH
+2026-07-02|04 OP. NLG|1037.33|D|02/07 19:54 GESUALDO JOSE PEREIRA FIL - OPERAÇÃO DE FRETE
+2026-07-02|01 SALÁRIO / ENCARGOS|49671.5|D|02/07 19:55 FLASH APP - V.A. V.T. JULHO (01)
+2026-07-03|Transferência recebida NE|5000|C|03/07 20:56 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-03|02 OP. / TAR. BANCÁRIAS|1|D|Tar. agrupadas - ocorrencia 03/07/2026 (02)
+2026-07-03|01 SALÁRIO / ENCARGOS|100|D|03/07 20:56 Ruan Carlos Vicente da Si - DIÁRIA TERCEIRO
+2026-07-03|01 SALÁRIO / ENCARGOS|100|D|03/07 20:56 DAVID ALVES DOS SANTOS - DIÁRIA TERCEIRO
+2026-07-03|01 SALÁRIO / ENCARGOS|100|D|03/07 20:56 Joas Felix dos Santos - DIÁRIA TERCEIRO
+2026-07-03|01 SALÁRIO / ENCARGOS|300|D|03/07 20:56 THIAGO SOARES DA SILVA - DIÁRIA TERCEIRO
+2026-07-03|05 OP. NORDESTE|550|D|03/07 20:56 CLAUDIO LUIS GOMES - OPERAÇÃO DE FRETE (05)
+2026-07-03|05 OP. NORDESTE|1750|D|03/07 20:56 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-07-03|05 OP. NORDESTE|1883|D|03/07 20:56 PEDRO ANTONIO DE CASTRO - OPERAÇÃO DE FRETE
+2026-07-06|Transferência recebida NE|78200|C|06/07 19:46 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-06|Transferência recebida NE|18100|C|06/07 19:49 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-06|Transferência recebida NE|6000|C|06/07 19:58 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-06|02 OP. / TAR. BANCÁRIAS|41.87|D|Tar. agrupadas - ocorrencia 06/07/2026
+2026-07-06|02 OP. / TAR. BANCÁRIAS|51.7|D|Cobrança referente 06/07/2026
+2026-07-06|01 SALÁRIO / ENCARGOS|113.68|D|06/07 19:59 CEF MATRIZ - FGTS RESCISÓRIO (01)
+2026-07-06|01 SALÁRIO / ENCARGOS|200|D|06/07 19:59 ELDER LOPES DE LIMA - DIÁRIA TERCEIRO
+2026-07-06|01 SALÁRIO / ENCARGOS|450|D|06/07 19:59 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-06|05 OP. NORDESTE|550|D|06/07 19:59 AYLANA FUJARO BEZERRA LEI - OPERAÇÃO DE FRETE
+2026-07-06|01 SALÁRIO / ENCARGOS|812|D|06/07 19:59 PORTAL RNTRC - INCLUSÃO PLACA ANTT (01)
+2026-07-06|01 SALÁRIO / ENCARGOS|1060.59|D|06/07 19:59 GILVANCY ALVES DE SOUZA - RESCISÃO (01)
+2026-07-06|01 SALÁRIO / ENCARGOS|1422.22|D|06/07 19:59 TAMIRES SANTANA DE OLIVEI - PENSÃO ALIMENTICIA FUNC
+2026-07-06|04 OP. NLG|3800|D|06/07 19:59 JOSE WILDSON GOMES DE ALB - OPERAÇÃO DE FRETE
+2026-07-06|01 SALÁRIO / ENCARGOS|18097.82|D|RESCISÃO (01)
+2026-07-06|01 SALÁRIO / ENCARGOS|78133.42|D|SALÁRIO (01)
+2026-07-07|Transferência recebida NE|10000|C|07/07 19:06 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-07|02 OP. / TAR. BANCÁRIAS|39.43|D|Tar. agrupadas - ocorrencia 07/07/2026 (02)
+2026-07-07|01 SALÁRIO / ENCARGOS|43.8|D|07/07 19:10 RUANY ANDRESSA RAMOS - REEMBOLSO (01)
+2026-07-07|01 SALÁRIO / ENCARGOS|45|D|07/07 19:10 ALEXSANDRO FERREIRA NERY - REEMBOLSO (01)
+2026-07-07|01 SALÁRIO / ENCARGOS|45|D|07/07 19:10 RUANY ANDRESSA RAMOS - REEMBOLSO (01)
+2026-07-07|01 SALÁRIO / ENCARGOS|93.52|D|07/07 19:10 Luis Guilherme Pessoa De - REEMBOLSO (01)
+2026-07-07|01 SALÁRIO / ENCARGOS|100|D|07/07 19:10 ELDER LOPES DE LIMA - DIÁRIA TERCEIRO
+2026-07-07|01 SALÁRIO / ENCARGOS|100|D|07/07 19:10 CLEITON MANOEL DE MELO - DIÁRIA TERCEIRO
+2026-07-07|01 SALÁRIO / ENCARGOS|100|D|07/07 19:10 Wesley Da Silva Ribeiro - DIÁRIA TERCEIRO
+2026-07-07|01 SALÁRIO / ENCARGOS|100|D|07/07 19:10 Daniel Ferreira da silva - DIÁRIA TERCEIRO
+2026-07-07|01 SALÁRIO / ENCARGOS|100|D|07/07 19:10 Israel Danilo Ribeiro de - DIÁRIA TERCEIRO
+2026-07-07|01 SALÁRIO / ENCARGOS|130|D|07/07 19:10 Ruan Carlos Vicente da Si - DIÁRIA TERCEIRO
+2026-07-07|06 CUSTOS ADM|925|D|07/07 19:10 SOUSA ACESSORIOS AUTOMOTI - MANUTENÇÃO EQUIPAMENTOS
+2026-07-07|04 OP. NLG|1260|D|07/07 19:10 GEORGE BEZERRA JACO - OPERAÇÃO DE FRETE (04)
+2026-07-07|04 OP. NLG|2940|D|07/07 19:10 GEORGE BEZERRA JACO - OPERAÇÃO DE FRETE (04)
+2026-07-08|Dep dinheiro banco|245|C|08/07 09:42 SOP.CID.UNIVERS - RECEITA DESCARGA
+2026-07-08|02 OP. / TAR. BANCÁRIAS|11.02|D|Tar. agrupadas - ocorrencia 08/07/2026 (02)
+2026-07-08|01 SALÁRIO / ENCARGOS|104|D|08/07 11:37 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-08|04 OP. NLG|3350|D|08/07 11:37 LUIZ PAULO MATOS - OPERAÇÃO DE FRETE (04)
+2026-07-09|Transferência recebida NE|8500|C|09/07 19:56 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-09|02 OP. / TAR. BANCÁRIAS|19.57|D|Tar. agrupadas - ocorrencia 09/07/2026 (02)
+2026-07-09|04 OP. NLG|61.6|D|09/07 19:57 LUIZ PAULO MATOS - OPERAÇÃO DE FRETE (04)
+2026-07-09|01 SALÁRIO / ENCARGOS|100|D|09/07 19:57 Israel Danilo Ribeiro de - DIÁRIA TERCEIRO
+2026-07-09|01 SALÁRIO / ENCARGOS|100|D|09/07 19:57 Rodrigo Oliveira de Melo - DIÁRIA TERCEIRO
+2026-07-09|01 SALÁRIO / ENCARGOS|100|D|09/07 19:57 ELDER LOPES DE LIMA - DIÁRIA TERCEIRO
+2026-07-09|01 SALÁRIO / ENCARGOS|100|D|09/07 19:57 RUAN CARLOS VICENTE DA SI - DIÁRIA TERCEIRO
+2026-07-09|01 SALÁRIO / ENCARGOS|100|D|09/07 19:57 Daniel Ferreira da silva - DIÁRIA TERCEIRO
+2026-07-09|01 SALÁRIO / ENCARGOS|100|D|09/07 19:57 VINICIUS VENANCIO DA SILV - DIÁRIA TERCEIRO
+2026-07-09|01 SALÁRIO / ENCARGOS|260|D|09/07 19:57 FABIO JOSE SOTERO NUNES - REEMBOLSO (01)
+2026-07-09|01 SALÁRIO / ENCARGOS|616.59|D|09/07 19:57 CEF MATRIZ - FGTS RESCISÓRIO (01)
+2026-07-09|01 SALÁRIO / ENCARGOS|978.45|D|09/07 19:57 CEF MATRIZ - FGTS RESCISÓRIO (01)
+2026-07-09|04 OP. NLG|1515|D|09/07 19:57 LUIZ PAULO MATOS - OPERAÇÃO DE FRETE (04)
+2026-07-10|Transferência recebida NE|30000|C|10/07 19:44 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-10|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 10/07/2026 (02)
+2026-07-10|06 CUSTOS ADM|39.96|D|HOSTGATOR BRASIL LTDA - HOSPEDAGEM DE EMAIL (06)
+2026-07-10|02 OP. / TAR. BANCÁRIAS|86.68|D|Tar. agrupadas - ocorrencia 10/07/2026 (02)
+2026-07-10|01 SALÁRIO / ENCARGOS|100|D|10/07 19:47 ELDER LOPES DE LIMA - DIÁRIA TERCEIRO
+2026-07-10|01 SALÁRIO / ENCARGOS|100|D|10/07 19:47 Rodrigo Oliveira de Melo - DIÁRIA TERCEIRO
+2026-07-10|01 SALÁRIO / ENCARGOS|100|D|10/07 19:47 RUAN CARLOS VICENTE DA SI - DIÁRIA TERCEIRO
+2026-07-10|01 SALÁRIO / ENCARGOS|100|D|10/07 19:47 Daniel Ferreira da silva - DIÁRIA TERCEIRO
+2026-07-10|01 SALÁRIO / ENCARGOS|100|D|10/07 19:47 Wesley Da Silva Ribeiro - DIÁRIA TERCEIRO
+2026-07-10|01 SALÁRIO / ENCARGOS|121.74|D|10/07 19:47 JOSE EDEILSON DA SILVA AS - DIÁRIA TERCEIRO
+2026-07-10|06 CUSTOS ADM|217.4|D|DORT NORDESTE - EXAMES ADM (06)
+2026-07-10|06 CUSTOS ADM|480|D|10/07 15:11 GRAVATINHA GAS 24H LTDA - MANUTENÇÃO DE EQUIPAMENTOS
+2026-07-10|05 OP. NORDESTE|700|D|10/07 19:47 NICODEMOS RODRIGUES DA SI - OPERAÇÃO DE FRETE
+2026-07-10|01 SALÁRIO / ENCARGOS|952.51|D|10/07 19:47 CEF MATRIZ - FGTS RESCISÓRIO (01)
+2026-07-10|01 SALÁRIO / ENCARGOS|1003.79|D|10/07 19:47 CEF MATRIZ - FGTS RESCISÓRIO (01)
+2026-07-10|01 SALÁRIO / ENCARGOS|1035.81|D|10/07 19:47 CEF MATRIZ - FGTS RESCISÓRIO (01)
+2026-07-10|05 OP. NORDESTE|1200|D|10/07 19:47 55.340.545 JOSE CARLOS DA - OPERAÇÃO DE FRETE
+2026-07-10|04 OP. NLG|1500|D|10/07 19:47 ROBISON SILVA RAMOS - OPERAÇÃO DE FRETE (04)
+2026-07-10|05 OP. NORDESTE|1800|D|10/07 19:47 JOSIAS VITAL DA SILVA - OPERAÇÃO DE FRETE (05)
+2026-07-10|05 OP. NORDESTE|2180|D|10/07 19:47 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE (05)
+2026-07-10|05 OP. NORDESTE|2230|D|10/07 19:47 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-07-10|05 OP. NORDESTE|2250|D|10/07 19:47 CLAUDIO LUIS GOMES - OPERAÇÃO DE FRETE (05)
+2026-07-10|05 OP. NORDESTE|2250|D|10/07 19:47 SILVANA MARIA DA SILVA - OPERAÇÃO DE FRETE
+2026-07-10|05 OP. NORDESTE|2590|D|10/07 19:47 PEDRO ANTONIO DE CASTRO - OPERAÇÃO DE FRETE
+2026-07-10|04 OP. NLG|3500|D|10/07 19:47 ROBISON SILVA RAMOS - OPERAÇÃO DE FRETE (04)
+2026-07-10|04 OP. NLG|3500|D|10/07 19:47 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-07-10|01 SALÁRIO / ENCARGOS|5092.68|D|RESCISÃO (01)
+2026-07-13|Transferência recebida NE|15000|C|13/07 20:36 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-13|Cobrança|5700|C|COOP AGRICOLA ALFREDO CHAVENSE (PAGO 10/07)
+2026-07-13|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 13/07/2026 (02)
+2026-07-13|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 13/07/2026 (02)
+2026-07-13|02 OP. / TAR. BANCÁRIAS|1.99|D|Tar. agrupadas - ocorrencia 10/07/2026 (02)
+2026-07-13|02 OP. / TAR. BANCÁRIAS|14.47|D|Tar. agrupadas - ocorrencia 13/07/2026 (02)
+2026-07-13|01 SALÁRIO / ENCARGOS|30|D|13/07 20:42 Jerffeson Félix dos Santo - REEMBOLSO (01)
+2026-07-13|01 SALÁRIO / ENCARGOS|71.95|D|13/07 20:42 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-13|01 SALÁRIO / ENCARGOS|80|D|13/07 20:42 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-13|01 SALÁRIO / ENCARGOS|390|D|13/07 20:43 FLASH APP - AJUDA DE CUSTO (01)
+2026-07-13|01 SALÁRIO / ENCARGOS|500|D|13/07 20:43 THIAGO SOARES DA SILVA - DIÁRIA TERCEIRO
+2026-07-13|04 OP. NLG|658.77|D|13/07 20:43 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-07-13|01 SALÁRIO / ENCARGOS|1115.06|D|13/07 20:40 CEF MATRIZ - FGTS RESCISÓRIO (01)
+2026-07-13|01 SALÁRIO / ENCARGOS|1203.83|D|13/07 20:40 CEF MATRIZ - FGTS RESCISÓRIO (01)
+2026-07-13|01 SALÁRIO / ENCARGOS|5000.06|D|RESCISÃO (01)
+2026-07-13|01 SALÁRIO / ENCARGOS|6239.98|D|RESCISÃO (01)
+2026-07-14|Pix-Envio devolvido|7500|C|14/07 17:48 NORDESTE COM. E IND.
+2026-07-14|Transferência recebida NE|8500|C|14/07 19:59 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-14|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 14/07/2026 (02)
+2026-07-14|02 OP. / TAR. BANCÁRIAS|10|D|Tar. agrupadas - ocorrencia 14/07/2026 (02)
+2026-07-14|01 SALÁRIO / ENCARGOS|4901.53|D|FÉRIAS RODRIGO (01)
+2026-07-14|02 OP. / TAR. BANCÁRIAS|7500|D|14/07 12:03 NORDESTE COM E IND - ESTORNO (02)
+2026-07-15|Transferência recebida NE|11000|C|15/07 19:05 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-15|02 OP. / TAR. BANCÁRIAS|10|D|Tar. agrupadas - ocorrencia 15/07/2026 (02)
+2026-07-15|06 CUSTOS ADM|1621|D|EAS TECH SOLUTION LTDA - SISTEMA TMS LOG (06)
+2026-07-15|06 CUSTOS ADM|2829|D|VERTICE GERENCIAMENTO DE RISCO - GERENCIADORA DE RISCO
+2026-07-15|01 SALÁRIO / ENCARGOS|3455.1|D|15/07 19:22 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-15|03 IMPOSTOS|6583.2|D|SEFAZ PE 193 E-FISCO - ICMS MENSAL (03)
+2026-07-17|Transferência recebida NE|7504.49|C|17/07 17:05 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS + 4,49 +
+2026-07-17|02 OP. / TAR. BANCÁRIAS|71.8|D|Tar. agrupadas - ocorrencia 17/07/2026 (02)
+2026-07-17|06 CUSTOS ADM|95.45|D|17/07 15:51 CASA DO CONSTRUTOR - MANUTENÇÃO GALPÃO (06)
+2026-07-17|01 SALÁRIO / ENCARGOS|221.7|D|17/07 17:06 JOSE EDEILSON DA SILVA AS - REEMBOLSO (01)
+2026-07-17|06 CUSTOS ADM|279.93|D|VIVO PE - CONTA TELEFÔNICA (06)
+2026-07-17|05 OP. NORDESTE|550|D|17/07 17:06 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE (05)
+2026-07-17|05 OP. NORDESTE|650|D|17/07 17:06 55.340.545 JOSE CARLOS DA - OPERAÇÃO DE FRETE (05)
+2026-07-17|05 OP. NORDESTE|650|D|17/07 17:06 JOSIAS VITAL DA SILVA - OPERAÇÃO DE FRETE (05)
+2026-07-17|05 OP. NORDESTE|800|D|17/07 17:06 CLAUDIO LUIS GOMES - OPERAÇÃO DE FRETE (05)
+2026-07-17|05 OP. NORDESTE|900|D|17/07 17:06 AIRON JATOBA DA SILVA - OPERAÇÃO DE FRETE (05)
+2026-07-17|05 OP. NORDESTE|1020|D|17/07 17:06 PEDRO ANTONIO DE CASTRO - OPERAÇÃO DE FRETE (05)
+2026-07-17|05 OP. NORDESTE|1150|D|17/07 17:06 SILVANA MARIA DA SILVA - OPERAÇÃO DE FRETE (05)
+2026-07-17|05 OP. NORDESTE|1170|D|17/07 17:06 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-07-17|04 OP. NLG|2260|D|17/07 17:06 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-07-17|04 OP. NLG|5281.84|D|17/07 17:06 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-07-20|Transferência recebida|760|C|20/07 12:01 08803022406 JOSEMARIO SILV - ESTORNO
+2026-07-20|Transferência recebida NE|95000|C|20/07 19:01 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-20|Transferência recebida NE|2140|C|20/07 19:04 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-20|Transferência recebida NE|5000|C|20/07 19:07 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-20|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 20/07/2026 (02)
+2026-07-20|02 OP. / TAR. BANCÁRIAS|2|D|Tar. agrupadas - ocorrencia 20/07/2026 (02)
+2026-07-20|02 OP. / TAR. BANCÁRIAS|6.41|D|Tar. agrupadas - ocorrencia 17/07/2026 (02)
+2026-07-20|02 OP. / TAR. BANCÁRIAS|17.35|D|Tar. agrupadas - ocorrencia 20/07/2026 (02)
+2026-07-20|01 SALÁRIO / ENCARGOS|34|D|20/07 19:09 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-20|02 OP. / TAR. BANCÁRIAS|52.8|D|Cobrança referente 20/07/2026 (02)
+2026-07-20|01 SALÁRIO / ENCARGOS|58.69|D|20/07 19:08 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-20|01 SALÁRIO / ENCARGOS|88.52|D|20/07 19:08 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-20|01 SALÁRIO / ENCARGOS|221.62|D|20/07 19:09 CEF MATRIZ - FGTS RESCISÃO (01)
+2026-07-20|01 SALÁRIO / ENCARGOS|500|D|20/07 19:09 THIAGO SOARES DA SILVA - DIÁRIA TERCEIRO
+2026-07-20|01 SALÁRIO / ENCARGOS|639.26|D|20/07 19:09 CEF MATRIZ - FGTS RESCISÓRIO (01)
+2026-07-20|04 OP. NLG|760|D|20/07 19:08 ROBISON SILVA RAMOS - OPERAÇÃO DE FRETE (04)
+2026-07-20|06 CUSTOS ADM|950|D|20/07 19:08 SOUSA ACESSORIOS AUTOMOTI - MANUTENÇÃO DE EQUIPA
+2026-07-20|06 CUSTOS ADM|1047.09|D|ALLIANZ SEGUROS S A - SEGURADORA (06)
+2026-07-20|06 CUSTOS ADM|1047.09|D|ALLIANZ SEGUROS S A - SEGURADORA (06)
+2026-07-20|01 SALÁRIO / ENCARGOS|1919.31|D|RESCISÃO (01)
+2026-07-20|01 SALÁRIO / ENCARGOS|10776.9|D|20/07 19:09 CEF MATRIZ - GUIA FGTS MENSAL (01)
+2026-07-20|01 SALÁRIO / ENCARGOS|41162.63|D|RFB-DARF CODIGO DE BARRAS - GUIA INSS MENSAL (01)
+2026-07-20|01 SALÁRIO / ENCARGOS|42081|D|SALÁRIO (01)
+2026-07-21|Cobrança|6290|C|COOP AGRICOLA ALFREDO CHAVENSE - (PAGO 20/07)
+2026-07-21|Transferência recebida NE|25|C|21/07 09:40 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-21|02 OP. / TAR. BANCÁRIAS|1.99|D|Tar. agrupadas - ocorrencia 20/07/2026 (02)
+2026-07-22|Dep dinheiro banco|420|C|22/07 09:17 SOP-S.LOURENCO MATA - RECEITA DE DESCARGA
+2026-07-22|Cobrança|4500|C|VITIVINICOLA TROPICAL+VINHOS DO BR+SANTA MARIA (PAGO DIA 21)
+2026-07-22|02 OP. / TAR. BANCÁRIAS|7.96|D|Tar. agrupadas - ocorrencia 21/07/2026 (02)
+2026-07-22|02 OP. / TAR. BANCÁRIAS|14.75|D|Tar. agrupadas - ocorrencia 22/07/2026 (02)
+2026-07-22|01 SALÁRIO / ENCARGOS|100|D|22/07 18:50 CLEITON MANOEL DE MELO - DIÁRIA TERCEIRO
+2026-07-22|01 SALÁRIO / ENCARGOS|100|D|22/07 18:50 Bruno Guilherme Cordeiro d - DIÁRIA TERCEIRO
+2026-07-22|01 SALÁRIO / ENCARGOS|134|D|22/07 18:50 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO (01)
+2026-07-22|01 SALÁRIO / ENCARGOS|145|D|22/07 18:50 Israel Danilo Ribeiro de B - DIÁRIA TERCEIRO
+2026-07-22|01 SALÁRIO / ENCARGOS|1369|D|22/07 18:50 JOSE RODRIGUES DE CARVALHO - 2 PAR FÉRIAS RODRIGO
+2026-07-23|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 23/07/2026 (02)
+2026-07-23|01 SALÁRIO / ENCARGOS|2658.63|D|RESCISÃO (01)
+2026-07-24|Dep dinheiro banco|668|C|24/07 13:14 SOP.CID.UNIVERS - RECEITA DE DESCARGA
+2026-07-24|Dep dinheiro banco|10|C|24/07 13:15 SOP.CID.UNIVERS - RECEITA DE DESCARGA
+2026-07-24|Transferência recebida NE|5000|C|24/07 16:42 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-24|01 SALÁRIO / ENCARGOS|19.98|D|24/07 16:43 JAIR FELIX DA SILVA - REEMBOLSO (01)
+2026-07-24|01 SALÁRIO / ENCARGOS|30|D|24/07 16:43 JOSE RODRIGUES DE CARVALH - REEMBOLSO (01)
+2026-07-24|02 OP. / TAR. BANCÁRIAS|35.58|D|Tar. agrupadas - ocorrencia 24/07/2026 (02)
+2026-07-24|01 SALÁRIO / ENCARGOS|60.5|D|24/07 16:43 Bruno Vital Pereira Duart - REEMBOLSO (01)
+2026-07-24|01 SALÁRIO / ENCARGOS|100|D|24/07 16:43 Israel Danilo Ribeiro de - DIÁRIA TERCEIRO
+2026-07-24|01 SALÁRIO / ENCARGOS|160|D|24/07 16:43 REGINALDO JONAS DUARTE BAT - REEMBOLSO (01)
+2026-07-24|01 SALÁRIO / ENCARGOS|250|D|24/07 16:43 JOSE EDEILSON DA SILVA AS - DIÁRIA (01)
+2026-07-24|01 SALÁRIO / ENCARGOS|378.89|D|24/07 16:43 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-07-24|06 CUSTOS ADM|388.9|D|E-FRETE - INTEGRAÇÃO SISTEMA TMS (06)
+2026-07-24|05 OP. NORDESTE|1035|D|24/07 16:43 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE
+2026-07-24|05 OP. NORDESTE|1121.93|D|24/07 16:43 PEDRO ANTONIO DE CASTRO - OPERAÇÃO DE FRETE
+2026-07-24|05 OP. NORDESTE|2270|D|24/07 16:43 CLAUDIO LUIS GOMES - OPERAÇÃO DE FRETE (05)
+2026-07-24|05 OP. NORDESTE|2840|D|24/07 16:43 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-07-24|03 IMPOSTOS|4036.39|D|RFB-DARF CODIGO DE BARRAS - PIS/ COFINS (03)
+2026-07-27|01 SALÁRIO / ENCARGOS|442.39|D|27/07 18:02 FLASH APP - AJUDA DE CUSTO (01)
+2026-07-30|Transferência recebida NE|8000|C|30/07 11:01 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-30|Transferência recebida NE|7000|C|30/07 17:35 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-30|01 SALÁRIO / ENCARGOS|22|D|30/07 11:02 JAIR FELIX DA SILVA - REEMBOLSO (01)
+2026-07-30|02 OP. / TAR. BANCÁRIAS|63.92|D|Tar. agrupadas - ocorrencia 30/07/2026 (02)
+2026-07-30|01 SALÁRIO / ENCARGOS|100|D|30/07 11:02 Bruno Guilherme Cordeiro d - DIÁRIA TERCEIRO
+2026-07-30|01 SALÁRIO / ENCARGOS|100|D|30/07 11:02 Wesley Da Silva Ribeiro - DIÁRIA TERCEIRO
+2026-07-30|01 SALÁRIO / ENCARGOS|100|D|30/07 11:02 ELDER LOPES DE LIMA - DIÁRIA TERCEIRO
+2026-07-30|01 SALÁRIO / ENCARGOS|100|D|30/07 17:36 Bruno Guilherme Cordeiro - DIÁRIA TERCEIRO
+2026-07-30|01 SALÁRIO / ENCARGOS|100|D|30/07 17:36 Wesley Da Silva Ribeiro - DIÁRIA TERCEIRO
+2026-07-30|01 SALÁRIO / ENCARGOS|100|D|30/07 17:36 CLEITON MANOEL DE MELO - DIÁRIA TERCEIRO
+2026-07-30|01 SALÁRIO / ENCARGOS|100|D|30/07 17:36 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-07-30|01 SALÁRIO / ENCARGOS|200|D|30/07 17:36 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-07-30|04 OP. NLG|530|D|30/07 17:36 JAKSON FERREIRA DE OLIVEIR - OPERAÇÃO DE FRETE
+2026-07-30|01 SALÁRIO / ENCARGOS|879.25|D|30/07 11:02 MANOEL DE ARAUJO LIRA BEZ - REEMBOLSO (01)
+2026-07-30|04 OP. NLG|1500|D|30/07 17:36 JAKSON FERREIRA DE OLIVEIR - OPERAÇÃO DE FRETE
+2026-07-30|04 OP. NLG|3500|D|30/07 11:02 JAKSON FERREIRA DE OLIVEIR - OPERAÇÃO DE FRETE
+2026-07-30|04 OP. NLG|3850|D|30/07 11:02 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-07-30|04 OP. NLG|3850|D|30/07 17:36 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-07-31|Dep dinheiro banco|490|C|31/07 13:06 SOP.CID.UNIVERS - RECEITA DE DESCARGA
+2026-07-31|Transferência recebida NE|20000|C|31/07 16:41 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-07-31|01 SALÁRIO / ENCARGOS|100|D|31/07 18:08 Bruno Guilherme Cordeiro d - DIÁRIA TERCEIRO
+2026-07-31|01 SALÁRIO / ENCARGOS|100|D|31/07 18:08 Wesley Da Silva Ribeiro - DIÁRIA TERCEIRO
+2026-07-31|01 SALÁRIO / ENCARGOS|100|D|31/07 18:08 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-07-31|01 SALÁRIO / ENCARGOS|100|D|31/07 18:08 CLEITON MANOEL DE MELO - DIÁRIA TERCEIRO
+2026-07-31|01 SALÁRIO / ENCARGOS|100|D|31/07 18:08 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-07-31|01 SALÁRIO / ENCARGOS|100|D|31/07 18:08 DIOLENOS DE SOUZA - DIÁRIA TERCEIRO
+2026-07-31|05 OP. NORDESTE|650|D|31/07 18:08 JOSIAS VITAL DA SILVA - OPERAÇÃO DE FRETE (05)
+2026-07-31|05 OP. NORDESTE|700|D|31/07 18:08 GEREMIAS CAMPOS DE SANTANA - OPERAÇÃO DE FRETE
+2026-07-31|05 OP. NORDESTE|1126|D|31/07 18:08 PEDRO ANTONIO DE CASTRO - OPERAÇÃO DE FRETE
+2026-07-31|05 OP. NORDESTE|1550|D|31/07 18:08 55.340.545 JOSE CARLOS DA - OPERAÇÃO DE FRETE
+2026-07-31|05 OP. NORDESTE|1850|D|31/07 18:08 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-07-31|05 OP. NORDESTE|2125.49|D|31/07 18:08 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE
+2026-07-31|04 OP. NLG|5000|D|31/07 18:08 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-07-31|03 IMPOSTOS|5932.9|D|RFB-DARF - IRPJ/CSLL 2 TRIMESTRE 2026 (03)
+2026-08-03|Cobrança|1200|C|COOP AGRICOLA ALFREDO CHAVENSE - (PAGO 31/07)
+2026-08-03|02 OP. / TAR. BANCÁRIAS|3.98|D|Tar. agrupadas - ocorrencia 31/07/2026
+2026-08-03|02 OP. / TAR. BANCÁRIAS|69.36|D|Tar. agrupadas - ocorrencia 31/07/2026
+2026-08-04|Transferência recebida NE|43000|C|04/08 17:50 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-04|Transferência recebida NE|7500|C|04/08 18:03 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-04|01 SALÁRIO / ENCARGOS|42854|D|04/08 17:51 FLASH APP - V.A V.T. AGOSTO (01)
+2026-08-04|04 OP. NLG|5500|D|04/08 18:06 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-08-04|04 OP. NLG|3300|D|04/08 18:06 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-08-04|04 OP. NLG|1104|D|04/08 18:06 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-08-04|01 SALÁRIO / ENCARGOS|124|D|04/08 18:06 JAIR FELIX DA SILVA - REEMBOLSO (01)
+2026-08-05|Transferência recebida NE|2500|C|05/08 16:59 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-05|04 OP. NLG|2800|D|05/08 17:00 GEORGE GABRIEL SORIANO - OPERAÇÃO DE FRETE
+2026-08-06|Transferência recebida NE|70150|C|06/08 16:07 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-06|Transferência recebida NE|4631|C|06/08 16:08 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-06|Transferência recebida NE|3500|C|06/08 16:10 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-06|01 SALÁRIO / ENCARGOS|70144.79|D|SALÁRIO (01)
+2026-08-06|01 SALÁRIO / ENCARGOS|4631|D|06/08 16:10 JOSE RODRIGUES DE CARVALHO - FÉRIAS 2 PARCELA
+2026-08-06|04 OP. NLG|2800|D|06/08 16:10 ROBISON SILVA RAMOS - OPERAÇÃO DE FRETE
+2026-08-06|01 SALÁRIO / ENCARGOS|260.47|D|06/08 16:10 MANOEL DE ARAUJO LIRA - REEMBOLSO (01)
+2026-08-06|02 OP. / TAR. BANCÁRIAS|44|D|Cobrança referente 06/08/2026 (02)
+2026-08-07|Transferência recebida NE|9000|C|07/08 16:29 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-07|05 OP. NORDESTE|1700|D|07/08 17:02 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-08-07|05 OP. NORDESTE|850|D|07/08 17:02 SILVANA MARIA DA SILVA - OPERAÇÃO DE FRETE
+2026-08-07|05 OP. NORDESTE|550|D|07/08 17:02 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE
+2026-08-07|05 OP. NORDESTE|550|D|07/08 17:02 SILVANA MARIA DA SILVA - OPERAÇÃO DE FRETE
+2026-08-07|05 OP. NORDESTE|650|D|07/08 17:02 55.340.545 JOSE CARLOS - OPERAÇÃO DE FRETE
+2026-08-07|05 OP. NORDESTE|780|D|07/08 17:02 PEDRO ANTONIO DE CASTRO - OPERAÇÃO DE FRETE
+2026-08-07|01 SALÁRIO / ENCARGOS|47.6|D|07/08 17:02 JOSE RODRIGUES DE CARVALHO - REEMBOLSO
+2026-08-07|01 SALÁRIO / ENCARGOS|380|D|07/08 17:02 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO
+2026-08-07|04 OP. NLG|3500|D|07/08 17:02 CARLOS HUMBERTO JUNIOR - OPERAÇÃO DE FRETE
+2026-08-07|02 OP. / TAR. BANCÁRIAS|28.91|D|Tar. agrupadas - ocorrencia 07/08/2026
+2026-08-10|Transferência recebida NE|2000|C|10/08 16:52 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-10|06 CUSTOS ADM|190|D|DORT NORDESTE - EXAMES ADM (06)
+2026-08-10|04 OP. NLG|1200|D|10/08 16:52 GEORGE GABRIEL SORIANO - OPERAÇÃO DE FRETE
+2026-08-10|06 CUSTOS ADM|586.69|D|10/08 16:52 CASA DO CRIADOR - MANUTENÇÃO DO GALPÃO
+2026-08-10|02 OP. / TAR. BANCÁRIAS|5.8|D|Tar. agrupadas - ocorrencia 10/08/2026
+2026-08-12|Transferência recebida NE|3500|C|12/08 17:10 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-12|04 OP. NLG|1500|D|12/08 17:11 ROBISON SILVA RAMOS - OPERAÇÃO DE FRETE (04)
+2026-08-12|04 OP. NLG|500|D|12/08 17:11 ROBISON SILVA RAMOS - OPERAÇÃO DE FRETE (04)
+2026-08-12|04 OP. NLG|1324|D|12/08 17:11 CARLOS HUMBERTO JUNIOR - OPERAÇÃO DE FRETE
+2026-08-12|04 OP. NLG|176|D|12/08 17:11 ARCO VERDE COMERCIO - OPERAÇÃO DE FRETE
+2026-08-12|02 OP. / TAR. BANCÁRIAS|10|D|Tar. agrupadas - ocorrencia 12/08/2026
+2026-08-17|Transferência recebida NE|12000|C|17/08 16:55 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-17|05 OP. NORDESTE|1100|D|17/08 16:56 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-08-17|05 OP. NORDESTE|550|D|17/08 16:56 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE
+2026-08-17|05 OP. NORDESTE|370|D|17/08 16:56 PEDRO ANTONIO DE CASTRO - OPERAÇÃO DE FRETE
+2026-08-17|01 SALÁRIO / ENCARGOS|100|D|17/08 16:56 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-08-17|01 SALÁRIO / ENCARGOS|100|D|17/08 16:56 CLEITON MANOEL DE MELO - DIÁRIA TERCEIRO
+2026-08-17|01 SALÁRIO / ENCARGOS|100|D|17/08 16:56 EVERTON GOMES DA SILVA - DIÁRIA TERCEIRO
+2026-08-17|01 SALÁRIO / ENCARGOS|375.71|D|17/08 16:56 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO
+2026-08-17|06 CUSTOS ADM|1621|D|EAS TECH SOLUTION LTDA - SISTEMA LOGISTICO TMS
+2026-08-17|06 CUSTOS ADM|2214|D|VERTICE GERENCIAMENTO DE RISCO - GERENCIADORA DE RISCO
+2026-08-17|01 SALÁRIO / ENCARGOS|1210.13|D|17/08 16:56 CEF MATRIZ - GUIA 40% FGTS JOSE EDEILSON
+2026-08-17|01 SALÁRIO / ENCARGOS|328.1|D|17/08 16:56 FLASH APP - VA E VT CLEITON NOVATO
+2026-08-17|06 CUSTOS ADM|279.93|D|VIVO PE - CONTA TELEFÔNICA (06)
+2026-08-17|03 IMPOSTOS|3457.5|D|SEFAZ PE 193 E-FISCO - ICMS MENSAL (03)
+2026-08-17|02 OP. / TAR. BANCÁRIAS|24.81|D|Tar. agrupadas - ocorrencia 17/08/2026
+2026-08-20|Transferência recebida NE|42385|C|20/08 16:35 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-20|Transferência recebida NE|48175.65|C|20/08 16:40 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-20|Transferência recebida NE|1293.28|C|20/08 16:41 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-20|Transferência recebida NE|3000|C|20/08 16:42 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-20|01 SALÁRIO / ENCARGOS|42385|D|SALÁRIO (01)
+2026-08-20|01 SALÁRIO / ENCARGOS|1293.28|D|RESCISÃO (01)
+2026-08-20|01 SALÁRIO / ENCARGOS|250|D|20/08 16:55 Israel Danilo Ribeiro - DIÁRIA TERCEIROS
+2026-08-20|01 SALÁRIO / ENCARGOS|100|D|20/08 16:55 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIROS
+2026-08-20|01 SALÁRIO / ENCARGOS|639.26|D|20/08 16:55 CEF MATRIZ - FGTS CONSIGNADO 07/2026
+2026-08-20|01 SALÁRIO / ENCARGOS|10552.55|D|20/08 16:55 CEF MATRIZ - GUIA FGTS MENSAL
+2026-08-20|01 SALÁRIO / ENCARGOS|380|D|20/08 16:55 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO
+2026-08-20|01 SALÁRIO / ENCARGOS|60|D|20/08 16:55 JOSE EDEILSON DA SILVA SAL - REEMBOLSO
+2026-08-20|06 CUSTOS ADM|1043.57|D|ALLIANZ SEGUROS S A - SEGURADORA (06)
+2026-08-20|06 CUSTOS ADM|1043.57|D|ALLIANZ SEGUROS S A - SEGURADORA (06)
+2026-08-20|03 IMPOSTOS|36983.84|D|RFB-DARF - GUIA INSS MENSAL
+2026-08-20|02 OP. / TAR. BANCÁRIAS|52.8|D|Cobrança referente 20/08/2026 (02)
+2026-08-20|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 20/08/2026 (02)
+2026-08-20|02 OP. / TAR. BANCÁRIAS|7.23|D|Tar. agrupadas - ocorrencia 20/08/2026
+2026-08-21|Cobrança|1581.93|C|VITIVINICOLA TROPICAL + SANTA MARIA (PAGO 20/08)
+2026-08-21|01 SALÁRIO / ENCARGOS|228.3|D|21/08 19:16 CEF MATRIZ - GRRF ROGERIO
+2026-08-21|05 OP. NORDESTE|550|D|21/08 19:16 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-08-21|05 OP. NORDESTE|550|D|21/08 19:16 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE
+2026-08-21|05 OP. NORDESTE|335.5|D|21/08 19:16 PEDRO ANTONIO DE CASTRO - OPERAÇÃO DE FRETE
+2026-08-21|01 SALÁRIO / ENCARGOS|100|D|21/08 19:16 Daniel Ferreira da silva - DIÁRIA TERCEIRO
+2026-08-21|05 OP. NORDESTE|370|D|21/08 19:16 Rafael Henrique Ferreira - OPERAÇÃO DE FRETE
+2026-08-21|01 SALÁRIO / ENCARGOS|6.4|D|21/08 19:16 THIAGO SOARES DA SILVA - REEMBOLSO
+2026-08-21|01 SALÁRIO / ENCARGOS|34.8|D|21/08 19:16 WEDSON FELIPE DOS SANTOS - REEMBOLSO
+2026-08-21|02 OP. / TAR. BANCÁRIAS|3.98|D|Tar. agrupadas - ocorrencia 20/08/2026
+2026-08-21|02 OP. / TAR. BANCÁRIAS|20.86|D|Tar. agrupadas - ocorrencia 21/08/2026
+2026-08-24|Transferência recebida NE|1000|C|24/08 17:00 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-24|06 CUSTOS ADM|389.9|D|E-FRETE - INTEGRAÇÃO SISTEMA TMS (06)
+2026-08-25|Transferência recebida NE|15000|C|25/08 17:06 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-25|01 SALÁRIO / ENCARGOS|35.5|D|25/08 17:07 JAIR FELIX DA SILVA - REEMBOLSO (01)
+2026-08-25|04 OP. NLG|2800|D|25/08 17:07 OLIVEIRA TRANSPORTES - OPERAÇÃO FRETE
+2026-08-25|03 IMPOSTOS|12089.6|D|RFB-DARF CODIGO DE BARRAS - PIS/ COFINS (03)
+2026-08-25|02 OP. / TAR. BANCÁRIAS|11|D|Tar. agrupadas - ocorrencia 25/08/2026
+2026-08-27|Transferência recebida NE|3000|C|27/08 19:40 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-27|01 SALÁRIO / ENCARGOS|100|D|27/08 19:41 Bruno Guilherme Cordeiro - DIÁRIA TERCEIRO
+2026-08-27|01 SALÁRIO / ENCARGOS|100|D|27/08 19:41 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-08-27|01 SALÁRIO / ENCARGOS|100|D|27/08 19:41 REGINALDO DA SILVA NERY - DIÁRIA TERCEIRO
+2026-08-27|01 SALÁRIO / ENCARGOS|100|D|27/08 19:41 DIOLENOS DE SOUZA - DIÁRIA TERCEIRO
+2026-08-27|01 SALÁRIO / ENCARGOS|100|D|27/08 19:41 ANDRE COSMO DE OLIVEIRA - DIÁRIA TERCEIRO
+2026-08-27|01 SALÁRIO / ENCARGOS|100|D|27/08 19:41 Afonso Peixoto Pereira - DIÁRIA TERCEIRO
+2026-08-27|01 SALÁRIO / ENCARGOS|100|D|27/08 19:41 Ricardo Ferreira Mascarenh - DIÁRIA TERCEIRO
+2026-08-27|01 SALÁRIO / ENCARGOS|100|D|27/08 19:41 Daniel Ferreira da silva - DIÁRIA TERCEIRO
+2026-08-27|01 SALÁRIO / ENCARGOS|627.44|D|27/08 19:41 MANOEL DE ARAUJO LIRA - REEMBOLSO
+2026-08-27|04 OP. NLG|1200|D|27/08 19:41 OLIVEIRA TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-08-27|04 OP. NLG|238.5|D|27/08 19:41 OLIVEIRA TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-08-27|02 OP. / TAR. BANCÁRIAS|26.57|D|Tar. agrupadas - ocorrencia 27/08/2026
+2026-08-28|Transferência recebida NE|15000|C|28/08 17:32 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-08-28|05 OP. NORDESTE|550|D|28/08 17:33 55.340.545 JOSE CARLOS - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|1730|D|28/08 17:33 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|2500|D|28/08 17:33 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|1700|D|28/08 17:33 SILVANA MARIA DA SILVA - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|800|D|28/08 17:33 GEREMIAS CAMPOS DE SANTANA - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|650|D|28/08 17:33 JOSIAS VITAL DA SILVA - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|800|D|28/08 17:33 CLAUDIO LUIS GOMES - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|650|D|28/08 17:33 GEREMIAS CAMPOS DE SANTANA - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|370|D|28/08 17:33 Rafael Henrique Ferreira - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|370|D|28/08 17:33 ADEILTON ARAUJO DA SILVA - OPERAÇÃO DE FRETE
+2026-08-28|05 OP. NORDESTE|700|D|28/08 17:33 NICODEMOS RODRIGUES DA - OPERAÇÃO DE FRETE
+2026-08-28|01 SALÁRIO / ENCARGOS|250|D|28/08 17:33 Israel Danilo Ribeiro - DIÁRIA TERCEIRO
+2026-08-28|01 SALÁRIO / ENCARGOS|275|D|28/08 17:33 MANOEL DE ARAUJO LIRA - REEMBOLSO
+2026-08-28|04 OP. NLG|3500|D|28/08 17:33 63.000.685 MARIA VITORIA - OPERAÇÃO DE FRETE
+2026-08-28|01 SALÁRIO / ENCARGOS|100|D|28/08 17:33 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-08-28|01 SALÁRIO / ENCARGOS|100|D|28/08 17:33 REGINALDO DA SILVA NERY - DIÁRIA TERCEIRO
+2026-08-28|02 OP. / TAR. BANCÁRIAS|87.66|D|Tar. agrupadas - ocorrencia 28/08/2026
+2026-08-31|Cobrança|1105.11|C|TERROIR DO SAO FRANCISCO - (PAGO DIA 28/08)
+2026-08-31|Dep dinheiro banco|762.3|C|31/08 12:36 DANIEL OLIVEIRA - RECEITA DE DESCARGA
+2026-08-31|02 OP. / TAR. BANCÁRIAS|1.99|D|Tar. agrupadas - ocorrencia 28/08/2026
+2026-09-01|Transferência recebida NE|8000|C|01/09 19:35 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-01|Transferência recebida NE|42000|C|01/09 19:39 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-01|04 OP. NLG|3500|D|01/09 19:37 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-09-01|04 OP. NLG|3500|D|01/09 19:37 EGM TRANSPORTE RODOVIARIO - OPERAÇÃO DE FRETE
+2026-09-01|06 CUSTOS ADM|160|D|01/09 19:37 ON SOLUTIONS - PG CERTIFICADO DIGITAL
+2026-09-01|01 SALÁRIO / ENCARGOS|125|D|01/09 19:37 Israel Danilo Ribeiro - DIÁRIA TERCEIRO
+2026-09-01|01 SALÁRIO / ENCARGOS|90|D|01/09 19:37 FABIO FRANCISCO DA SILVA - REEMBOLSO
+2026-09-01|05 OP. NORDESTE|430|D|01/09 19:37 ADEILTON ARAUJO DA SILVA - OPERAÇÃO DE FRETE
+2026-09-01|05 OP. NORDESTE|750|D|01/09 19:37 ROBERTO MENEZES CALDAS - OPERAÇÃO DE FRETE
+2026-09-01|01 SALÁRIO / ENCARGOS|44.15|D|01/09 19:37 Beatriz Marilia Correia - REEMBOLSO (01)
+2026-09-01|01 SALÁRIO / ENCARGOS|100|D|01/09 19:37 Victor Sevethe Silva Sant - DIÁRIA TERCEIRO
+2026-09-01|05 OP. NORDESTE|871.21|D|01/09 19:37 NATANAEL RIBEIRO DA SILVA - OPERAÇÃO DE FRETE
+2026-09-01|01 SALÁRIO / ENCARGOS|100|D|01/09 19:37 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-01|01 SALÁRIO / ENCARGOS|100|D|01/09 19:37 REGINALDO DA SILVA NERY - DIÁRIA TERCEIRO
+2026-09-01|01 SALÁRIO / ENCARGOS|100|D|01/09 19:37 DIOLENOS DE SOUZA - DIÁRIA TERCEIRO
+2026-09-01|01 SALÁRIO / ENCARGOS|100|D|01/09 19:37 DAVID DOS SANTOS SOARES - DIÁRIA TERCEIRO
+2026-09-01|01 SALÁRIO / ENCARGOS|100|D|01/09 19:37 Bruno Guilherme Cordeiro - DIÁRIA TERCEIRO
+2026-09-01|01 SALÁRIO / ENCARGOS|42018|D|01/09 19:40 FLASH APP - V.A. V.T. SETEMBRO (01)
+2026-09-01|02 OP. / TAR. BANCÁRIAS|4|D|Tar. agrupadas - ocorrencia 01/09/2026 (02)
+2026-09-02|Transferência recebida NE|10500|C|02/09 16:31 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-02|01 SALÁRIO / ENCARGOS|84.85|D|02/09 16:36 JOSE RODRIGUES DE CARVALHO - REEMBOLSO
+2026-09-02|04 OP. NLG|1500|D|02/09 16:36 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-09-02|04 OP. NLG|504|D|02/09 16:36 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-09-02|04 OP. NLG|2000|D|02/09 16:36 EGM TRANSPORTE RODOVIARIO - OPERAÇÃO DE FRETE
+2026-09-02|04 OP. NLG|1304|D|02/09 16:36 EGM TRANSPORTE RODOVIARIO - OPERAÇÃO DE FRETE
+2026-09-02|04 OP. NLG|5500|D|02/09 16:36 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-09-02|02 OP. / TAR. BANCÁRIAS|45.98|D|Tar. agrupadas - ocorrencia 02/09/2026 (02)
+2026-09-03|Cobrança|5817.79|C|TERROIR DO SAO FRANCISCO - (VENCIDO 31/08 - PAGO 02/09)
+2026-09-03|Dep dinheiro banco|490|C|SOP.CID.UNIVERS - RECEITA DE DESCARGA
+2026-09-03|04 OP. NLG|500|D|03/09 16:42 63.000.685 MARIA VITORIA F - OPERAÇÃO DE FRETE
+2026-09-03|04 OP. NLG|252|D|03/09 16:42 63.000.685 MARIA VITORIA F - OPERAÇÃO DE FRETE
+2026-09-03|01 SALÁRIO / ENCARGOS|253.89|D|03/09 16:42 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO
+2026-09-03|02 OP. / TAR. BANCÁRIAS|1.99|D|Tar. agrupadas - ocorrencia 02/09/2026 (02)
+2026-09-03|02 OP. / TAR. BANCÁRIAS|9.95|D|Tar. agrupadas - ocorrencia 03/09/2026 (02)
+2026-09-04|Transferência recebida NE|70361.84|C|04/09 18:02 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-04|Transferência recebida NE|9500|C|04/09 18:03 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-04|01 SALÁRIO / ENCARGOS|70361.84|D|SALÁRIO (01)
+2026-09-04|05 OP. NORDESTE|1865|D|04/09 19:05 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-09-04|05 OP. NORDESTE|610|D|04/09 19:05 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE
+2026-09-04|05 OP. NORDESTE|1524|D|04/09 19:05 NICODEMOS RODRIGUES DA SIL - OPERAÇÃO DE FRETE
+2026-09-04|05 OP. NORDESTE|750|D|04/09 19:05 SILVANA MARIA DA SILVA - OPERAÇÃO DE FRETE
+2026-09-04|05 OP. NORDESTE|1100|D|04/09 19:05 Rafael Henrique Ferreira d - OPERAÇÃO DE FRETE
+2026-09-04|05 OP. NORDESTE|422.1|D|04/09 19:05 NATANAEL RIBEIRO DA SILVA - OPERAÇÃO DE FRETE
+2026-09-04|05 OP. NORDESTE|700|D|04/09 19:05 GEREMIAS CAMPOS DE SANTANA - OPERAÇÃO DE FRETE
+2026-09-04|05 OP. NORDESTE|500|D|04/09 19:05 ROBERTO MENEZES CALDAS - OPERAÇÃO DE FRETE
+2026-09-04|05 OP. NORDESTE|2476.79|D|04/09 19:05 JOSIAS VITAL DA SILVA - OPERAÇÃO DE FRETE
+2026-09-04|04 OP. NLG|1000|D|04/09 19:05 63.000.685 MARIA VITORIA F - OPERAÇÃO DE FRETE
+2026-09-04|04 OP. NLG|3570|D|04/09 19:05 FORTE FRIOS TRANSPORTES LT - OPERAÇÃO DE FRETE
+2026-09-04|02 OP. / TAR. BANCÁRIAS|42.9|D|Cobrança referente 04/09/2026 (02)
+2026-09-04|02 OP. / TAR. BANCÁRIAS|89.4|D|Tar. agrupadas - ocorrencia 04/09/2026 (02)
+2026-09-09|Transferência recebida NE|3000|C|09/09 17:09 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-09|01 SALÁRIO / ENCARGOS|200|D|09/09 17:10 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-09-09|01 SALÁRIO / ENCARGOS|100|D|09/09 17:10 ANDRE COSMO DE OLIVEIRA - DIÁRIA TERCEIRO
+2026-09-09|01 SALÁRIO / ENCARGOS|100|D|09/09 17:10 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-09|04 OP. NLG|1530|D|09/09 17:10 FORTE FRIOS TRANSPORTES LT - OPERAÇÃO DE FRETE
+2026-09-09|04 OP. NLG|855.31|D|09/09 17:10 FORTE FRIOS TRANSPORTES LT - OPERAÇÃO DE FRETE
+2026-09-09|02 OP. / TAR. BANCÁRIAS|22.44|D|Tar. agrupadas - ocorrencia 09/09/2026 (02)
+2026-09-10|Transferência recebida NE|1000|C|10/09 17:38 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-10|Transferência recebida NE|5000|C|10/09 17:41 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-10|02 OP. / TAR. BANCÁRIAS|1000|D|10/09 17:39 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-10|01 SALÁRIO / ENCARGOS|432|D|10/09 17:42 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO
+2026-09-10|06 CUSTOS ADM|76|D|DORT NORDESTE - EXAMES ADM (06)
+2026-09-10|01 SALÁRIO / ENCARGOS|100|D|10/09 17:42 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-10|01 SALÁRIO / ENCARGOS|12.6|D|10/09 17:42 Robson Cesar de Araujo - REEMBOLSO (01)
+2026-09-10|04 OP. NLG|4060|D|10/09 17:42 FRANCISCO ELOI DA SILVA - OPERAÇÃO DE FRETE
+2026-09-10|02 OP. / TAR. BANCÁRIAS|16.27|D|Tar. agrupadas - ocorrencia 10/09/2026 (02)
+2026-09-11|Transferência recebida NE|8000|C|11/09 18:29 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-11|05 OP. NORDESTE|1900|D|11/09 18:29 55.340.545 JOSE CARLOS DA - OPERAÇÃO DE FRETE
+2026-09-11|05 OP. NORDESTE|700|D|11/09 18:29 JOSIAS VITAL DA SILVA - OPERAÇÃO DE FRETE
+2026-09-11|05 OP. NORDESTE|1750|D|11/09 18:29 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE
+2026-09-11|05 OP. NORDESTE|1160|D|11/09 18:29 NICODEMOS RODRIGUES DA SIL - OPERAÇÃO DE FRETE
+2026-09-11|05 OP. NORDESTE|700|D|11/09 18:29 SILVANA MARIA DA SILVA - OPERAÇÃO DE FRETE
+2026-09-11|01 SALÁRIO / ENCARGOS|100|D|11/09 18:29 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-11|01 SALÁRIO / ENCARGOS|100|D|11/09 18:29 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-09-11|01 SALÁRIO / ENCARGOS|100|D|11/09 18:29 Willamis Marcolino dos San - DIÁRIA TERCEIRO
+2026-09-11|01 SALÁRIO / ENCARGOS|125|D|11/09 18:29 Israel Danilo Ribeiro de B - DIÁRIA TERCEIRO
+2026-09-11|04 OP. NLG|1740|D|11/09 18:29 FRANCISCO ELOI DA SILVA - OPERAÇÃO DE FRETE
+2026-09-11|02 OP. / TAR. BANCÁRIAS|58.09|D|Tar. agrupadas - ocorrencia 11/09/2026 (02)
+2026-09-14|06 CUSTOS ADM|39.96|D|HOSTGATOR BRASIL LTDA - HOSPEDAGEM DE E-MAIL
+2026-09-15|Transferência recebida NE|7500|C|15/09 16:56 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-15|06 CUSTOS ADM|1621|D|EAS TECH SOLUTION LTDA - SISTEMA TMS LOG (06)
+2026-09-15|06 CUSTOS ADM|1438|D|VERTICE GERENCIAMENTO DE RISCO - GERENCIADORA DE RISCO
+2026-09-15|01 SALÁRIO / ENCARGOS|100|D|15/09 16:57 REGINALDO DA SILVA NERY - DIÁRIA TERCEIRO
+2026-09-15|03 IMPOSTOS|3775.68|D|SEFAZ PE 193 E-FISCO - ICMS MENSAL (03)
+2026-09-15|06 CUSTOS ADM|279.93|D|VIVO PE - CONTA TELEFÔNICA (06)
+2026-09-15|02 OP. / TAR. BANCÁRIAS|1|D|Tar. agrupadas - ocorrencia 15/09/2026 (02)
+2026-09-17|Transferência recebida NE|1000|C|17/09 17:20 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-17|01 SALÁRIO / ENCARGOS|301.18|D|17/09 17:21 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO
+2026-09-17|01 SALÁRIO / ENCARGOS|100|D|17/09 17:21 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-17|01 SALÁRIO / ENCARGOS|200|D|17/09 17:21 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-09-17|01 SALÁRIO / ENCARGOS|100|D|17/09 17:21 Willamis Marcolino dos San - DIÁRIA TERCEIRO
+2026-09-17|01 SALÁRIO / ENCARGOS|100|D|17/09 17:21 ROSENILDO AUGUSTO DA SILVA - DIÁRIA TERCEIRO
+2026-09-18|Transferência recebida NE|44390|C|18/09 17:07 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-18|Transferência recebida NE|8000|C|18/09 17:10 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-18|Transferência recebida NE|43000|C|18/09 18:09 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-18|01 SALÁRIO / ENCARGOS|43019|D|SALÁRIO (01)
+2026-09-18|01 SALÁRIO / ENCARGOS|10121.88|D|18/09 17:08 CEF MATRIZ - GUIA FGTS MENSAL (01)
+2026-09-18|01 SALÁRIO / ENCARGOS|1399.41|D|18/09 17:08 CEF MATRIZ - GUIA FGTS CONSIGNADO (01)
+2026-09-18|01 SALÁRIO / ENCARGOS|32865.27|D|RFB-DARF CODIGO DE BARRAS - GUIA INSS (01)
+2026-09-18|05 OP. NORDESTE|1800|D|18/09 17:10 55.340.545 JOSE CARLOS DA - OPERAÇÃO DE FRETE
+2026-09-18|05 OP. NORDESTE|1589.94|D|18/09 17:10 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-09-18|05 OP. NORDESTE|650|D|18/09 17:10 NICODEMOS RODRIGUES DA SIL - OPERAÇÃO DE FRETE
+2026-09-18|05 OP. NORDESTE|2447.2|D|18/09 17:10 JEFFERSON JOSE DA SILVA - OPERAÇÃO DE FRETE
+2026-09-18|05 OP. NORDESTE|858|D|18/09 17:11 JOSIAS VITAL DA SILVA - OPERAÇÃO DE FRETE
+2026-09-18|01 SALÁRIO / ENCARGOS|400|D|18/09 17:11 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO DESCARGA
+2026-09-18|02 OP. / TAR. BANCÁRIAS|53.9|D|Cobrança referente 18/09/2026 (02)
+2026-09-18|02 OP. / TAR. BANCÁRIAS|7.96|D|Tar. agrupadas - ocorrencia 17/09/2026 (02)
+2026-09-21|02 OP. / TAR. BANCÁRIAS|48.88|D|Tar. agrupadas - ocorrencia 18/09/2026 (02)
+2026-09-22|Transferência recebida NE|1500|C|22/09 16:59 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-22|06 CUSTOS ADM|735.92|D|ALLIANZ SEGUROS S A - SEGURO DE CARGA (06)
+2026-09-22|06 CUSTOS ADM|735.92|D|ALLIANZ SEGUROS S A - SEGURO DE CARGA (06)
+2026-09-22|01 SALÁRIO / ENCARGOS|100|D|22/09 17:00 Bruno Guilherme Cordeiro d - DIÁRIA TERCEIRO
+2026-09-22|01 SALÁRIO / ENCARGOS|200|D|22/09 17:00 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-22|01 SALÁRIO / ENCARGOS|180|D|22/09 17:00 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-09-23|Transferência recebida NE|1000|C|23/09 16:39 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-23|01 SALÁRIO / ENCARGOS|100|D|23/09 20:41 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-23|01 SALÁRIO / ENCARGOS|100|D|23/09 20:41 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-09-23|01 SALÁRIO / ENCARGOS|100|D|23/09 20:41 Bruno Guilherme Cordeiro d - DIÁRIA TERCEIRO
+2026-09-23|01 SALÁRIO / ENCARGOS|100|D|23/09 20:41 GABRIEL PEREIRA DE LIMA - DIÁRIA TERCEIRO
+2026-09-23|01 SALÁRIO / ENCARGOS|100|D|23/09 20:41 Denilson José da Silva - DIÁRIA TERCEIRO
+2026-09-23|01 SALÁRIO / ENCARGOS|125|D|23/09 20:41 Asafe Carlos Pereira Nasci - DIÁRIA TERCEIRO
+2026-09-23|02 OP. / TAR. BANCÁRIAS|4.76|D|Tar. agrupadas - ocorrencia 22/09/2026 (02)
+2026-09-23|02 OP. / TAR. BANCÁRIAS|6.23|D|Tar. agrupadas - ocorrencia 23/09/2026 (02)
+2026-09-24|Transferência recebida NE|10000|C|24/09 15:04 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-24|01 SALÁRIO / ENCARGOS|2180.78|D|RESCISÃO (01)
+2026-09-24|01 SALÁRIO / ENCARGOS|5334.49|D|RESCISÃO (01)
+2026-09-24|01 SALÁRIO / ENCARGOS|100|D|24/09 15:06 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-09-24|01 SALÁRIO / ENCARGOS|150|D|24/09 15:06 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-24|01 SALÁRIO / ENCARGOS|100|D|24/09 15:06 Bruno Guilherme Cordeiro d - DIÁRIA TERCEIRO
+2026-09-24|01 SALÁRIO / ENCARGOS|100|D|24/09 15:06 DIOLENOS DE SOUZA - DIÁRIA TERCEIRO
+2026-09-24|01 SALÁRIO / ENCARGOS|100|D|24/09 15:06 MATHEUS GABRIEL DA SILVA M - DIÁRIA TERCEIRO
+2026-09-24|01 SALÁRIO / ENCARGOS|100|D|24/09 15:06 EMERSON LIMA DO NASCIMENTO - DIÁRIA TERCEIRO
+2026-09-24|01 SALÁRIO / ENCARGOS|100|D|24/09 15:06 RODRIGO LEITE DA FONSECA - DIÁRIA TERCEIRO
+2026-09-24|01 SALÁRIO / ENCARGOS|125|D|24/09 15:06 Asafe Carlos Pereira Nasci - DIÁRIA TERCEIRO
+2026-09-24|01 SALÁRIO / ENCARGOS|44|D|24/09 15:06 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO DESCARGA
+2026-09-24|01 SALÁRIO / ENCARGOS|401.82|D|24/09 15:06 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-09-24|01 SALÁRIO / ENCARGOS|1053.63|D|24/09 15:06 CEF MATRIZ - GUIA RESCISÓRIA (01)
+2026-09-24|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 24/09/2026 (02)
+2026-09-24|02 OP. / TAR. BANCÁRIAS|1.1|D|Cobrança referente 24/09/2026 (02)
+2026-09-25|Transferência recebida NE|30000|C|25/09 16:13 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-25|05 OP. NORDESTE|2422|D|25/09 16:14 55.340.545 JOSE CARLOS DA - OPERAÇÃO DE FRETE
+2026-09-25|05 OP. NORDESTE|2990|D|25/09 16:14 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-09-25|05 OP. NORDESTE|2100|D|25/09 16:14 NICODEMOS RODRIGUES DA SIL - OPERAÇÃO DE FRETE
+2026-09-25|05 OP. NORDESTE|800|D|25/09 16:14 PAULO ROBERTO BARBOSA DA S - OPERAÇÃO DE FRETE
+2026-09-25|05 OP. NORDESTE|1543.55|D|25/09 16:14 JOSIAS VITAL DA SILVA - OPERAÇÃO DE FRETE
+2026-09-25|05 OP. NORDESTE|850|D|25/09 16:14 SILVANA MARIA DA SILVA - OPERAÇÃO DE FRETE
+2026-09-25|05 OP. NORDESTE|800|D|25/09 16:14 CLAUDIO LUIS GOMES - OPERAÇÃO DE FRETE
+2026-09-25|01 SALÁRIO / ENCARGOS|100|D|25/09 16:14 MATHEUS GABRIEL DA SILVA M - DIÁRIA TERCEIRO
+2026-09-25|01 SALÁRIO / ENCARGOS|100|D|25/09 16:14 RODRIGO LEITE DA FONSECA - DIÁRIA TERCEIRO
+2026-09-25|04 OP. NLG|3570|D|25/09 16:14 VILDOMAR FONSECA RUBEN - OPERAÇÃO DE FRETE
+2026-09-25|04 OP. NLG|3570|D|25/09 16:14 FRANCISCO ELOI DA SILVA - OPERAÇÃO DE FRETE
+2026-09-25|01 SALÁRIO / ENCARGOS|24.8|D|25/09 16:14 IVAN PEREIRA DA SILVA FILH - REEMBOLSO DESCARGA
+2026-09-25|03 IMPOSTOS|11740.39|D|RFB-DARF CODIGO DE BARRAS - PIS/ COFINS (03)
+2026-09-25|02 OP. / TAR. BANCÁRIAS|9.71|D|Tar. agrupadas - ocorrencia 24/09/2026 (02)
+2026-09-25|02 OP. / TAR. BANCÁRIAS|79.33|D|Tar. agrupadas - ocorrencia 25/09/2026 (02)
+2026-09-28|Transferência recebida NE|3000|C|28/09 16:32 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-28|01 SALÁRIO / ENCARGOS|100|D|28/09 16:33 MATHEUS GABRIEL DA SILVA M - DIÁRIA TERCEIRO
+2026-09-28|01 SALÁRIO / ENCARGOS|100|D|28/09 16:33 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-28|01 SALÁRIO / ENCARGOS|142|D|28/09 16:33 DAVID WILLIAM G F DIAS - REEMBOLSO MANUTENÇÃO FROTA
+2026-09-28|04 OP. NLG|1530|D|28/09 16:33 FRANCISCO ELOI DA SILVA - OPERAÇÃO DE FRETE
+2026-09-28|04 OP. NLG|742|D|28/09 16:33 FRANCISCO ELOI DA SILVA - OPERAÇÃO DE FRETE
+2026-09-28|01 SALÁRIO / ENCARGOS|25|D|28/09 16:33 Abimael Raimundo Leonardo - REEMBOLSO CUSTO DE OP.
+2026-09-29|Dep dinheiro banco|594|C|29/09 14:34 SOP.CID.UNIVERS - RECEITA DESCARGA
+2026-09-29|Transferência recebida NE|3500|C|29/09 18:12 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-09-29|04 OP. NLG|1530|D|29/09 18:14 VILDOMAR FONSECA RUBEN - OPERAÇÃO DE FRETE
+2026-09-29|04 OP. NLG|1925|D|29/09 18:14 VILDOMAR FONSECA RUBEN - OPERAÇÃO DE FRETE
+2026-09-29|01 SALÁRIO / ENCARGOS|34.82|D|29/09 18:14 Beatriz Marilia Correia do - REEMBOLSO
+2026-09-29|01 SALÁRIO / ENCARGOS|100|D|29/09 18:14 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-09-29|01 SALÁRIO / ENCARGOS|100|D|29/09 18:14 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-09-29|01 SALÁRIO / ENCARGOS|100|D|29/09 18:14 MATHEUS GABRIEL DA SILVA M - DIÁRIA TERCEIRO
+2026-09-29|01 SALÁRIO / ENCARGOS|100|D|29/09 18:14 DARIO NERIS DE OLIVEIRA - DIÁRIA TERCEIRO
+2026-09-29|01 SALÁRIO / ENCARGOS|100|D|29/09 18:14 JACQUELINE LUNA DE MELO - DIÁRIA TERCEIRO
+2026-09-29|01 SALÁRIO / ENCARGOS|250|D|29/09 18:14 Asafe Carlos Pereira Nasci - DIÁRIA TERCEIRO
+2026-09-29|01 SALÁRIO / ENCARGOS|32.15|D|29/09 18:14 IVAN PEREIRA DA SILVA FILH - REEMBOLSO OPERAÇÃO
+2026-09-29|02 OP. / TAR. BANCÁRIAS|21.74|D|Tar. agrupadas - ocorrencia 28/09/2026 (02)
+2026-09-29|02 OP. / TAR. BANCÁRIAS|29.47|D|Tar. agrupadas - ocorrencia 29/09/2026 (02)
+2026-10-01|Transferência recebida NE|12000|C|01/10 19:21 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-10-01|01 SALÁRIO / ENCARGOS|411.9|D|01/10 19:22 MANOEL DE ARAUJO LIRA BEZE - REEMBOLSO TOTAL DA SEMANA
+2026-10-01|01 SALÁRIO / ENCARGOS|100|D|01/10 19:22 IVAN PEREIRA DA SILVA FILH - REEMBOLSO OPERACIONAL
+2026-10-01|01 SALÁRIO / ENCARGOS|30|D|01/10 19:22 Beatriz Marilia Correia do - REEMBOLSO AJUDA DE CUSTO
+2026-10-01|06 CUSTOS ADM|388.9|D|01/10 19:22 E FRETE - INTEGRAÇÃO SISTEMA SITRAWEB (06)
+2026-10-01|01 SALÁRIO / ENCARGOS|100|D|01/10 19:22 DAYVSON DE OLIVEIRA MORAES - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|100|D|01/10 19:22 FERNANDO JOSE DA SILVA - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|200|D|01/10 19:22 REGINALDO DA SILVA NERY JU - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|200|D|01/10 19:22 MATHEUS GABRIEL DA SILVA M - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|200|D|01/10 19:22 Bruno Guilherme Cordeiro d - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|200|D|01/10 19:22 Denis Portela Gomes - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|200|D|01/10 19:22 Edson Silva dos Santos - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|100|D|01/10 19:22 JOSE MICHELSON BESERRA DA - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|100|D|01/10 19:22 EDUARDO PEIXOTO DE SOUZA F - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|80|D|01/10 19:22 JACQUELINE LUNA DE MELO - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|100|D|01/10 19:22 EMERSON LIMA DO NASCIMENTO - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|100|D|01/10 19:22 DIOGO BARBOSA DA SILVA - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|100|D|01/10 19:22 Henrique Pedro da Silva Ne - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|250|D|01/10 19:22 Asafe Carlos Pereira Nasci - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|125|D|01/10 19:22 KLEBSON VITOR FERREIRA DA - DIÁRIA TERCEIRO
+2026-10-01|01 SALÁRIO / ENCARGOS|24.2|D|01/10 19:22 JULIO SEVERINO DA SILVA CA - REEMBOLSO AJUDA DE CUSTO
+2026-10-01|04 OP. NLG|4060|D|01/10 19:22 FRANCISCO ELOI DA SILVA - OPERAÇÃO DE FRETE
+2026-10-01|04 OP. NLG|4560|D|01/10 19:22 JOSE EDUARDO DE CARVALHO B - OPERAÇÃO DE FRETE
+2026-10-02|Transferência recebida NE|42000|C|02/10 17:06 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-10-02|Transferência recebida NE|19700|C|02/10 17:07 NORDESTE COMERCIO E INDUSTRIA DE BEBIDAS
+2026-10-02|05 OP. NORDESTE|936.77|D|02/10 17:21 55.340.545 JOSE CARLOS DA - OPERAÇÃO DE FRETE
+2026-10-02|05 OP. NORDESTE|2052.02|D|02/10 17:21 MARCELO BEZERRA DA COSTA - OPERAÇÃO DE FRETE
+2026-10-02|05 OP. NORDESTE|2220|D|02/10 17:21 JOSIAS VITAL DA SILVA - OPERAÇÃO DE FRETE
+2026-10-02|05 OP. NORDESTE|2100|D|02/10 17:21 NICODEMOS RODRIGUES DA SIL - OPERAÇÃO DE FRETE
+2026-10-02|05 OP. NORDESTE|600|D|02/10 17:21 ROBERTO MENEZES CALDAS - OPERAÇÃO DE FRETE
+2026-10-02|05 OP. NORDESTE|1550|D|02/10 17:21 NATALICIO DE JESUS DE ANDR - OPERAÇÃO DE FRETE
+2026-10-02|05 OP. NORDESTE|550|D|02/10 17:21 SILVANA MARIA DA SILVA - OPERAÇÃO DE FRETE
+2026-10-02|05 OP. NORDESTE|1400|D|02/10 17:21 JOSE FRANCISCO XAVIER FILH - OPERAÇÃO DE FRETE
+2026-10-02|05 OP. NORDESTE|1200|D|02/10 17:21 CLAUDIO LUIS GOMES - OPERAÇÃO DE FRETE
+2026-10-02|05 OP. NORDESTE|800|D|02/10 17:21 PAULO ROBERTO BARBOSA DA S - OPERAÇÃO DE FRETE
+2026-10-02|01 SALÁRIO / ENCARGOS|42033.5|D|02/10 17:21 FLASH APP - V.A E V.T OUTUBRO (01)
+2026-10-02|01 SALÁRIO / ENCARGOS|71.77|D|02/10 17:21 IVAN PEREIRA DA SILVA FILH - REEMBOLSO DESCARGA
+2026-10-02|01 SALÁRIO / ENCARGOS|20|D|02/10 17:21 Beatriz Marilia Correia do - REEMBOLSO AJUDA DE CUSTO
+2026-10-02|04 OP. NLG|4850|D|02/10 17:21 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-10-02|01 SALÁRIO / ENCARGOS|100|D|02/10 17:21 MATHEUS GABRIEL DA SILVA M - DIÁRIA TERCEIRO
+2026-10-02|01 SALÁRIO / ENCARGOS|100|D|02/10 17:21 Bruno Guilherme Cordeiro d - DIÁRIA TERCEIRO
+2026-10-02|01 SALÁRIO / ENCARGOS|100|D|02/10 17:21 Edson Silva dos Santos - DIÁRIA TERCEIRO
+2026-10-02|01 SALÁRIO / ENCARGOS|125|D|02/10 17:21 Asafe Carlos Pereira Nasci - DIÁRIA TERCEIRO
+2026-10-02|01 SALÁRIO / ENCARGOS|125|D|02/10 17:21 Denilson José da Silva - DIÁRIA TERCEIRO
+2026-10-02|04 OP. NLG|720|D|02/10 17:21 JS TRANSPORTES - OPERAÇÃO DE FRETE (04)
+2026-10-02|02 OP. / TAR. BANCÁRIAS|32.68|D|Tar. agrupadas - ocorrencia 01/10/2026 (02)
+2026-10-02|02 OP. / TAR. BANCÁRIAS|103.15|D|Tar. agrupadas - ocorrencia 02/10/2026 (02)
+`;
+
+const RESUMO_ORIGINAL = {
+  mesesFull:['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],
+  meses:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],
+  receita:[247000,377036,382620,498373,267745.39,325675,420552.49,291284.27,317153.63,73700,0,0],
+  despesa:[212602.75,402959.07,389317.63,497933.20,268658.40,326632.31,419291.73,290340.98,319458.66,73519.89,0,0],
+  categorias:[
+    {nome:'01 SALÁRIO / ENCARGOS',tipo:'Despesa',cor:'#4f8cff',valores:[115401.53,219631.92,244656.94,323409.18,231280.52,242958.30,292062.99,215857.17,216057.56,45396.37,0,0]},
+    {nome:'02 OP. / TAR. BANCÁRIAS',tipo:'Despesa',cor:'#38bdf8',valores:[439.66,34556.56,637.25,58072.69,269.34,381.66,8085.37,400.05,1556.20,135.83,0,0]},
+    {nome:'03 IMPOSTOS',tipo:'Despesa',cor:'#f59e0b',valores:[17874.40,22836.01,9706.18,41470.91,10024.63,7423.42,16552.49,15547.10,15516.07,0,0,0]},
+    {nome:'04 OP. NLG',tipo:'Despesa',cor:'#a78bfa',valores:[75341.40,120018.07,130012.60,66617.64,20264.27,69890.48,49760.14,31442.50,44182.31,14190.00,0,0]},
+    {nome:'05 OP. NORDESTE',tipo:'Despesa',cor:'#f472b6',valores:[0,0,0,0,0,0,42091.42,19725.50,37059.79,13408.79,0,0]},
+    {nome:'06 CUSTOS ADM',tipo:'Despesa',cor:'#34d399',valores:[3545.76,5916.51,4304.66,8362.78,6819.64,5978.45,10739.32,7368.66,5086.73,388.90,0,0]},
+    {nome:'Cobrança',tipo:'Receita',cor:'#2ecc8f',valores:[0,0,0,0,5700,0,16490,3887.04,5817.79,0,0,0]},
+    {nome:'Dep dinheiro banco',tipo:'Receita',cor:'#22d3ee',valores:[0,0,720,0,0,0,1833,762.30,1084,0,0,0]},
+    {nome:'Pix-Envio devolvido',tipo:'Receita',cor:'#fbbf24',valores:[0,0,0,0,0,0,7500,0,0,0,0,0]},
+    {nome:'Transferência recebida',tipo:'Receita',cor:'#818cf8',valores:[0,0,0,0,2945.39,175,760,0,0,0,0,0]},
+    {nome:'Transferência recebida NE',tipo:'Receita',cor:'#10b981',valores:[247000,377036,381900,498373,259100,325500,393969.49,286634.93,310251.84,73700,0,0]}
+  ]
+};
+
+/* ============================================================
+   STORAGE — v4 (chave nova para ignorar dados antigos salvos)
+   ============================================================ */
+const STORAGE_KEY = 'dashboard-caixa-v4';
+const DATA_VERSION = '2026-10-02-v4';
+
+function salvarLocal(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      dados: STATE.dados,
+      resumo: STATE.resumo,
+      versao: DATA_VERSION,
+      atualizado: new Date().toISOString()
+    }));
+    return true;
+  }catch(e){ console.error(e); return false; }
+}
+function carregarLocal(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj || !Array.isArray(obj.dados) || !obj.dados.length) return null;
+    // Se os dados salvos não cobrirem janeiro, ignora (dados antigos de outra versão)
+    const primeiroMes = obj.dados[0]?.data?.slice(0,7);
+    if(primeiroMes && primeiroMes > '2026-01') return null;
+    return obj;
+  }catch(e){ return null; }
+}
+function limparLocal(){ localStorage.removeItem(STORAGE_KEY); }
+
+/* ============================================================
+   UTILITÁRIOS
+   ============================================================ */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const fmtBRL = n => (n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fmtBRL0 = n => (n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:0});
+const fmtNum = n => (n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const fmtK = n => {
+  const a = Math.abs(n);
+  if(a >= 1e6) return (n/1e6).toFixed(1).replace('.',',')+'M';
+  if(a >= 1e3) return (n/1e3).toFixed(0)+'k';
+  return n.toFixed(0);
+};
+const MESES_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const MESES_FULL = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+function parseData(s){
+  s = String(s||'').trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+  if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  return null;
+}
+function parseValor(s){
+  if(typeof s === 'number') return s;
+  s = String(s||'').replace(/[R$\s]/g,'');
+  if(s.includes(',')) s = s.replace(/\./g,'').replace(',','.');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+function tipoNorm(s){
+  const t = String(s||'').trim().toUpperCase();
+  if(t==='C'||t==='CREDITO'||t==='CRÉDITO'||t==='RECEITA'||t==='ENTRADA') return 'C';
+  return 'D';
+}
+function corCategoria(nome){
+  const found = STATE.resumo.categorias.find(c => c.nome === nome);
+  if(found) return found.cor;
+  const prefix = nome.slice(0,2);
+  const map = {'01':'#4f8cff','02':'#38bdf8','03':'#f59e0b','04':'#a78bfa','05':'#f472b6','06':'#34d399'};
+  return map[prefix] || '#8899bb';
+}
+function parseExtrato(txt){
+  const linhas = String(txt).split(/\r?\n/);
+  const out = [];
+  for(const linha of linhas){
+    const raw = linha.trim();
+    if(!raw) continue;
+    let sep = '|';
+    if(!raw.includes('|')){
+      if(raw.includes('\t')) sep = '\t';
+      else if(raw.includes(';')) sep = ';';
+      else if(raw.includes(',')) sep = ',';
+      else continue;
+    }
+    const p = raw.split(sep).map(x=>x.trim());
+    if(p.length < 4) continue;
+    const data = parseData(p[0]);
+    if(!data) continue;
+    if(/^(total|data)/i.test(p[0])) continue;
+    out.push({
+      data, categoria: p[1] || 'Não classificado',
+      valor: parseValor(p[2]), tipo: tipoNorm(p[3]),
+      detalhe: p[4] || ''
+    });
+  }
+  out.sort((a,b)=> a.data.localeCompare(b.data));
+  return out;
+}
+function toast(msg, tipo='ok'){
+  const el = $('#toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (tipo==='error'?'error':tipo==='info'?'info':'');
+  clearTimeout(el._t);
+  el._t = setTimeout(()=> el.classList.remove('show'), 3200);
+}
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+const STATE = {
+  dados: [], resumo: null, saldoInicial: 0,
+  mesIni: 0, mesFim: 9,
+  catGeral: 'todas', tipoGeral: 'todos', busca: '',
+  origem: 'original'
+};
+
+/* ============================================================
+   FILTROS
+   ============================================================ */
+function getMesesFiltrados(){
+  const out = [];
+  for(let i = STATE.mesIni; i <= STATE.mesFim; i++) out.push(i);
+  return out;
+}
+function getCategoriasFiltradas(){
+  return STATE.resumo.categorias.filter(c => {
+    if(STATE.catGeral !== 'todas' && c.nome !== STATE.catGeral) return false;
+    return true;
+  });
+}
+function categoriaPassaFiltro(nome){
+  return STATE.catGeral === 'todas' || nome === STATE.catGeral;
+}
+function tipoPassaFiltro(tipo){
+  if(STATE.tipoGeral === 'todos') return true;
+  if(STATE.tipoGeral === 'receita' && tipo === 'C') return true;
+  if(STATE.tipoGeral === 'despesa' && tipo === 'D') return true;
+  return false;
+}
+function getTotaisFiltrados(){
+  const meses = getMesesFiltrados();
+  const cats = getCategoriasFiltradas();
+  let rec = 0, desp = 0;
+  meses.forEach(m => {
+    cats.forEach(c => {
+      const v = c.valores[m] || 0;
+      if(c.tipo === 'Receita' && (STATE.tipoGeral === 'todos' || STATE.tipoGeral === 'receita')) rec += v;
+      if(c.tipo === 'Despesa' && (STATE.tipoGeral === 'todos' || STATE.tipoGeral === 'despesa')) desp += v;
+    });
+  });
+  return {rec, desp, resultado: rec - desp};
+}
+function getMovimentosFiltrados(){
+  return STATE.dados.filter(d => {
+    const m = parseInt(d.data.slice(5,7),10) - 1;
+    if(m < STATE.mesIni || m > STATE.mesFim) return false;
+    if(STATE.catGeral !== 'todas' && d.categoria !== STATE.catGeral) return false;
+    if(!tipoPassaFiltro(d.tipo)) return false;
+    if(STATE.busca){
+      const blob = `${d.categoria} ${d.detalhe} ${d.data} ${d.valor}`.toLowerCase();
+      if(!blob.includes(STATE.busca.toLowerCase())) return false;
+    }
+    return true;
+  });
+}
+
+/* ============================================================
+   SVG HELPERS
+   ============================================================ */
+const NS = 'http://www.w3.org/2000/svg';
+function svgEl(tag, attrs={}){
+  const e = document.createElementNS(NS, tag);
+  for(const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+function clearSvg(svg){ while(svg.firstChild) svg.removeChild(svg.firstChild); }
+
+/* ============================================================
+   GRÁFICO MENSAL
+   ============================================================ */
+function renderChartMensal(){
+  const svg = $('#chartMensal');
+  clearSvg(svg);
+  const W=900,H=340, P={t:22,r:20,b:46,l:66};
+  const iw = W-P.l-P.r, ih = H-P.t-P.b;
+  const meses = getMesesFiltrados();
+  if(!meses.length) return;
+  const cats = getCategoriasFiltradas();
+  const rec = meses.map(m => cats.filter(c => c.tipo === 'Receita' && (STATE.tipoGeral === 'todos' || STATE.tipoGeral === 'receita')).reduce((s,c) => s + (c.valores[m] || 0), 0));
+  const des = meses.map(m => cats.filter(c => c.tipo === 'Despesa' && (STATE.tipoGeral === 'todos' || STATE.tipoGeral === 'despesa')).reduce((s,c) => s + (c.valores[m] || 0), 0));
+  const res = meses.map((_,i) => rec[i] - des[i]);
+  const maxV = Math.max(1, ...rec, ...des) * 1.12;
+  const minR = Math.min(0, ...res), maxR = Math.max(1, ...res) * 1.2;
+  const n = meses.length;
+  const slot = iw / n;
+  const bw = Math.min(26, slot*0.32);
+  const steps = 5;
+  for(let i=0;i<=steps;i++){
+    const y = P.t + ih - (ih*i/steps);
+    svg.appendChild(svgEl('line',{x1:P.l,y1:y,x2:W-P.r,y2:y,stroke:'var(--chart-grid)','stroke-width':1,'stroke-dasharray':i===0?'0':'3 4'}));
+    const t = svgEl('text',{x:P.l-10,y:y+4,fill:'var(--chart-text)','font-size':11,'text-anchor':'end'});
+    t.textContent = fmtK(maxV*i/steps); svg.appendChild(t);
+  }
+  meses.forEach((mi,idx)=>{
+    const cx = P.l + slot*idx + slot/2;
+    const hR = (rec[idx]/maxV)*ih, hD = (des[idx]/maxV)*ih;
+    const b1 = svgEl('rect',{x:cx-bw-3,y:P.t+ih-hR,width:bw,height:Math.max(hR,0),rx:4,fill:'var(--green)',opacity:.92});
+    const ti1 = svgEl('title'); ti1.textContent = `${MESES_FULL[mi]} — Receita: ${fmtBRL(rec[idx])}`;
+    b1.appendChild(ti1); svg.appendChild(b1);
+    const b2 = svgEl('rect',{x:cx+3,y:P.t+ih-hD,width:bw,height:Math.max(hD,0),rx:4,fill:'var(--red)',opacity:.92});
+    const ti2 = svgEl('title'); ti2.textContent = `${MESES_FULL[mi]} — Despesa: ${fmtBRL(des[idx])}`;
+    b2.appendChild(ti2); svg.appendChild(b2);
+    const t = svgEl('text',{x:cx,y:H-P.b+22,fill:'var(--chart-text)','font-size':12,'text-anchor':'middle','font-weight':600});
+    t.textContent = MESES_PT[mi]; svg.appendChild(t);
+  });
+  const rangeR = (maxR-minR)||1;
+  const pts = res.map((v,i)=>{
+    const cx = P.l + slot*i + slot/2;
+    const cy = P.t + ih - ((v-minR)/rangeR)*ih;
+    return {x:cx,y:cy,v};
+  });
+  if(pts.length>1){
+    svg.appendChild(svgEl('polyline',{points:pts.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:'var(--amber)','stroke-width':2.4,'stroke-linejoin':'round','stroke-linecap':'round'}));
+  }
+  pts.forEach(p=>{
+    const c = svgEl('circle',{cx:p.x,cy:p.y,r:4,fill:'var(--amber)',stroke:'var(--surface)','stroke-width':2});
+    const t = svgEl('title'); t.textContent = `Resultado: ${fmtBRL(p.v)}`;
+    c.appendChild(t); svg.appendChild(c);
+  });
+}
+
+/* ============================================================
+   BARRAS HORIZONTAIS
+   ============================================================ */
+function renderBarrasH(targetId, tipo, topN){
+  const svg = $(targetId);
+  clearSvg(svg);
+  const W=700;
+  const meses = getMesesFiltrados();
+  const cats = STATE.resumo.categorias.filter(c => c.tipo === tipo).filter(c => categoriaPassaFiltro(c.nome));
+  const itens = cats.map(c => {
+    let s=0; meses.forEach(m => s += c.valores[m] || 0);
+    return {nome:c.nome, cor:c.cor, val:s};
+  }).filter(x=>x.val>0).sort((a,b)=>b.val-a.val);
+  const lista = topN ? itens.slice(0,topN) : itens;
+  const rowH = 40;
+  const H = Math.max(120, lista.length*rowH + 30);
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  if(!lista.length){
+    const t = svgEl('text',{x:W/2,y:60,fill:'var(--chart-text)','font-size':13,'text-anchor':'middle'});
+    t.textContent='Sem dados no período'; svg.appendChild(t); return;
+  }
+  const maxV = lista[0].val;
+  const labelW = 190, barW = W - labelW - 110;
+  lista.forEach((it,i)=>{
+    const y = 14 + i*rowH;
+    const w = Math.max(2,(it.val/maxV)*barW);
+    const lb = svgEl('text',{x:0,y:y+18,fill:'var(--chart-text)','font-size':12,'font-weight':600});
+    lb.textContent = it.nome.length>26 ? it.nome.slice(0,25)+'…' : it.nome;
+    svg.appendChild(lb);
+    svg.appendChild(svgEl('rect',{x:labelW,y:y+4,width:barW,height:20,rx:6,fill:'var(--surface-3)'}));
+    const bar = svgEl('rect',{x:labelW,y:y+4,width:w,height:20,rx:6,fill:it.cor,opacity:.9});
+    const ti = svgEl('title'); ti.textContent = `${it.nome}: ${fmtBRL(it.val)}`;
+    bar.appendChild(ti); svg.appendChild(bar);
+    const v = svgEl('text',{x:labelW+barW+10,y:y+19,fill:'var(--text)','font-size':12,'font-weight':700,'text-anchor':'start'});
+    v.textContent = fmtBRL0(it.val); svg.appendChild(v);
+  });
+}
+
+/* ============================================================
+   SALDO ACUMULADO
+   ============================================================ */
+function renderSaldo(){
+  const svg = $('#chartSaldo');
+  clearSvg(svg);
+  const W=700,H=320,P={t:24,r:24,b:44,l:70};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const movs = getMovimentosFiltrados();
+  if(!movs.length){
+    const t=svgEl('text',{x:W/2,y:H/2,fill:'var(--chart-text)','font-size':13,'text-anchor':'middle'});
+    t.textContent='Sem movimentações no período'; svg.appendChild(t); return;
+  }
+  const porDia = new Map();
+  movs.forEach(d => {
+    if(!porDia.has(d.data)) porDia.set(d.data,{r:0,d:0});
+    const o = porDia.get(d.data);
+    if(d.tipo==='C') o.r += d.valor; else o.d += d.valor;
+  });
+  const dias = Array.from(porDia.keys()).sort();
+  let saldo = 0;
+  const serie = dias.map(dia => {
+    const o = porDia.get(dia);
+    saldo += o.r - o.d;
+    return {dia, saldo};
+  });
+  const vals = serie.map(s => s.saldo);
+  const min = Math.min(0, ...vals), max = Math.max(1, ...vals);
+  const range = (max - min) || 1;
+  for(let i=0;i<=4;i++){
+    const y = P.t + ih - (ih*i/4);
+    svg.appendChild(svgEl('line',{x1:P.l,y1:y,x2:W-P.r,y2:y,stroke:'var(--chart-grid)','stroke-width':1,'stroke-dasharray':i===0?'0':'3 4'}));
+    const t = svgEl('text',{x:P.l-10,y:y+4,fill:'var(--chart-text)','font-size':11,'text-anchor':'end'});
+    t.textContent = fmtK(min + range*i/4); svg.appendChild(t);
+  }
+  const X = i => P.l + (serie.length===1 ? iw/2 : (iw*i/(serie.length-1)));
+  const Y = v => P.t + ih - ((v-min)/range)*ih;
+  const pts = serie.map((s,i)=>`${X(i)},${Y(s.saldo)}`).join(' ');
+  const defs = svgEl('defs');
+  const lg = svgEl('linearGradient',{id:'gradSaldo',x1:'0',y1:'0',x2:'0',y2:'1'});
+  lg.appendChild(svgEl('stop',{offset:'0%','stop-color':'var(--accent)','stop-opacity':.75}));
+  lg.appendChild(svgEl('stop',{offset:'100%','stop-color':'var(--accent)','stop-opacity':0}));
+  defs.appendChild(lg); svg.appendChild(defs);
+  svg.appendChild(svgEl('polygon',{points:`${P.l},${P.t+ih} ${pts} ${X(serie.length-1)},${P.t+ih}`,fill:'url(#gradSaldo)',opacity:.35}));
+  svg.appendChild(svgEl('polyline',{points:pts,fill:'none',stroke:'var(--accent)','stroke-width':2.6,'stroke-linejoin':'round','stroke-linecap':'round'}));
+  const step = Math.max(1, Math.floor(serie.length/40));
+  serie.forEach((s,i)=>{
+    if(i%step!==0 && i!==serie.length-1) return;
+    const c = svgEl('circle',{cx:X(i),cy:Y(s.saldo),r:3,fill:'var(--accent)',stroke:'var(--surface)','stroke-width':1.5});
+    const t = svgEl('title'); t.textContent = `${s.dia.split('-').reverse().join('/')} — Saldo: ${fmtBRL(s.saldo)}`;
+    c.appendChild(t); svg.appendChild(c);
+  });
+  const nLab = Math.min(6, serie.length);
+  for(let i=0;i<nLab;i++){
+    const idx = Math.round(i*(serie.length-1)/Math.max(1,nLab-1));
+    const t = svgEl('text',{x:X(idx),y:H-P.b+22,fill:'var(--chart-text)','font-size':11,'text-anchor':'middle'});
+    const [a,m,d] = serie[idx].dia.split('-');
+    t.textContent = `${d}/${m}`; svg.appendChild(t);
+  }
+}
+
+/* ============================================================
+   KPIs
+   ============================================================ */
+function renderKPIs(){
+  const {rec, desp, resultado} = getTotaisFiltrados();
+  const nMeses = STATE.mesFim - STATE.mesIni + 1;
+  const margem = rec > 0 ? (resultado/rec*100) : 0;
+  const movs = getMovimentosFiltrados();
+  const volExtrato = movs.reduce((s,d)=>s+d.valor,0);
+  const catsDesp = getCategoriasFiltradas().filter(c=>c.tipo==='Despesa' && (STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa'));
+  const topDesp = catsDesp.map(c=>{
+    let t=0; getMesesFiltrados().forEach(m=> t += c.valores[m]||0);
+    return {nome:c.nome, val:t};
+  }).sort((a,b)=>b.val-a.val)[0];
+  const saldoExtrato = movs.reduce((s,d)=> s + (d.tipo==='C'?d.valor:-d.valor), 0);
+  const cards = [
+    {label:'💰 Receita Total', cls:'green', valor:fmtBRL(rec), sub:`${nMeses} ${nMeses===1?'mês':'meses'} · média ${fmtBRL(rec/nMeses)}/mês`},
+    {label:'💸 Despesa Total', cls:'red', valor:fmtBRL(desp), sub: topDesp ? `maior: ${topDesp.nome} (${fmtBRL0(topDesp.val)})` : `média ${fmtBRL(desp/nMeses)}/mês`},
+    {label:'📈 Resultado do Período', cls: resultado>=0?'green':'red', valor:fmtBRL(resultado), sub:`margem de ${margem.toFixed(2)}% sobre a receita`},
+    {label:'🧾 Movimentações', cls:'purple', valor:movs.length.toLocaleString('pt-BR'), sub:`volume filtrado de ${fmtBRL(volExtrato)}`},
+    {label:'📊 Média Diária de Despesa', cls:'amber', valor:fmtBRL(desp/(nMeses*30)), sub:'estimativa com 30 dias/mês'},
+    {label:'🏦 Saldo do Período (extrato)', cls:'green', valor:fmtBRL(saldoExtrato), sub:`base: ${movs.length} lançamentos no extrato`}
+  ];
+  $('#kpiBox').innerHTML = cards.map(c=>`
+    <div class="card ${c.cls}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.valor}</div>
+      <div class="kpi-sub">${c.sub}</div>
+    </div>`).join('');
+}
+
+/* ============================================================
+   RESUMO MENSAL
+   ============================================================ */
+function renderResumoMensal(){
+  const meses = getMesesFiltrados();
+  const cats = getCategoriasFiltradas();
+  let html = '<thead><tr><th>Mês</th><th>Receita</th><th>Despesa</th><th>Resultado</th><th>Margem</th></tr></thead><tbody>';
+  let tR=0,tD=0;
+  meses.forEach(i=>{
+    const r = cats.filter(c=>c.tipo==='Receita' && (STATE.tipoGeral==='todos'||STATE.tipoGeral==='receita')).reduce((s,c)=> s + (c.valores[i]||0), 0);
+    const d = cats.filter(c=>c.tipo==='Despesa' && (STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa')).reduce((s,c)=> s + (c.valores[i]||0), 0);
+    const res = r - d;
+    tR += r; tD += d;
+    html += `<tr><td>${MESES_FULL[i]}</td><td class="pos">${fmtNum(r)}</td><td class="neg">${fmtNum(d)}</td><td class="${res>=0?'pos':'neg'}">${fmtNum(res)}</td><td class="muted">${r>0?((res/r)*100).toFixed(1):'0,0'}%</td></tr>`;
+  });
+  const tRes = tR - tD;
+  html += `<tr class="total-row"><td>TOTAL</td><td class="pos">${fmtNum(tR)}</td><td class="neg">${fmtNum(tD)}</td><td class="${tRes>=0?'pos':'neg'}">${fmtNum(tRes)}</td><td>${tR>0?((tRes/tR)*100).toFixed(2):'0,00'}%</td></tr></tbody>`;
+  $('#tblResumo').innerHTML = html;
+}
+
+/* ============================================================
+   MATRIZ
+   ============================================================ */
+function renderMatriz(){
+  const meses = getMesesFiltrados();
+  const todasCats = getCategoriasFiltradas();
+  const desps = todasCats.filter(c=>c.tipo==='Despesa');
+  const recs  = todasCats.filter(c=>c.tipo==='Receita');
+  let head = '<thead><tr><th>Categoria</th>';
+  meses.forEach(i=> head += `<th>${MESES_PT[i]}</th>`);
+  head += '<th>Total</th></tr></thead>';
+  const linha = (c)=>{
+    let soma = 0; let cols = '';
+    meses.forEach(i=>{
+      const v = c.valores[i] || 0; soma += v;
+      cols += `<td>${v?fmtNum(v):'<span class="muted">—</span>'}</td>`;
+    });
+    return `<tr><td><span class="cat-dot" style="background:${c.cor}"></span>${c.nome}</td>${cols}<td style="font-weight:800">${fmtNum(soma)}</td></tr>`;
+  };
+  let body = '<tbody>';
+  if(desps.length){
+    body += `<tr class="total-row"><td colspan="${meses.length+2}" style="text-align:left;color:var(--red)">DESPESAS</td></tr>`;
+    desps.forEach(c=> body += linha(c));
+    const totDesp = meses.map(i=>desps.reduce((s,c)=>s+(c.valores[i]||0),0));
+    body += `<tr class="total-row"><td>Total Despesas</td>${totDesp.map(v=>`<td>${fmtNum(v)}</td>`).join('')}<td>${fmtNum(totDesp.reduce((a,b)=>a+b,0))}</td></tr>`;
+  }
+  if(recs.length){
+    body += `<tr class="total-row"><td colspan="${meses.length+2}" style="text-align:left;color:var(--green)">RECEITAS</td></tr>`;
+    recs.forEach(c=> body += linha(c));
+    const totRec = meses.map(i=>recs.reduce((s,c)=>s+(c.valores[i]||0),0));
+    body += `<tr class="total-row"><td>Total Receitas</td>${totRec.map(v=>`<td>${fmtNum(v)}</td>`).join('')}<td>${fmtNum(totRec.reduce((a,b)=>a+b,0))}</td></tr>`;
+  }
+  body += '</tbody>';
+  $('#tblMatriz').innerHTML = head + body;
+  $('#matrizSub').textContent = `${desps.length + recs.length} categorias · ${meses.length} meses`;
+}
+
+/* ============================================================
+   RANKING
+   ============================================================ */
+function renderRanking(){
+  const meses = getMesesFiltrados();
+  const cats = getCategoriasFiltradas();
+  const itens = cats.map(c=>{
+    let s=0; meses.forEach(m => s += c.valores[m] || 0);
+    return {...c, total:s};
+  }).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);
+  const totDesp = itens.filter(x=>x.tipo==='Despesa').reduce((a,b)=>a+b.total,0);
+  const totRec  = itens.filter(x=>x.tipo==='Receita').reduce((a,b)=>a+b.total,0);
+  let html = `<thead><tr><th>Categoria</th><th>Tipo</th><th>Total</th><th>% do Tipo</th><th>Média/Mês</th></tr></thead><tbody>`;
+  const nMeses = meses.length;
+  itens.forEach(c=>{
+    const base = c.tipo==='Despesa' ? totDesp : totRec;
+    const pct = base>0 ? (c.total/base*100) : 0;
+    html += `<tr><td><span class="cat-dot" style="background:${c.cor}"></span>${c.nome}</td><td><span class="tag ${c.tipo==='Receita'?'C':'D'}">${c.tipo}</span></td><td style="font-weight:700">${fmtNum(c.total)}</td><td>${pct.toFixed(1)}%</td><td class="muted">${fmtNum(c.total/nMeses)}</td></tr>`;
+  });
+  html += '</tbody>';
+  $('#tblCat').innerHTML = html;
+}
+
+/* ============================================================
+   MOVIMENTAÇÕES
+   ============================================================ */
+function renderMov(){
+  const filtrado = getMovimentosFiltrados();
+  let saldo = 0;
+  const comSaldo = filtrado.map(d => {
+    saldo += (d.tipo==='C' ? d.valor : -d.valor);
+    return {...d, saldo};
+  });
+  const totR = filtrado.filter(d=>d.tipo==='C').reduce((s,d)=>s+d.valor,0);
+  const totD = filtrado.filter(d=>d.tipo==='D').reduce((s,d)=>s+d.valor,0);
+  $('#movInfo').innerHTML = `${filtrado.length} lançamentos · <span class="pos">${fmtBRL(totR)}</span> · <span class="neg">${fmtBRL(totD)}</span> · resultado <strong class="${totR-totD>=0?'pos':'neg'}">${fmtBRL(totR-totD)}</strong>`;
+  let html = `<thead><tr><th>Data</th><th>Categoria</th><th>Detalhamento</th><th>Tipo</th><th>Receita</th><th>Despesa</th><th>Saldo</th></tr></thead><tbody>`;
+  if(!filtrado.length){
+    html += `<tr><td colspan="7" style="text-align:center;padding:40px" class="muted">Nenhum lançamento encontrado com os filtros atuais.</td></tr>`;
+  }else{
+    comSaldo.forEach(d=>{
+      const [a,m,dia] = d.data.split('-');
+      html += `<tr>
+        <td>${dia}/${m}/${a}</td>
+        <td><span class="cat-dot" style="background:${corCategoria(d.categoria)}"></span>${d.categoria}</td>
+        <td style="text-align:left;max-width:420px;white-space:normal;color:var(--muted);font-weight:400">${d.detalhe||'—'}</td>
+        <td><span class="tag ${d.tipo}">${d.tipo==='C'?'Receita':'Despesa'}</span></td>
+        <td class="pos">${d.tipo==='C'?fmtNum(d.valor):'—'}</td>
+        <td class="neg">${d.tipo==='D'?fmtNum(d.valor):'—'}</td>
+        <td style="font-weight:700">${fmtNum(d.saldo)}</td>
+      </tr>`;
+    });
+  }
+  html += `<tr class="total-row"><td colspan="4">TOTAL FILTRADO</td><td class="pos">${fmtNum(totR)}</td><td class="neg">${fmtNum(totD)}</td><td class="${totR-totD>=0?'pos':'neg'}">${fmtNum(totR-totD)}</td></tr></tbody>`;
+  $('#tblMov').innerHTML = html;
+}
+
+/* ============================================================
+   STATS / STORAGE
+   ============================================================ */
+function renderStats(){
+  const d = STATE.dados;
+  if(!d.length){ $('#statsBox').innerHTML='<p class="muted small">Sem dados.</p>'; return; }
+  const datas = d.map(x=>x.data).sort();
+  const cats = new Set(d.map(x=>x.categoria));
+  const rec = d.filter(x=>x.tipo==='C').reduce((s,x)=>s+x.valor,0);
+  const des = d.filter(x=>x.tipo==='D').reduce((s,x)=>s+x.valor,0);
+  const linhas = [
+    ['Período', `${datas[0].split('-').reverse().join('/')} → ${datas[datas.length-1].split('-').reverse().join('/')}`],
+    ['Lançamentos', d.length.toLocaleString('pt-BR')],
+    ['Categorias distintas', cats.size],
+    ['Total de receitas', fmtBRL(rec)],
+    ['Total de despesas', fmtBRL(des)],
+    ['Resultado do extrato', fmtBRL(rec-des)],
+    ['Maior lançamento', fmtBRL(Math.max(...d.map(x=>x.valor)))],
+    ['Menor lançamento', fmtBRL(Math.min(...d.map(x=>x.valor)))]
+  ];
+  $('#statsBox').innerHTML = linhas.map(([k,v])=>`
+    <div style="display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <span class="muted small">${k}</span><strong class="small">${v}</strong>
+    </div>`).join('');
+}
+function renderStorage(){
+  const tamanho = (()=>{
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? (raw.length/1024).toFixed(1)+' KB' : '—';
+    }catch(e){ return '—'; }
+  })();
+  const linhas = [
+    ['Origem dos dados', STATE.origem === 'local' ? '💾 Salvos no navegador' : '📦 Dados originais do arquivo'],
+    ['Versão do dataset', DATA_VERSION],
+    ['Categorias no resumo', STATE.resumo.categorias.length],
+    ['Lançamentos no extrato', STATE.dados.length.toLocaleString('pt-BR')],
+    ['Espaço usado', tamanho],
+    ['Limite do navegador', '≈ 5 MB']
+  ];
+  $('#storageBox').innerHTML = linhas.map(([k,v])=>`
+    <div style="display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <span class="muted small">${k}</span><strong class="small">${v}</strong>
+    </div>`).join('');
+}
+function atualizarStatusSave(){
+  const el = $('#saveStatus');
+  if(STATE.origem === 'local'){
+    el.className = 'save-status saved';
+    el.textContent = '💾 Salvo no navegador';
+  }else{
+    el.className = 'save-status';
+    el.textContent = '📦 Dados originais';
+  }
+}
+
+/* ============================================================
+   POPULAR SELECTS
+   ============================================================ */
+function mesesComDados(){
+  const set = new Set();
+  STATE.resumo.categorias.forEach(c => {
+    c.valores.forEach((v, i) => { if(v > 0) set.add(i); });
+  });
+  return Array.from(set).sort((a,b)=>a-b);
+}
+function popularSelects(){
+  const meses = mesesComDados();
+  if(!meses.length){
+    $('#fMesIni').innerHTML = '<option>—</option>';
+    $('#fMesFim').innerHTML = '<option>—</option>';
+    return;
+  }
+  const opts = meses.map(i => `<option value="${i}">${MESES_FULL[i]}</option>`).join('');
+  $('#fMesIni').innerHTML = opts;
+  $('#fMesFim').innerHTML = opts;
+  const ini = meses.includes(STATE.mesIni) ? STATE.mesIni : meses[0];
+  const fim = meses.includes(STATE.mesFim) ? STATE.mesFim : meses[meses.length-1];
+  STATE.mesIni = ini; STATE.mesFim = fim;
+  $('#fMesIni').value = ini;
+  $('#fMesFim').value = fim;
+  const cats = STATE.resumo.categorias.map(c=>`<option value="${c.nome}">${c.nome}</option>`).join('');
+  const catAtual = STATE.catGeral;
+  $('#fCat').innerHTML = `<option value="todas">Todas</option>${cats}`;
+  if(STATE.resumo.categorias.some(c=>c.nome===catAtual)) $('#fCat').value = catAtual;
+  else { $('#fCat').value = 'todas'; STATE.catGeral = 'todas'; }
+}
+function atualizarBadge(){
+  const badge = $('#filterBadge');
+  const partes = [];
+  const ultimoMes = mesesComDados().slice(-1)[0];
+  if(STATE.mesIni !== 0 || STATE.mesFim !== ultimoMes) {
+    partes.push(`<strong>${MESES_PT[STATE.mesIni]}–${MESES_PT[STATE.mesFim]}</strong>`);
+  }
+  if(STATE.catGeral !== 'todas') partes.push(`<strong>${STATE.catGeral}</strong>`);
+  if(STATE.tipoGeral !== 'todos') partes.push(`<strong>${STATE.tipoGeral}</strong>`);
+  if(STATE.busca) partes.push(`"<strong>${STATE.busca}</strong>"`);
+  if(partes.length){
+    badge.style.display = 'inline-flex';
+    badge.innerHTML = `Filtros ativos: ${partes.join(' · ')}`;
+  }else{
+    badge.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   RENDER ALL
+   ============================================================ */
+function renderAll(){
+  renderKPIs();
+  renderChartMensal();
+  renderBarrasH('#chartCat', 'Despesa', 6);
+  renderBarrasH('#chartCatFull', 'Despesa', null);
+  renderBarrasH('#chartRecFull', 'Receita', null);
+  renderSaldo();
+  renderResumoMensal();
+  renderMatriz();
+  renderRanking();
+  renderMov();
+  renderStats();
+  renderStorage();
+  atualizarStatusSave();
+  atualizarBadge();
+  $('#topCatSub').textContent = `${MESES_PT[STATE.mesIni]} — ${MESES_PT[STATE.mesFim]}`;
+  $('#saldoSub').textContent = `${MESES_PT[STATE.mesIni]} — ${MESES_PT[STATE.mesFim]}`;
+  $('#brandSub').textContent = `${MESES_PT[STATE.mesIni]} a ${MESES_PT[STATE.mesFim]} · ${STATE.dados.length} lançamentos · ${STATE.resumo.categorias.length} categorias`;
+}
+
+/* ============================================================
+   EXCEL
+   ============================================================ */
+function parseExtratoSheet(wb){
+  const names = wb.SheetNames;
+  const prefer = ['Controle de Caixa Unificado','EXTRATO BASE','Extrato Base','Extrato'];
+  let sheetName = prefer.find(n => names.includes(n));
+  if(!sheetName) sheetName = names.find(n => /controle.*caixa|extrato/i.test(n));
+  if(!sheetName) return null;
+  const sheet = wb.Sheets[sheetName];
+  const data = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true, defval:null});
+  const out = [];
+  for(let i = 0; i < data.length; i++){
+    const row = data[i];
+    if(!row || row.length < 4) continue;
+    const c0 = row[0];
+    if(c0 == null) continue;
+    let dataISO = null;
+    if(c0 instanceof Date){
+      const y = c0.getUTCFullYear();
+      const m = String(c0.getUTCMonth()+1).padStart(2,'0');
+      const d = String(c0.getUTCDate()).padStart(2,'0');
+      dataISO = `${y}-${m}-${d}`;
+    }else{
+      dataISO = parseData(String(c0));
+    }
+    if(!dataISO) continue;
+    if(/^(total|data)/i.test(String(c0))) continue;
+    const col1 = String(row[1]||'').trim();
+    const col3 = String(row[3]||'').trim();
+    const isUnificado = /^(receita|despesa)$/i.test(col1);
+    let categoria, valor, tipo, detalhe;
+    if(isUnificado){
+      tipo = tipoNorm(col1);
+      categoria = String(row[2]||'').trim();
+      detalhe = String(row[3]||'').trim();
+      const recVal = parseValor(row[4]);
+      const despVal = parseValor(row[5]);
+      valor = tipo === 'C' ? recVal : despVal;
+      if(!valor) continue;
+    }else{
+      categoria = col1;
+      valor = parseValor(row[2]);
+      if(valor === 0) continue;
+      tipo = tipoNorm(col3);
+      detalhe = String(row[4]||'').trim();
+    }
+    if(!categoria) continue;
+    out.push({data: dataISO, categoria, valor, tipo, detalhe});
+  }
+  out.sort((a,b) => a.data.localeCompare(b.data));
+  return out;
+}
+function parseRelatorioSheet(wb){
+  const names = wb.SheetNames;
+  let sheetName = names.find(n => /relat[óo]rio/i.test(n));
+  if(!sheetName) return null;
+  const sheet = wb.Sheets[sheetName];
+  const data = XLSX.utils.sheet_to_json(sheet, {header:1, raw:true, defval:null});
+  const monthShort = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  let monthRow = -1, monthCols = [];
+  for(let i = 0; i < data.length; i++){
+    const row = data[i];
+    if(!row) continue;
+    const found = [];
+    const seen = new Set();
+    for(let c = 0; c < row.length; c++){
+      const v = String(row[c] || '').toLowerCase().trim();
+      if(!v) continue;
+      const idx = monthShort.indexOf(v.slice(0,3));
+      if(idx >= 0 && !seen.has(idx)){
+        found.push({m: idx, col: c});
+        seen.add(idx);
+      }
+    }
+    if(found.length >= 3){
+      monthRow = i;
+      monthCols = found.sort((a,b) => a.col - b.col);
+      break;
+    }
+  }
+  if(monthRow < 0 || monthCols.length < 3) return null;
+  const map = new Map();
+  for(let r = monthRow + 1; r < data.length; r++){
+    const row = data[r];
+    if(!row) continue;
+    const nome = String(row[0] || '').trim();
+    if(!nome) continue;
+    if(/^(total|r[óo]tulos|soma)/i.test(nome)) continue;
+    const receitas = new Array(12).fill(0);
+    const despesas = new Array(12).fill(0);
+    let temDados = false;
+    monthCols.forEach(({m, col}) => {
+      const recVal = parseValor(row[col]);
+      const despVal = parseValor(row[col + 1]);
+      if(recVal > 0){ receitas[m] = recVal; temDados = true; }
+      if(despVal > 0){ despesas[m] = despVal; temDados = true; }
+    });
+    if(!temDados) continue;
+    if(!map.has(nome)) map.set(nome, {receitas: new Array(12).fill(0), despesas: new Array(12).fill(0)});
+    const entry = map.get(nome);
+    for(let i = 0; i < 12; i++){
+      if(receitas[i] > 0) entry.receitas[i] = receitas[i];
+      if(despesas[i] > 0) entry.despesas[i] = despesas[i];
+    }
+  }
+  if(!map.size) return null;
+  const cores = ['#4f8cff','#38bdf8','#f59e0b','#a78bfa','#f472b6','#34d399','#2ecc8f','#22d3ee','#fbbf24','#818cf8','#10b981','#f87171'];
+  let corIdx = 0;
+  const categorias = [];
+  map.forEach((entry, nome) => {
+    const temRec = entry.receitas.some(v => v > 0);
+    const temDesp = entry.despesas.some(v => v > 0);
+    const tipo = temRec && !temDesp ? 'Receita' : 'Despesa';
+    const valores = tipo === 'Receita' ? entry.receitas : entry.despesas;
+    const orig = RESUMO_ORIGINAL.categorias.find(c => c.nome === nome);
+    const cor = orig ? orig.cor : cores[corIdx++ % cores.length];
+    categorias.push({nome, tipo, cor, valores});
+  });
+  const receita = new Array(12).fill(0);
+  const despesa = new Array(12).fill(0);
+  categorias.forEach(c => {
+    c.valores.forEach((v, i) => {
+      if(c.tipo === 'Receita') receita[i] += v;
+      else despesa[i] += v;
+    });
+  });
+  return {meses:[...MESES_PT], mesesFull:[...MESES_FULL], receita, despesa, categorias};
+}
+async function importarArquivoExcel(file){
+  if(typeof XLSX === 'undefined'){
+    toast('Biblioteca Excel não disponível. Conecte-se à internet uma vez.', 'error');
+    return;
+  }
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, {type:'array', cellDates:true});
+    const movs = parseExtratoSheet(wb);
+    if(!movs || !movs.length){
+      toast('Não foi possível ler a aba de movimentações do arquivo', 'error');
+      return;
+    }
+    const rel = parseRelatorioSheet(wb);
+    STATE.dados = movs;
+    STATE.resumo = rel || parseResumoFallback();
+    STATE.origem = 'local';
+    const meses = mesesComDados();
+    if(meses.length){ STATE.mesIni = meses[0]; STATE.mesFim = meses[meses.length - 1]; }
+    $('#txtDados').value = movs.map(d => `${d.data}|${d.categoria}|${d.valor}|${d.tipo}|${d.detalhe}`).join('\n');
+    $('#txtInfo').textContent = `${movs.length} lançamentos`;
+    $('#excelInfo').innerHTML = `
+      <div class="note" style="margin-top:12px">
+        <strong>✓ Arquivo importado:</strong> ${file.name}<br>
+        <strong>Lançamentos:</strong> ${movs.length.toLocaleString('pt-BR')}<br>
+        <strong>Período:</strong> ${movs[0].data.split('-').reverse().join('/')} → ${movs[movs.length-1].data.split('-').reverse().join('/')}<br>
+        <strong>Resumo lido do Relatório:</strong> ${rel ? '✅ Sim' : '⚠️ Usando dados originais'}
+      </div>`;
+    if(salvarLocal()){
+      popularSelects(); renderAll();
+      toast(`✓ ${movs.length} lançamentos importados`);
+    }else{
+      popularSelects(); renderAll();
+      toast(`✓ ${movs.length} lançamentos (falha ao salvar)`, 'error');
+    }
+  }catch(e){
+    console.error(e);
+    toast('Erro: ' + e.message, 'error');
+  }
+}
+function parseResumoFallback(){ return JSON.parse(JSON.stringify(RESUMO_ORIGINAL)); }
+
+/* ============================================================
+   EVENTOS
+   ============================================================ */
+$$('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    $$('.tab').forEach(b=>b.classList.remove('active'));
+    $$('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    $('#panel-'+btn.dataset.tab).classList.add('active');
+  });
+});
+$('#fMesIni').addEventListener('change', e=>{
+  STATE.mesIni = +e.target.value;
+  if(STATE.mesFim < STATE.mesIni){ STATE.mesFim = STATE.mesIni; $('#fMesFim').value = STATE.mesIni; }
+  renderAll();
+});
+$('#fMesFim').addEventListener('change', e=>{
+  STATE.mesFim = +e.target.value;
+  if(STATE.mesIni > STATE.mesFim){ STATE.mesIni = STATE.mesFim; $('#fMesIni').value = STATE.mesFim; }
+  renderAll();
+});
+$('#fCat').addEventListener('change', e=>{ STATE.catGeral = e.target.value; renderAll(); });
+$('#fTipo').addEventListener('change', e=>{ STATE.tipoGeral = e.target.value; renderAll(); });
+$('#fBusca').addEventListener('input', e=>{ STATE.busca = e.target.value; renderAll(); });
+$('#btnReset').addEventListener('click', ()=>{
+  const meses = mesesComDados();
+  STATE.mesIni = meses[0] ?? 0;
+  STATE.mesFim = meses[meses.length - 1] ?? 11;
+  STATE.catGeral = 'todas'; STATE.tipoGeral = 'todos'; STATE.busca = '';
+  $('#fMesIni').value = STATE.mesIni; $('#fMesFim').value = STATE.mesFim;
+  $('#fCat').value = 'todas'; $('#fTipo').value = 'todos'; $('#fBusca').value = '';
+  renderAll();
+});
+$('#btnTheme').addEventListener('click', ()=>{
+  const html = document.documentElement;
+  const novo = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  html.dataset.theme = novo;
+  $('#btnTheme').textContent = novo === 'dark' ? '🌙' : '☀️';
+  setTimeout(renderAll, 60);
+});
+$('#btnPrint').addEventListener('click', ()=> window.print());
+$('#btnExport').addEventListener('click', ()=>{
+  const linhas = ['DATA;CATEGORIA;VALOR;TIPO;DETALHAMENTO'];
+  STATE.dados.forEach(d=>{
+    linhas.push([d.data, d.categoria, d.valor.toFixed(2).replace('.',','), d.tipo, (d.detalhe||'').replace(/;/g,',')].join(';'));
+  });
+  const blob = new Blob(['\uFEFF'+linhas.join('\n')], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `extrato_base_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast('CSV exportado');
+});
+$('#btnExcelTop').addEventListener('click', ()=> $('#fileExcel').click());
+$('#fileExcel').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  importarArquivoExcel(file);
+  setTimeout(()=> e.target.value = '', 500);
+});
+const dropzone = $('#dropExcel');
+['dragenter','dragover'].forEach(ev=>{
+  dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add('dragover'); });
+});
+['dragleave','drop'].forEach(ev=>{
+  dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove('dragover'); });
+});
+dropzone.addEventListener('drop', e=>{
+  const file = e.dataTransfer.files[0];
+  if(file) importarArquivoExcel(file);
+});
+const overlay = $('#dragOverlay');
+let dragCounter = 0;
+window.addEventListener('dragenter', e=>{
+  e.preventDefault(); dragCounter++;
+  if(e.dataTransfer.types.includes('Files')) overlay.classList.add('active');
+});
+window.addEventListener('dragover', e=> e.preventDefault());
+window.addEventListener('dragleave', ()=>{
+  dragCounter--;
+  if(dragCounter <= 0){ dragCounter = 0; overlay.classList.remove('active'); }
+});
+window.addEventListener('drop', e=>{
+  e.preventDefault();
+  dragCounter = 0; overlay.classList.remove('active');
+  const file = e.dataTransfer.files[0];
+  if(file) importarArquivoExcel(file);
+});
+$('#btnAplicar').addEventListener('click', ()=>{
+  const txt = $('#txtDados').value;
+  const novos = parseExtrato(txt);
+  if(!novos.length){ toast('Nenhum lançamento válido.', 'error'); return; }
+  STATE.dados = novos;
+  STATE.origem = 'local';
+  const meses = mesesComDados();
+  if(meses.length){ STATE.mesIni = meses[0]; STATE.mesFim = meses[meses.length-1]; }
+  salvarLocal(); popularSelects(); renderAll();
+  toast(`✓ ${novos.length} lançamentos aplicados`);
+});
+$('#btnRestaurar').addEventListener('click', ()=>{
+  if(!confirm('Restaurar os dados originais do arquivo?')) return;
+  limparLocal();
+  STATE.dados = parseExtrato(EXTRATO_RAW);
+  STATE.resumo = parseResumoFallback();
+  STATE.origem = 'original';
+  $('#txtDados').value = EXTRATO_RAW.trim();
+  popularSelects(); renderAll();
+  toast('Dados originais restaurados');
+});
+$('#btnLimpar').addEventListener('click', ()=>{
+  if(!confirm('Apagar tudo que foi salvo no navegador?')) return;
+  limparLocal();
+  STATE.dados = parseExtrato(EXTRATO_RAW);
+  STATE.resumo = parseResumoFallback();
+  STATE.origem = 'original';
+  $('#txtDados').value = EXTRATO_RAW.trim();
+  popularSelects(); renderAll();
+  toast('Dados salvos removidos', 'info');
+});
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(function init(){
+  const salvo = carregarLocal();
+  if(salvo){
+    STATE.dados = salvo.dados;
+    STATE.resumo = salvo.resumo || parseResumoFallback();
+    STATE.origem = 'local';
+    $('#txtDados').value = salvo.dados.map(d => `${d.data}|${d.categoria}|${d.valor}|${d.tipo}|${d.detalhe}`).join('\n');
+    $('#txtInfo').textContent = `${salvo.dados.length} lançamentos`;
+    setTimeout(()=> toast(`💾 ${salvo.dados.length} lançamentos restaurados`, 'info'), 500);
+  }else{
+    STATE.dados = parseExtrato(EXTRATO_RAW);
+    STATE.resumo = parseResumoFallback();
+    STATE.origem = 'original';
+    $('#txtDados').value = EXTRATO_RAW.trim();
+    $('#txtInfo').textContent = `${STATE.dados.length} lançamentos`;
+  }
+  popularSelects();
+  renderAll();
+})();
+</script>
+</body>
+</html>
