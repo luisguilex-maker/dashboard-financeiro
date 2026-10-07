@@ -29,6 +29,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .btn.ghost{background:transparent}
 .btn.danger{border-color:var(--red);color:var(--red)}
 .btn.danger:hover{background:rgba(255,95,109,.12)}
+.btn.sm{padding:6px 11px;font-size:12px}
 .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:5px;margin-bottom:14px;overflow-x:auto}
 .tab{flex:1;min-width:130px;background:transparent;border:0;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;padding:11px 16px;border-radius:10px;cursor:pointer;transition:.18s;white-space:nowrap}
 .tab:hover{color:var(--text);background:var(--surface-2)}
@@ -53,7 +54,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14
 .card.red::before{background:var(--red)}
 .card.amber::before{background:var(--amber)}
 .card.purple::before{background:var(--purple)}
-.kpi-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.kpi-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px}
 .kpi-value{font-size:25px;font-weight:800;letter-spacing:-.8px;font-variant-numeric:tabular-nums}
 .kpi-sub{font-size:12px;color:var(--muted);margin-top:6px}
 .pos{color:var(--green)}.neg{color:var(--red)}
@@ -75,10 +76,6 @@ tbody tr.total-row td:first-child{background:var(--surface-3)}
 .tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700}
 .tag.C{background:rgba(46,204,143,.14);color:var(--green)}
 .tag.D{background:rgba(255,95,109,.14);color:var(--red)}
-.tag.pago{background:rgba(46,204,143,.18);color:var(--green)}
-.tag.pendente{background:rgba(255,179,71,.18);color:var(--amber)}
-.tag.atrasado{background:rgba(255,95,109,.20);color:var(--red)}
-.tag.aguardando{background:rgba(143,161,199,.15);color:var(--muted)}
 .cat-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:middle}
 .muted{color:var(--muted)}
 .small{font-size:12px}
@@ -86,7 +83,6 @@ textarea{width:100%;min-height:220px;resize:vertical;background:var(--surface-2)
 textarea:focus{border-color:var(--accent)}
 .note{background:var(--surface-2);border-left:3px solid var(--accent);border-radius:8px;padding:12px 15px;font-size:12.5px;color:var(--muted);line-height:1.7;margin-bottom:16px}
 .note strong{color:var(--text)}
-.note code{background:var(--surface-3);padding:1px 6px;border-radius:5px;font-family:'SF Mono',Consolas,monospace;font-size:11.5px;color:var(--amber)}
 .dropzone{border:2px dashed var(--border);border-radius:var(--radius);padding:40px 20px;text-align:center;background:var(--surface-2);cursor:pointer;transition:.2s;position:relative}
 .dropzone:hover,.dropzone.dragover{border-color:var(--green);background:rgba(46,204,143,.06)}
 .dropzone .icon{font-size:44px;margin-bottom:12px}
@@ -95,7 +91,7 @@ textarea:focus{border-color:var(--accent)}
 .dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
 svg text{font-family:var(--font)}
 .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--surface-3);color:var(--muted)}
-.toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--green);padding:13px 18px;border-radius:12px;box-shadow:var(--shadow);font-size:13px;font-weight:600;color:var(--text);opacity:0;transform:translateY(20px);pointer-events:none;transition:.3s;max-width:380px}
+.toast{position:fixed;bottom:24px;right:24px;z-index:99999;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--green);padding:13px 18px;border-radius:12px;box-shadow:var(--shadow);font-size:13px;font-weight:600;color:var(--text);opacity:0;transform:translateY(20px);pointer-events:none;transition:.3s;max-width:380px}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.error{border-left-color:var(--red)}
 .toast.info{border-left-color:var(--accent)}
@@ -112,27 +108,54 @@ svg text{font-family:var(--font)}
 .alert-banner.ok{background:rgba(46,204,143,.10);border-color:rgba(46,204,143,.35);color:var(--green)}
 .alert-banner .big{font-size:22px}
 
-.venc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:var(--gap)}
-.venc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:.2s}
+.venc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:var(--gap)}
+.venc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:.2s;display:flex;flex-direction:column;gap:10px}
 .venc-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
 .venc-card::before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:var(--muted)}
 .venc-card.pago::before{background:var(--green)}
 .venc-card.pendente::before{background:var(--amber)}
 .venc-card.atrasado::before{background:var(--red)}
 .venc-card.aguardando::before{background:var(--muted)}
-.venc-card .titulo{font-size:14px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:8px}
-.venc-card .status{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;margin-bottom:10px}
+.venc-card .titulo{font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.venc-card .titulo .nome{display:flex;align-items:center;gap:8px}
+.venc-card .stamp{font-size:9.5px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:20px;background:rgba(255,179,71,.18);color:var(--amber);text-transform:uppercase}
+.venc-card .status{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase}
 .venc-card.pago .status{color:var(--green)}
 .venc-card.pendente .status{color:var(--amber)}
 .venc-card.atrasado .status{color:var(--red)}
 .venc-card.aguardando .status{color:var(--muted)}
-.venc-card .info{font-size:12px;color:var(--muted);line-height:1.7}
-.venc-card .info strong{color:var(--text);font-weight:700}
-.venc-card .dias-restantes{font-size:20px;font-weight:800;letter-spacing:-.5px;margin:8px 0}
+.venc-card .dias-restantes{font-size:22px;font-weight:800;letter-spacing:-.5px}
 .venc-card.pago .dias-restantes{color:var(--green)}
 .venc-card.pendente .dias-restantes{color:var(--amber)}
 .venc-card.atrasado .dias-restantes{color:var(--red)}
 .venc-card.aguardando .dias-restantes{color:var(--muted)}
+.venc-card .info{font-size:12px;color:var(--muted);line-height:1.75}
+.venc-card .info strong{color:var(--text);font-weight:700}
+.venc-card .boleto-box{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'SF Mono',Consolas,monospace;font-size:11px;line-height:1.5;word-break:break-all;position:relative}
+.venc-card .boleto-box .copy-btn{position:absolute;top:6px;right:6px;padding:3px 8px;font-size:10px;background:var(--surface-3);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:700}
+.venc-card .boleto-box .copy-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.venc-card .acoes{display:flex;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid var(--border)}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;z-index:99999;background:rgba(11,18,32,.75);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);max-width:560px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);animation:fade .2s ease}
+.modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+.modal-head h3{font-size:16px;font-weight:700}
+.modal-head .close{background:transparent;border:0;color:var(--muted);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px;font-family:inherit}
+.modal-head .close:hover{background:var(--surface-3);color:var(--text)}
+.modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.modal-body label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
+.modal-body input[type=date],.modal-body input[type=number],.modal-body input[type=text],.modal-body textarea{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;border-radius:var(--radius-sm);outline:none;transition:.15s}
+.modal-body textarea{min-height:70px;font-family:'SF Mono',Consolas,monospace;font-size:12px;resize:vertical}
+.modal-body input:focus,.modal-body textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,140,255,.15)}
+.modal-body .checkbox-line{display:flex;align-items:center;gap:10px;background:var(--surface-2);padding:11px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer}
+.modal-body .checkbox-line input{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+.modal-body .checkbox-line span{font-size:13px;font-weight:600;color:var(--text)}
+.modal-foot{padding:16px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.modal-foot .spacer{margin-right:auto}
+.modal-body .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.modal-body .row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -198,7 +221,7 @@ svg text{font-family:var(--font)}
 
 <section class="panel" id="panel-recorrentes">
 <div class="note">
-<strong>🔔 Controle de Vencimentos.</strong> Monitora as despesas fixas cadastradas e alerta conforme a aproximação do dia previsto. Cada ciclo usa o mês de referência (atual ou o mais recente da planilha).
+<strong>🔔 Controle de Vencimentos.</strong> Monitore as despesas fixas com alertas automáticos. Use o botão <strong>✏️ Editar</strong> em cada card para ajustar manualmente: data de vencimento, valor, número do boleto e linha digitável. Tudo é salvo no navegador.
 </div>
 <div id="alertasTopo"></div>
 <div class="grid kpis" id="kpiVenc" style="margin-bottom:var(--gap)"></div>
@@ -219,10 +242,57 @@ svg text{font-family:var(--font)}
 <div class="card"><div class="card-head"><h3>📈 Estatísticas do dataset</h3></div><div id="statsBox"></div></div>
 </section>
 </div>
+
+<!-- MODAL DE EDIÇÃO -->
+<div class="modal-overlay" id="modalOverride">
+<div class="modal" role="dialog" aria-modal="true">
+<div class="modal-head">
+<h3 id="modalTitle">Editar Despesa Fixa</h3>
+<button class="close" id="btnFecharModal" aria-label="Fechar">×</button>
+</div>
+<div class="modal-body">
+<div class="row">
+<div>
+<label for="editData">Data de vencimento</label>
+<input type="date" id="editData">
+</div>
+<div>
+<label for="editValor">Valor (R$)</label>
+<input type="number" id="editValor" step="0.01" min="0" placeholder="0,00">
+</div>
+</div>
+<div>
+<label for="editBoleto">Número do boleto / identificação (opcional)</label>
+<input type="text" id="editBoleto" placeholder="Ex: 12345.67890 12345.678901 12345.678901 1 12345678901234">
+</div>
+<div>
+<label for="editLinha">Linha digitável / código de barras (opcional)</label>
+<textarea id="editLinha" placeholder="Cole aqui os 47 dígitos do boleto"></textarea>
+</div>
+<label class="checkbox-line">
+<input type="checkbox" id="editPago">
+<span>✓ Marcar como <strong>já pago</strong> neste ciclo</span>
+</label>
+<div>
+<label for="editObs">Observação (opcional)</label>
+<input type="text" id="editObs" placeholder="Ex: Pago via PIX, boleto reemitido...">
+</div>
+</div>
+<div class="modal-foot">
+<button class="btn danger sm spacer" id="btnLimparOverride">🗑️ Limpar edição</button>
+<button class="btn ghost" id="btnCancelarOverride">Cancelar</button>
+<button class="btn primary" id="btnSalvarOverride">💾 Salvar</button>
+</div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 <div class="drag-overlay" id="dragOverlay"><div class="msg"><span class="big">📊</span>Solte o arquivo Excel aqui</div></div>
+
 <script>
-/* Amostra mínima — seus dados reais migram automaticamente do navegador */
+/* ============================================================
+   Amostra mínima — dados reais migram do localStorage v7
+   ============================================================ */
 const EXTRATO_RAW = `2026-10-02|Transferência recebida NE|42000|C|02/10 NORDESTE COMERCIO
 2026-10-02|01 SALÁRIO / ENCARGOS|42033.5|D|FLASH APP - VA E VT OUTUBRO`;
 
@@ -230,26 +300,65 @@ const RESUMO_ORIGINAL={mesesFull:['Janeiro','Fevereiro','Março','Abril','Maio',
 
 /* ============================================================
    LISTA DE DESPESAS FIXAS CADASTRADAS
-   Edite aqui se precisar ajustar dias, padrões ou janela de alerta
    ============================================================ */
 const DESPESAS_FIXAS = [
-  {id:'salario',  nome:'Folha Salário',          padroes:['SALÁRIO (01)','SALÁRIO'],                            dia:5,  alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
-  {id:'eas',      nome:'EAS Tech Solution',      padroes:['EAS TECH'],                                           dia:16, alertaDias:3, categoria:'06 CUSTOS ADM'},
-  {id:'vivo',     nome:'Vivo PE',                padroes:['VIVO PE'],                                            dia:17, alertaDias:3, categoria:'06 CUSTOS ADM'},
-  {id:'fgts',     nome:'Guia FGTS Mensal',       padroes:['GUIA FGTS MENSAL','CEF MATRIZ - GUIA FGTS MENSAL'],   dia:20, alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
-  {id:'inss',     nome:'Guia INSS Mensal',       padroes:['GUIA INSS','RFB-DARF CODIGO DE BARRAS - GUIA INSS'],  dia:20, alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
-  {id:'vertice',  nome:'Verttice Gerenciamento', padroes:['VERTTICE','VERTICE GERENCIAMENTO'],                   dia:16, alertaDias:3, categoria:'06 CUSTOS ADM'},
-  {id:'allianz',  nome:'Allianz Seguros',        padroes:['ALLIANZ'],                                            dia:20, alertaDias:3, categoria:'06 CUSTOS ADM'},
-  {id:'efrete',   nome:'E-Frete',                padroes:['E-FRETE','E FRETE'],                                  dia:24, alertaDias:3, categoria:'06 CUSTOS ADM'}
+  {id:'salario',  nome:'Folha Salário',           padroes:['SALÁRIO (01)','SALÁRIO'],                            dia:5,  alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
+  {id:'eas',      nome:'EAS Tech Solution',       padroes:['EAS TECH'],                                           dia:16, alertaDias:3, categoria:'06 CUSTOS ADM'},
+  {id:'vivo',     nome:'Vivo PE',                 padroes:['VIVO PE'],                                            dia:17, alertaDias:3, categoria:'06 CUSTOS ADM'},
+  {id:'fgts',     nome:'Guia FGTS Mensal',        padroes:['GUIA FGTS MENSAL','CEF MATRIZ - GUIA FGTS MENSAL'],   dia:20, alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
+  {id:'inss',     nome:'Guia INSS Mensal',        padroes:['GUIA INSS','RFB-DARF CODIGO DE BARRAS - GUIA INSS'],  dia:20, alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
+  {id:'vertice',  nome:'Verttice Gerenciamento',  padroes:['VERTTICE','VERTICE GERENCIAMENTO'],                   dia:16, alertaDias:3, categoria:'06 CUSTOS ADM'},
+  {id:'allianz',  nome:'Allianz Seguros',         padroes:['ALLIANZ'],                                            dia:20, alertaDias:3, categoria:'06 CUSTOS ADM'},
+  {id:'efrete',   nome:'E-Frete',                 padroes:['E-FRETE','E FRETE'],                                  dia:24, alertaDias:3, categoria:'06 CUSTOS ADM'}
 ];
 
-/* Migração automática */
-const STORAGE_KEY='dashboard-caixa-v7';
-const STORAGE_KEYS_OLD=['dashboard-caixa-v6','dashboard-caixa-v5','dashboard-caixa-v4'];
-const DATA_VERSION='2026-10-07-v7';
-function salvarLocal(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({dados:STATE.dados,resumo:STATE.resumo,versao:DATA_VERSION,atualizado:new Date().toISOString()}));return true;}catch(e){console.error(e);return false;}}
-function carregarLocal(){try{let r=localStorage.getItem(STORAGE_KEY);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length)return o;}for(const k of STORAGE_KEYS_OLD){r=localStorage.getItem(k);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length){localStorage.setItem(STORAGE_KEY,r);return o;}}}return null;}catch(e){return null;}}
-function limparLocal(){localStorage.removeItem(STORAGE_KEY);STORAGE_KEYS_OLD.forEach(k=>localStorage.removeItem(k));}
+/* ============================================================
+   STORAGE v8 — migração automática de v7, v6, v5, v4
+   ============================================================ */
+const STORAGE_KEY='dashboard-caixa-v8';
+const STORAGE_KEYS_OLD=['dashboard-caixa-v7','dashboard-caixa-v6','dashboard-caixa-v5','dashboard-caixa-v4'];
+const DATA_VERSION='2026-10-07-v8';
+
+function salvarLocal(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      dados: STATE.dados,
+      resumo: STATE.resumo,
+      overrides: STATE.overrides,
+      versao: DATA_VERSION,
+      atualizado: new Date().toISOString()
+    }));
+    return true;
+  }catch(e){ console.error(e); return false; }
+}
+function carregarLocal(){
+  try{
+    let r = localStorage.getItem(STORAGE_KEY);
+    if(r){
+      const o = JSON.parse(r);
+      if(o && Array.isArray(o.dados) && o.dados.length){
+        if(!o.overrides) o.overrides = {};
+        return o;
+      }
+    }
+    for(const k of STORAGE_KEYS_OLD){
+      r = localStorage.getItem(k);
+      if(r){
+        const o = JSON.parse(r);
+        if(o && Array.isArray(o.dados) && o.dados.length){
+          o.overrides = o.overrides || {};
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(o));
+          return o;
+        }
+      }
+    }
+    return null;
+  }catch(e){ return null; }
+}
+function limparLocal(){
+  localStorage.removeItem(STORAGE_KEY);
+  STORAGE_KEYS_OLD.forEach(k => localStorage.removeItem(k));
+}
 
 const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
 const fmtBRL=n=>(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
@@ -265,7 +374,7 @@ function corCategoria(nome){const f=STATE.resumo.categorias.find(c=>c.nome===nom
 function parseExtrato(txt){const linhas=String(txt).split(/\r?\n/);const out=[];for(const linha of linhas){const raw=linha.trim();if(!raw)continue;let sep='|';if(!raw.includes('|')){if(raw.includes('\t'))sep='\t';else if(raw.includes(';'))sep=';';else if(raw.includes(','))sep=',';else continue;}const p=raw.split(sep).map(x=>x.trim());if(p.length<4)continue;const data=parseData(p[0]);if(!data)continue;if(/^(total|data)/i.test(p[0]))continue;out.push({data,categoria:p[1]||'Não classificado',valor:parseValor(p[2]),tipo:tipoNorm(p[3]),detalhe:p[4]||''});}out.sort((a,b)=>a.data.localeCompare(b.data));return out;}
 function toast(msg,tipo='ok'){const el=$('#toast');el.textContent=msg;el.className='toast show '+(tipo==='error'?'error':tipo==='info'?'info':'');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3200);}
 
-const STATE={dados:[],resumo:null,saldoInicial:0,mesIni:0,mesFim:9,catGeral:'todas',tipoGeral:'todos',busca:'',origem:'original'};
+const STATE={dados:[],resumo:null,overrides:{},saldoInicial:0,mesIni:0,mesFim:9,catGeral:'todas',tipoGeral:'todos',busca:'',origem:'original'};
 function getMesesFiltrados(){const o=[];for(let i=STATE.mesIni;i<=STATE.mesFim;i++)o.push(i);return o;}
 function getCategoriasFiltradas(){return STATE.resumo.categorias.filter(c=>STATE.catGeral==='todas'||c.nome===STATE.catGeral);}
 function categoriaPassaFiltro(nome){return STATE.catGeral==='todas'||nome===STATE.catGeral;}
@@ -276,6 +385,7 @@ function getMovimentosFiltrados(){return STATE.dados.filter(d=>{const m=parseInt
 const NS='http://www.w3.org/2000/svg';
 function svgEl(tag,attrs={}){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
 function clearSvg(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+
 function renderChartMensal(){const svg=$('#chartMensal');clearSvg(svg);const W=900,H=340,P={t:22,r:20,b:46,l:66};const iw=W-P.l-P.r,ih=H-P.t-P.b;const meses=getMesesFiltrados();if(!meses.length)return;const cats=getCategoriasFiltradas();const rec=meses.map(m=>cats.filter(c=>c.tipo==='Receita'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='receita')).reduce((s,c)=>s+(c.valores[m]||0),0));const des=meses.map(m=>cats.filter(c=>c.tipo==='Despesa'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa')).reduce((s,c)=>s+(c.valores[m]||0),0));const res=meses.map((_,i)=>rec[i]-des[i]);const maxV=Math.max(1,...rec,...des)*1.12;const minR=Math.min(0,...res),maxR=Math.max(1,...res)*1.2;const n=meses.length,slot=iw/n,bw=Math.min(26,slot*0.32);for(let i=0;i<=5;i++){const y=P.t+ih-(ih*i/5);svg.appendChild(svgEl('line',{x1:P.l,y1:y,x2:W-P.r,y2:y,stroke:'var(--chart-grid)','stroke-width':1,'stroke-dasharray':i===0?'0':'3 4'}));const t=svgEl('text',{x:P.l-10,y:y+4,fill:'var(--chart-text)','font-size':11,'text-anchor':'end'});t.textContent=fmtK(maxV*i/5);svg.appendChild(t);}meses.forEach((mi,idx)=>{const cx=P.l+slot*idx+slot/2;const hR=(rec[idx]/maxV)*ih,hD=(des[idx]/maxV)*ih;const b1=svgEl('rect',{x:cx-bw-3,y:P.t+ih-hR,width:bw,height:Math.max(hR,0),rx:4,fill:'var(--green)',opacity:.92});const t1=svgEl('title');t1.textContent=`${MESES_FULL[mi]} — Receita: ${fmtBRL(rec[idx])}`;b1.appendChild(t1);svg.appendChild(b1);const b2=svgEl('rect',{x:cx+3,y:P.t+ih-hD,width:bw,height:Math.max(hD,0),rx:4,fill:'var(--red)',opacity:.92});const t2=svgEl('title');t2.textContent=`${MESES_FULL[mi]} — Despesa: ${fmtBRL(des[idx])}`;b2.appendChild(t2);svg.appendChild(b2);const t=svgEl('text',{x:cx,y:H-P.b+22,fill:'var(--chart-text)','font-size':12,'text-anchor':'middle','font-weight':600});t.textContent=MESES_PT[mi];svg.appendChild(t);});const rangeR=(maxR-minR)||1;const pts=res.map((v,i)=>{const cx=P.l+slot*i+slot/2;const cy=P.t+ih-((v-minR)/rangeR)*ih;return{x:cx,y:cy,v};});if(pts.length>1)svg.appendChild(svgEl('polyline',{points:pts.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:'var(--amber)','stroke-width':2.4,'stroke-linejoin':'round','stroke-linecap':'round'}));pts.forEach(p=>{const c=svgEl('circle',{cx:p.x,cy:p.y,r:4,fill:'var(--amber)',stroke:'var(--surface)','stroke-width':2});const t=svgEl('title');t.textContent=`Resultado: ${fmtBRL(p.v)}`;c.appendChild(t);svg.appendChild(c);});}
 function renderBarrasH(targetId,tipo,topN){const svg=$(targetId);clearSvg(svg);const W=700,meses=getMesesFiltrados();const cats=STATE.resumo.categorias.filter(c=>c.tipo===tipo).filter(c=>categoriaPassaFiltro(c.nome));const itens=cats.map(c=>{let s=0;meses.forEach(m=>s+=c.valores[m]||0);return{nome:c.nome,cor:c.cor,val:s};}).filter(x=>x.val>0).sort((a,b)=>b.val-a.val);const lista=topN?itens.slice(0,topN):itens;const rowH=40,H=Math.max(120,lista.length*rowH+30);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);if(!lista.length){const t=svgEl('text',{x:W/2,y:60,fill:'var(--chart-text)','font-size':13,'text-anchor':'middle'});t.textContent='Sem dados no período';svg.appendChild(t);return;}const maxV=lista[0].val,labelW=190,barW=W-labelW-110;lista.forEach((it,i)=>{const y=14+i*rowH,w=Math.max(2,(it.val/maxV)*barW);const lb=svgEl('text',{x:0,y:y+18,fill:'var(--chart-text)','font-size':12,'font-weight':600});lb.textContent=it.nome.length>26?it.nome.slice(0,25)+'…':it.nome;svg.appendChild(lb);svg.appendChild(svgEl('rect',{x:labelW,y:y+4,width:barW,height:20,rx:6,fill:'var(--surface-3)'}));const bar=svgEl('rect',{x:labelW,y:y+4,width:w,height:20,rx:6,fill:it.cor,opacity:.9});const ti=svgEl('title');ti.textContent=`${it.nome}: ${fmtBRL(it.val)}`;bar.appendChild(ti);svg.appendChild(bar);const v=svgEl('text',{x:labelW+barW+10,y:y+19,fill:'var(--text)','font-size':12,'font-weight':700,'text-anchor':'start'});v.textContent=fmtBRL0(it.val);svg.appendChild(v);});}
 function renderSaldo(){const svg=$('#chartSaldo');clearSvg(svg);const W=700,H=320,P={t:24,r:24,b:44,l:70};const iw=W-P.l-P.r,ih=H-P.t-P.b;const movs=getMovimentosFiltrados();if(!movs.length){const t=svgEl('text',{x:W/2,y:H/2,fill:'var(--chart-text)','font-size':13,'text-anchor':'middle'});t.textContent='Sem movimentações';svg.appendChild(t);return;}const porDia=new Map();movs.forEach(d=>{if(!porDia.has(d.data))porDia.set(d.data,{r:0,d:0});const o=porDia.get(d.data);if(d.tipo==='C')o.r+=d.valor;else o.d+=d.valor;});const dias=Array.from(porDia.keys()).sort();let saldo=0;const serie=dias.map(dia=>{const o=porDia.get(dia);saldo+=o.r-o.d;return{dia,saldo};});const vals=serie.map(s=>s.saldo);const min=Math.min(0,...vals),max=Math.max(1,...vals);const range=(max-min)||1;for(let i=0;i<=4;i++){const y=P.t+ih-(ih*i/4);svg.appendChild(svgEl('line',{x1:P.l,y1:y,x2:W-P.r,y2:y,stroke:'var(--chart-grid)','stroke-width':1,'stroke-dasharray':i===0?'0':'3 4'}));const t=svgEl('text',{x:P.l-10,y:y+4,fill:'var(--chart-text)','font-size':11,'text-anchor':'end'});t.textContent=fmtK(min+range*i/4);svg.appendChild(t);}const X=i=>P.l+(serie.length===1?iw/2:(iw*i/(serie.length-1)));const Y=v=>P.t+ih-((v-min)/range)*ih;const pts=serie.map((s,i)=>`${X(i)},${Y(s.saldo)}`).join(' ');const defs=svgEl('defs');const lg=svgEl('linearGradient',{id:'gradSaldo',x1:'0',y1:'0',x2:'0',y2:'1'});lg.appendChild(svgEl('stop',{offset:'0%','stop-color':'var(--accent)','stop-opacity':.75}));lg.appendChild(svgEl('stop',{offset:'100%','stop-color':'var(--accent)','stop-opacity':0}));defs.appendChild(lg);svg.appendChild(defs);svg.appendChild(svgEl('polygon',{points:`${P.l},${P.t+ih} ${pts} ${X(serie.length-1)},${P.t+ih}`,fill:'url(#gradSaldo)',opacity:.35}));svg.appendChild(svgEl('polyline',{points:pts,fill:'none',stroke:'var(--accent)','stroke-width':2.6,'stroke-linejoin':'round','stroke-linecap':'round'}));const step=Math.max(1,Math.floor(serie.length/40));serie.forEach((s,i)=>{if(i%step!==0&&i!==serie.length-1)return;const c=svgEl('circle',{cx:X(i),cy:Y(s.saldo),r:3,fill:'var(--accent)',stroke:'var(--surface)','stroke-width':1.5});const t=svgEl('title');t.textContent=`${s.dia} — ${fmtBRL(s.saldo)}`;c.appendChild(t);svg.appendChild(c);});const nLab=Math.min(6,serie.length);for(let i=0;i<nLab;i++){const idx=Math.round(i*(serie.length-1)/Math.max(1,nLab-1));const t=svgEl('text',{x:X(idx),y:H-P.b+22,fill:'var(--chart-text)','font-size':11,'text-anchor':'middle'});const[a,m,d]=serie[idx].dia.split('-');t.textContent=`${d}/${m}`;svg.appendChild(t);}}
@@ -286,11 +396,9 @@ function renderRanking(){const meses=getMesesFiltrados(),cats=getCategoriasFiltr
 function renderMov(){const filtrado=getMovimentosFiltrados();let saldo=0;const comSaldo=filtrado.map(d=>{saldo+=(d.tipo==='C'?d.valor:-d.valor);return{...d,saldo};});const totR=filtrado.filter(d=>d.tipo==='C').reduce((s,d)=>s+d.valor,0);const totD=filtrado.filter(d=>d.tipo==='D').reduce((s,d)=>s+d.valor,0);$('#movInfo').innerHTML=`${filtrado.length} lançamentos · <span class="pos">${fmtBRL(totR)}</span> · <span class="neg">${fmtBRL(totD)}</span>`;let html=`<thead><tr><th>Data</th><th>Categoria</th><th>Detalhamento</th><th>Tipo</th><th>Receita</th><th>Despesa</th><th>Saldo</th></tr></thead><tbody>`;if(!filtrado.length){html+=`<tr><td colspan="7" style="text-align:center;padding:40px" class="muted">Nenhum lançamento.</td></tr>`;}else{comSaldo.forEach(d=>{const[a,m,dia]=d.data.split('-');html+=`<tr><td>${dia}/${m}/${a}</td><td><span class="cat-dot" style="background:${corCategoria(d.categoria)}"></span>${d.categoria}</td><td style="text-align:left;max-width:420px;white-space:normal;color:var(--muted);font-weight:400">${d.detalhe||'—'}</td><td><span class="tag ${d.tipo}">${d.tipo==='C'?'Receita':'Despesa'}</span></td><td class="pos">${d.tipo==='C'?fmtNum(d.valor):'—'}</td><td class="neg">${d.tipo==='D'?fmtNum(d.valor):'—'}</td><td style="font-weight:700">${fmtNum(d.saldo)}</td></tr>`;});}html+=`<tr class="total-row"><td colspan="4">TOTAL</td><td class="pos">${fmtNum(totR)}</td><td class="neg">${fmtNum(totD)}</td><td class="${totR-totD>=0?'pos':'neg'}">${fmtNum(totR-totD)}</td></tr></tbody>`;$('#tblMov').innerHTML=html;}
 
 /* ============================================================
-   VENCIMENTOS — STATUS E ALERTAS
+   VENCIMENTOS + OVERRIDES MANUAIS
    ============================================================ */
 function dataReferencia(){
-  // Se os dados têm datas futuras em relação a hoje, usa o último dia do dataset
-  // Senão, usa hoje de verdade
   const hoje = new Date();
   const ultimaData = STATE.dados.length ? STATE.dados[STATE.dados.length-1].data : null;
   if(ultimaData){
@@ -299,9 +407,13 @@ function dataReferencia(){
   }
   return hoje;
 }
-
+function chaveOverride(id, refDate){
+  return `${id}_${refDate.getFullYear()}-${String(refDate.getMonth()+1).padStart(2,'0')}`;
+}
+function getOverride(id, refDate){
+  return STATE.overrides[chaveOverride(id, refDate)] || null;
+}
 function acharPagamentoMes(fixo, refDate){
-  // Procura movimentos dessa despesa fixa no mês de referência
   const ano = refDate.getFullYear();
   const mes = refDate.getMonth();
   const padroes = fixo.padroes.map(p => p.toUpperCase());
@@ -314,35 +426,47 @@ function acharPagamentoMes(fixo, refDate){
   });
   if(!matches.length) return null;
   matches.sort((a,b) => a.data.localeCompare(b.data));
-  return {
-    data: matches[0].data,
-    dia: parseInt(matches[0].data.slice(8,10),10),
-    valor: matches.reduce((s,m) => s+m.valor, 0),
-    nMatching: matches.length
-  };
+  return {data: matches[0].data, dia: parseInt(matches[0].data.slice(8,10),10), valor: matches.reduce((s,m) => s+m.valor, 0), nMatching: matches.length};
 }
-
 function calcularStatus(fixo, refDate){
-  const pago = acharPagamentoMes(fixo, refDate);
-  const diaRef = refDate.getDate();
+  const ov = getOverride(fixo.id, refDate);
+  const pagoAuto = acharPagamentoMes(fixo, refDate);
+  const hoje = refDate.getDate();
   const mesRef = refDate.getMonth() + 1;
-  const anoRef = refDate.getFullYear();
+
+  let diaVenc = fixo.dia;
+  let dataVencISO = `${refDate.getFullYear()}-${String(mesRef).padStart(2,'0')}-${String(fixo.dia).padStart(2,'0')}`;
+  let valorOv = null, boletoOv = null, linhaOv = null, obsOv = null;
+  let marcadoPago = false;
+  if(ov){
+    if(ov.dataVenc){
+      const [a,m,d] = ov.dataVenc.split('-').map(Number);
+      diaVenc = d;
+      dataVencISO = ov.dataVenc;
+    }
+    if(ov.valor != null) valorOv = ov.valor;
+    boletoOv = ov.boleto || null;
+    linhaOv = ov.linha || null;
+    obsOv = ov.obs || null;
+    marcadoPago = ov.pago === true;
+  }
+
+  const pago = marcadoPago
+    ? {data: dataVencISO, dia: diaVenc, valor: valorOv ?? (pagoAuto ? pagoAuto.valor : 0), manual: true}
+    : pagoAuto;
 
   if(pago){
-    return {estado:'pago', pago, diasRestantes:0, mensagem:`Pago em ${pago.dia}/${String(mesRef).padStart(2,'0')} · ${fmtBRL(pago.valor)}`};
+    return {estado:'pago', pago, override: !!ov, diasRestantes:0, mensagem:`Pago em ${pago.dia}/${String(mesRef).padStart(2,'0')} · ${fmtBRL(pago.valor)}${marcadoPago?' (manual)':''}`, diaVenc, dataVencISO, valorOv, boletoOv, linhaOv, obsOv};
   }
-  const hoje = diaRef;
-  const d = fixo.dia;
-  const dif = d - hoje;
+  const dif = diaVenc - hoje;
   if(dif > fixo.alertaDias){
-    return {estado:'aguardando', pago:null, diasRestantes:dif, mensagem:`Vence dia ${d} · faltam ${dif} dias`};
+    return {estado:'aguardando', pago:null, override: !!ov, diasRestantes:dif, mensagem:`Vence dia ${diaVenc} · faltam ${dif} dias`, diaVenc, dataVencISO, valorOv, boletoOv, linhaOv, obsOv};
   }
   if(dif >= 0){
-    return {estado:'pendente', pago:null, diasRestantes:dif, mensagem: dif === 0 ? 'Vence HOJE' : `Vence em ${dif} dia${dif===1?'':'s'}`};
+    return {estado:'pendente', pago:null, override: !!ov, diasRestantes:dif, mensagem: dif === 0 ? 'Vence HOJE' : `Vence em ${dif} dia${dif===1?'':'s'}`, diaVenc, dataVencISO, valorOv, boletoOv, linhaOv, obsOv};
   }
-  // Já passou do dia
   const atraso = Math.abs(dif);
-  return {estado:'atrasado', pago:null, diasRestantes:-atraso, mensagem:`Atrasado há ${atraso} dia${atraso===1?'':'s'}`};
+  return {estado:'atrasado', pago:null, override: !!ov, diasRestantes:-atraso, mensagem:`Atrasado há ${atraso} dia${atraso===1?'':'s'}`, diaVenc, dataVencISO, valorOv, boletoOv, linhaOv, obsOv};
 }
 
 function renderVencimentos(){
@@ -350,33 +474,26 @@ function renderVencimentos(){
   const ano = refDate.getFullYear();
   const mes = refDate.getMonth();
   const nomeMes = MESES_FULL[mes] + ' ' + ano;
-
-  // Calcula status de todos
   const resultados = DESPESAS_FIXAS.map(f => ({...f, status: calcularStatus(f, refDate)}));
+  resultados.sort((a,b) => a.status.diaVenc - b.status.diaVenc);
 
-  // Ordena por dia do mês
-  resultados.sort((a,b) => a.dia - b.dia);
-
-  // KPIs
   const pagos = resultados.filter(r => r.status.estado === 'pago');
   const pendentes = resultados.filter(r => r.status.estado === 'pendente');
   const atrasados = resultados.filter(r => r.status.estado === 'atrasado');
   const aguardando = resultados.filter(r => r.status.estado === 'aguardando');
   const totalPago = pagos.reduce((s,r) => s + r.status.pago.valor, 0);
-  const totalPendente = pendentes.length;
-  const totalAtrasado = atrasados.length;
+  const totalPendenteValor = pendentes.reduce((s,r) => s + (r.status.valorOv ?? 0), 0);
 
   $('#kpiVenc').innerHTML = `
     <div class="card green"><div class="kpi-label">✅ Pagos no Ciclo</div><div class="kpi-value">${pagos.length}/${resultados.length}</div><div class="kpi-sub">Total desembolsado: ${fmtBRL(totalPago)}</div></div>
     <div class="card amber"><div class="kpi-label">⏳ A Vencer (alerta)</div><div class="kpi-value">${pendentes.length}</div><div class="kpi-sub">${pendentes.map(p=>p.nome).join(' · ') || 'Nenhum'}</div></div>
-    <div class="card red"><div class="kpi-label">🔴 Atrasados</div><div class="kpi-value">${totalAtrasado}</div><div class="kpi-sub">${atrasados.map(a=>a.nome).join(' · ') || 'Nenhum'}</div></div>
+    <div class="card red"><div class="kpi-label">🔴 Atrasados</div><div class="kpi-value">${atrasados.length}</div><div class="kpi-sub">${atrasados.map(a=>a.nome).join(' · ') || 'Nenhum'}</div></div>
     <div class="card purple"><div class="kpi-label">📅 Ciclo de Referência</div><div class="kpi-value">${nomeMes}</div><div class="kpi-sub">Hoje: dia ${refDate.getDate()} · ${aguardando.length} aguardando</div></div>
   `;
 
-  // Banner de alerta no topo
   const banner = $('#alertasTopo');
   if(atrasados.length){
-    banner.innerHTML = `<div class="alert-banner danger"><span class="big">🚨</span><div><strong>${atrasados.length} despesa${atrasados.length===1?'':'s'} em atraso!</strong><br><span class="small">${atrasados.map(a=>`${a.nome} (dia ${a.dia})`).join(' · ')}</span></div></div>`;
+    banner.innerHTML = `<div class="alert-banner danger"><span class="big">🚨</span><div><strong>${atrasados.length} despesa${atrasados.length===1?'':'s'} em atraso!</strong><br><span class="small">${atrasados.map(a=>`${a.nome} (dia ${a.status.diaVenc})`).join(' · ')}</span></div></div>`;
   } else if(pendentes.length){
     banner.innerHTML = `<div class="alert-banner warn"><span class="big">⚠️</span><div><strong>${pendentes.length} vencimento${pendentes.length===1?'':'s'} nos próximos dias</strong><br><span class="small">${pendentes.map(p=>`${p.nome} (${p.status.mensagem})`).join(' · ')}</span></div></div>`;
   } else if(pagos.length === resultados.length){
@@ -385,26 +502,56 @@ function renderVencimentos(){
     banner.innerHTML = `<div class="alert-banner info"><span class="big">ℹ️</span><div><strong>Sem alertas ativos no momento.</strong><br><span class="small">${aguardando.length} despesa${aguardando.length===1?'':'s'} fora da janela de alerta</span></div></div>`;
   }
 
-  // Cards de cada despesa
   $('#vencGrid').innerHTML = resultados.map(r => {
     const s = r.status;
     const st = s.estado;
     const stLabel = st === 'pago' ? '✓ Pago' : st === 'pendente' ? '⏳ A vencer' : st === 'atrasado' ? '⚠ Atrasado' : '○ Aguardando';
     const diasTxt = st === 'pago' ? 'Pago' : st === 'atrasado' ? `${Math.abs(s.diasRestantes)}d em atraso` : st === 'pendente' ? `${s.diasRestantes}d` : `Em ${s.diasRestantes}d`;
+    const temOverride = !!s.override;
+
+    let valorTxt = '—';
+    if(st === 'pago' && s.pago){
+      valorTxt = `<strong>${fmtBRL(s.pago.valor)}</strong>`;
+    } else if(s.valorOv != null){
+      valorTxt = `<strong>${fmtBRL(s.valorOv)}</strong> <span class="muted">(previsto)</span>`;
+    }
+
+    let boletoHtml = '';
+    if(s.boletoOv || s.linhaOv){
+      const conteudo = s.boletoOv || s.linhaOv;
+      boletoHtml = `
+        <div class="boleto-box">
+          <button class="copy-btn" data-copy="${conteudo.replace(/"/g,'&quot;')}">📋 Copiar</button>
+          ${s.boletoOv ? `<div style="margin-bottom:4px"><span class="muted">Boleto:</span> ${s.boletoOv}</div>` : ''}
+          ${s.linhaOv ? `<div><span class="muted">Linha:</span> ${s.linhaOv}</div>` : ''}
+        </div>`;
+    }
+
+    const obsHtml = s.obsOv ? `<div class="info" style="color:var(--amber);font-style:italic;margin-top:4px">📌 ${s.obsOv}</div>` : '';
+
     return `
       <div class="venc-card ${st}">
-        <div class="titulo">${r.nome}</div>
+        <div class="titulo">
+          <div class="nome">${r.nome}</div>
+          ${temOverride ? `<span class="stamp">✏️ Editado</span>` : ''}
+        </div>
         <div class="status">${stLabel}</div>
         <div class="dias-restantes">${diasTxt}</div>
         <div class="info">
-          <div><strong>Dia previsto:</strong> dia ${r.dia}</div>
-          <div><strong>Alerta a partir de:</strong> ${r.alertaDias} dia${r.alertaDias===1?'':'s'} antes</div>
+          <div><strong>Vencimento:</strong> dia ${s.diaVenc}${s.dataVencISO ? ' <span class="muted">(' + s.dataVencISO.split('-').reverse().join('/') + ')</span>' : ''}</div>
+          <div><strong>Valor:</strong> ${valorTxt}</div>
           <div>${s.mensagem}</div>
+          ${obsHtml}
+        </div>
+        ${boletoHtml}
+        <div class="acoes">
+          <button class="btn sm primary" data-editar="${r.id}">✏️ Editar</button>
+          ${temOverride ? `<button class="btn sm danger" data-limpar="${r.id}">Limpar</button>` : ''}
         </div>
       </div>`;
   }).join('');
 
-  // Histórico por despesa fixa
+  // Histórico
   const hist = DESPESAS_FIXAS.map(f => {
     const padroes = f.padroes.map(p => p.toUpperCase());
     const todos = STATE.dados.filter(d => {
@@ -446,10 +593,116 @@ function renderVencimentos(){
   html += '</tbody>';
   $('#tblHist').innerHTML = html;
   $('#histInfo').textContent = `${DESPESAS_FIXAS.length} despesas monitoradas · referência: ${nomeMes}`;
+
+  // Listeners dinâmicos
+  $$('[data-editar]').forEach(btn => {
+    btn.addEventListener('click', () => abrirModal(btn.dataset.editar));
+  });
+  $$('[data-limpar]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(!confirm('Remover a edição manual desta despesa neste ciclo?')) return;
+      const ref = dataReferencia();
+      delete STATE.overrides[chaveOverride(btn.dataset.limpar, ref)];
+      salvarLocal();
+      renderVencimentos();
+      toast('Edição removida','info');
+    });
+  });
+  $$('[data-copy]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const txt = btn.dataset.copy;
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(() => toast('Copiado!')).catch(() => fallbackCopy(txt));
+      } else {
+        fallbackCopy(txt);
+      }
+    });
+  });
 }
 
+function fallbackCopy(txt){
+  const ta = document.createElement('textarea');
+  ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast('Copiado!'); }catch(e){ toast('Não foi possível copiar','error'); }
+  document.body.removeChild(ta);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+let modalFixoIdAtual = null;
+
+function abrirModal(fixoId){
+  const fixo = DESPESAS_FIXAS.find(f => f.id === fixoId);
+  if(!fixo) return;
+  const ref = dataReferencia();
+  const ov = getOverride(fixoId, ref);
+  modalFixoIdAtual = fixoId;
+
+  $('#modalTitle').textContent = `Editar — ${fixo.nome}`;
+  const y = ref.getFullYear(), m = ref.getMonth()+1;
+  const diaDefault = String(fixo.dia).padStart(2,'0');
+  const mesStr = String(m).padStart(2,'0');
+  $('#editData').value = ov && ov.dataVenc ? ov.dataVenc : `${y}-${mesStr}-${diaDefault}`;
+  $('#editValor').value = ov && ov.valor != null ? ov.valor : '';
+  $('#editBoleto').value = ov && ov.boleto ? ov.boleto : '';
+  $('#editLinha').value = ov && ov.linha ? ov.linha : '';
+  $('#editPago').checked = !!(ov && ov.pago);
+  $('#editObs').value = ov && ov.obs ? ov.obs : '';
+
+  $('#modalOverride').classList.add('active');
+  setTimeout(() => $('#editValor').focus(), 100);
+}
+function fecharModal(){
+  $('#modalOverride').classList.remove('active');
+  modalFixoIdAtual = null;
+}
+function salvarOverride(){
+  if(!modalFixoIdAtual) return;
+  const ref = dataReferencia();
+  const key = chaveOverride(modalFixoIdAtual, ref);
+  const dataVenc = $('#editData').value || null;
+  const valorStr = $('#editValor').value;
+  const valor = valorStr !== '' ? parseFloat(valorStr) : null;
+  const boleto = $('#editBoleto').value.trim() || null;
+  const linha = $('#editLinha').value.trim() || null;
+  const pago = $('#editPago').checked;
+  const obs = $('#editObs').value.trim() || null;
+
+  if(!dataVenc && valor == null && !boleto && !linha && !pago && !obs){
+    delete STATE.overrides[key];
+  } else {
+    STATE.overrides[key] = {dataVenc, valor, boleto, linha, pago, obs};
+  }
+  salvarLocal();
+  fecharModal();
+  renderVencimentos();
+  toast('✓ Edição salva');
+}
+function limparOverrideModal(){
+  if(!modalFixoIdAtual) return;
+  if(!confirm('Limpar todas as edições desta despesa neste ciclo?')) return;
+  const ref = dataReferencia();
+  delete STATE.overrides[chaveOverride(modalFixoIdAtual, ref)];
+  salvarLocal();
+  fecharModal();
+  renderVencimentos();
+  toast('Edição removida','info');
+}
+
+$('#btnFecharModal').addEventListener('click', fecharModal);
+$('#btnCancelarOverride').addEventListener('click', fecharModal);
+$('#btnSalvarOverride').addEventListener('click', salvarOverride);
+$('#btnLimparOverride').addEventListener('click', limparOverrideModal);
+$('#modalOverride').addEventListener('click', e => { if(e.target.id === 'modalOverride') fecharModal(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('#modalOverride').classList.contains('active')) fecharModal(); });
+
+/* ============================================================
+   STATS / STORAGE / STATUS
+   ============================================================ */
 function renderStats(){const d=STATE.dados;if(!d.length){$('#statsBox').innerHTML='<p class="muted small">Sem dados.</p>';return;}const datas=d.map(x=>x.data).sort();const cats=new Set(d.map(x=>x.categoria));const rec=d.filter(x=>x.tipo==='C').reduce((s,x)=>s+x.valor,0);const des=d.filter(x=>x.tipo==='D').reduce((s,x)=>s+x.valor,0);const linhas=[['Período',`${datas[0].split('-').reverse().join('/')} → ${datas[datas.length-1].split('-').reverse().join('/')}`],['Lançamentos',d.length.toLocaleString('pt-BR')],['Categorias',cats.size],['Receitas',fmtBRL(rec)],['Despesas',fmtBRL(des)],['Resultado',fmtBRL(rec-des)]];$('#statsBox').innerHTML=linhas.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--border)"><span class="muted small">${k}</span><strong class="small">${v}</strong></div>`).join('');}
-function renderStorage(){const t=(()=>{try{const r=localStorage.getItem(STORAGE_KEY);return r?(r.length/1024).toFixed(1)+' KB':'—';}catch(e){return'—';}})();const l=[['Origem',STATE.origem==='local'?'💾 Salvos':'📦 Originais'],['Versão',DATA_VERSION],['Lançamentos',STATE.dados.length.toLocaleString('pt-BR')],['Espaço',t]];$('#storageBox').innerHTML=l.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)"><span class="muted small">${k}</span><strong class="small">${v}</strong></div>`).join('');}
+function renderStorage(){const t=(()=>{try{const r=localStorage.getItem(STORAGE_KEY);return r?(r.length/1024).toFixed(1)+' KB':'—';}catch(e){return'—';}})();const numOv = Object.keys(STATE.overrides).length;const l=[['Origem',STATE.origem==='local'?'💾 Salvos':'📦 Originais'],['Versão',DATA_VERSION],['Lançamentos',STATE.dados.length.toLocaleString('pt-BR')],['Edições manuais',numOv],['Espaço',t]];$('#storageBox').innerHTML=l.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)"><span class="muted small">${k}</span><strong class="small">${v}</strong></div>`).join('');}
 function atualizarStatusSave(){const el=$('#saveStatus');if(STATE.origem==='local'){el.className='save-status saved';el.textContent='💾 Salvo';}else{el.className='save-status';el.textContent='📦 Originais';}}
 function mesesComDados(){const set=new Set();STATE.resumo.categorias.forEach(c=>{c.valores.forEach((v,i)=>{if(v>0)set.add(i);});});return Array.from(set).sort((a,b)=>a-b);}
 function popularSelects(){const meses=mesesComDados();if(!meses.length){$('#fMesIni').innerHTML='<option>—</option>';$('#fMesFim').innerHTML='<option>—</option>';return;}const opts=meses.map(i=>`<option value="${i}">${MESES_FULL[i]}</option>`).join('');$('#fMesIni').innerHTML=opts;$('#fMesFim').innerHTML=opts;const ini=meses.includes(STATE.mesIni)?STATE.mesIni:meses[0];const fim=meses.includes(STATE.mesFim)?STATE.mesFim:meses[meses.length-1];STATE.mesIni=ini;STATE.mesFim=fim;$('#fMesIni').value=ini;$('#fMesFim').value=fim;const cats=STATE.resumo.categorias.map(c=>`<option value="${c.nome}">${c.nome}</option>`).join('');const catAtual=STATE.catGeral;$('#fCat').innerHTML=`<option value="todas">Todas</option>${cats}`;if(STATE.resumo.categorias.some(c=>c.nome===catAtual))$('#fCat').value=catAtual;else{$('#fCat').value='todas';STATE.catGeral='todas';}}
@@ -476,9 +729,9 @@ $('#fileExcel').addEventListener('change',e=>{const f=e.target.files[0];if(!f)re
 const dz=$('#dropExcel');['dragenter','dragover'].forEach(ev=>{dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('dragover');});});['dragleave','drop'].forEach(ev=>{dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('dragover');});});dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)importarArquivoExcel(f);});
 const ov=$('#dragOverlay');let dc=0;window.addEventListener('dragenter',e=>{e.preventDefault();dc++;if(e.dataTransfer.types.includes('Files'))ov.classList.add('active');});window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('dragleave',()=>{dc--;if(dc<=0){dc=0;ov.classList.remove('active');}});window.addEventListener('drop',e=>{e.preventDefault();dc=0;ov.classList.remove('active');const f=e.dataTransfer.files[0];if(f)importarArquivoExcel(f);});
 $('#btnAplicar').addEventListener('click',()=>{const n=parseExtrato($('#txtDados').value);if(!n.length){toast('Nenhum lançamento válido.','error');return;}STATE.dados=n;STATE.origem='local';const m=mesesComDados();if(m.length){STATE.mesIni=m[0];STATE.mesFim=m[m.length-1];}salvarLocal();popularSelects();renderAll();toast(`✓ ${n.length} lançamentos aplicados`);});
-$('#btnRestaurar').addEventListener('click',()=>{if(!confirm('Restaurar originais?'))return;limparLocal();STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();popularSelects();renderAll();toast('Restaurado');});
-$('#btnLimpar').addEventListener('click',()=>{if(!confirm('Apagar tudo?'))return;limparLocal();STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();popularSelects();renderAll();toast('Limpo','info');});
-(function init(){const s=carregarLocal();if(s){STATE.dados=s.dados;STATE.resumo=s.resumo||parseResumoFallback();STATE.origem='local';$('#txtDados').value=s.dados.map(d=>`${d.data}|${d.categoria}|${d.valor}|${d.tipo}|${d.detalhe}`).join('\n');$('#txtInfo').textContent=`${s.dados.length} lançamentos`;setTimeout(()=>toast(`💾 ${s.dados.length} restaurados`,'info'),500);}else{STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();$('#txtInfo').textContent=`${STATE.dados.length} lançamentos`;}popularSelects();renderAll();})();
+$('#btnRestaurar').addEventListener('click',()=>{if(!confirm('Restaurar originais?'))return;limparLocal();STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.overrides={};STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();popularSelects();renderAll();toast('Restaurado');});
+$('#btnLimpar').addEventListener('click',()=>{if(!confirm('Apagar tudo? Isso inclui edições manuais de vencimentos.'))return;limparLocal();STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.overrides={};STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();popularSelects();renderAll();toast('Limpo','info');});
+(function init(){const s=carregarLocal();if(s){STATE.dados=s.dados;STATE.resumo=s.resumo||parseResumoFallback();STATE.overrides=s.overrides||{};STATE.origem='local';$('#txtDados').value=s.dados.map(d=>`${d.data}|${d.categoria}|${d.valor}|${d.tipo}|${d.detalhe}`).join('\n');$('#txtInfo').textContent=`${s.dados.length} lançamentos`;setTimeout(()=>toast(`💾 ${s.dados.length} restaurados · ${Object.keys(STATE.overrides).length} edições`,'info'),500);}else{STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.overrides={};STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();$('#txtInfo').textContent=`${STATE.dados.length} lançamentos`;}popularSelects();renderAll();})();
 </script>
 </body>
 </html>
