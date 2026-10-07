@@ -108,6 +108,7 @@ svg text{font-family:var(--font)}
 .alert-banner.ok{background:rgba(46,204,143,.10);border-color:rgba(46,204,143,.35);color:var(--green)}
 .alert-banner .big{font-size:22px}
 
+.bar-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
 .venc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:var(--gap)}
 .venc-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;position:relative;overflow:hidden;transition:.2s;display:flex;flex-direction:column;gap:10px}
 .venc-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
@@ -117,8 +118,9 @@ svg text{font-family:var(--font)}
 .venc-card.atrasado::before{background:var(--red)}
 .venc-card.aguardando::before{background:var(--muted)}
 .venc-card .titulo{font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
-.venc-card .titulo .nome{display:flex;align-items:center;gap:8px}
+.venc-card .titulo .nome{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .venc-card .stamp{font-size:9.5px;font-weight:800;letter-spacing:.5px;padding:2px 7px;border-radius:20px;background:rgba(255,179,71,.18);color:var(--amber);text-transform:uppercase}
+.venc-card .stamp.custom{background:rgba(167,139,250,.18);color:var(--purple)}
 .venc-card .status{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase}
 .venc-card.pago .status{color:var(--green)}
 .venc-card.pendente .status{color:var(--amber)}
@@ -134,7 +136,7 @@ svg text{font-family:var(--font)}
 .venc-card .boleto-box{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px;font-family:'SF Mono',Consolas,monospace;font-size:11px;line-height:1.5;word-break:break-all;position:relative}
 .venc-card .boleto-box .copy-btn{position:absolute;top:6px;right:6px;padding:3px 8px;font-size:10px;background:var(--surface-3);border:1px solid var(--border);border-radius:6px;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:700}
 .venc-card .boleto-box .copy-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-.venc-card .acoes{display:flex;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid var(--border)}
+.venc-card .acoes{display:flex;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;z-index:99999;background:rgba(11,18,32,.75);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
@@ -146,9 +148,9 @@ svg text{font-family:var(--font)}
 .modal-head .close:hover{background:var(--surface-3);color:var(--text)}
 .modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
 .modal-body label{font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;display:block}
-.modal-body input[type=date],.modal-body input[type=number],.modal-body input[type=text],.modal-body textarea{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;border-radius:var(--radius-sm);outline:none;transition:.15s}
+.modal-body input[type=date],.modal-body input[type=number],.modal-body input[type=text],.modal-body textarea,.modal-body select{width:100%;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:10px 12px;border-radius:var(--radius-sm);outline:none;transition:.15s}
 .modal-body textarea{min-height:70px;font-family:'SF Mono',Consolas,monospace;font-size:12px;resize:vertical}
-.modal-body input:focus,.modal-body textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,140,255,.15)}
+.modal-body input:focus,.modal-body textarea:focus,.modal-body select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,140,255,.15)}
 .modal-body .checkbox-line{display:flex;align-items:center;gap:10px;background:var(--surface-2);padding:11px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer}
 .modal-body .checkbox-line input{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
 .modal-body .checkbox-line span{font-size:13px;font-weight:600;color:var(--text)}
@@ -156,6 +158,7 @@ svg text{font-family:var(--font)}
 .modal-foot .spacer{margin-right:auto}
 .modal-body .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:520px){.modal-body .row{grid-template-columns:1fr}}
+.hint{font-size:11px;color:var(--muted);margin-top:4px;font-style:italic}
 </style>
 </head>
 <body>
@@ -173,7 +176,7 @@ svg text{font-family:var(--font)}
 <button class="tab" data-tab="mensal">📅 Mensal</button>
 <button class="tab" data-tab="categorias">🏷️ Categorias</button>
 <button class="tab" data-tab="mov">📋 Movimentações</button>
-<button class="tab" data-tab="recorrentes">🔔 Vencimentos</button>
+<button class="tab" data-tab="recorrentes">🚀 Lançamentos Futuros</button>
 <button class="tab" data-tab="dados">⚙️ Dados</button>
 </nav>
 <div class="global-filters">
@@ -188,18 +191,12 @@ svg text{font-family:var(--font)}
 
 <section class="panel active" id="panel-geral">
 <div class="grid kpis" id="kpiBox"></div>
-<div class="card" style="margin-bottom:var(--gap)">
-<div class="card-head"><h3>Receitas × Despesas por mês</h3><span>Barras: valores mensais · Linha: resultado</span></div>
-<svg id="chartMensal" viewBox="0 0 900 340" style="width:100%;height:auto"></svg>
-</div>
+<div class="card" style="margin-bottom:var(--gap)"><div class="card-head"><h3>Receitas × Despesas por mês</h3><span>Barras: valores mensais · Linha: resultado</span></div><svg id="chartMensal" viewBox="0 0 900 340" style="width:100%;height:auto"></svg></div>
 <div class="grid charts-row">
 <div class="card"><div class="card-head"><h3>Top Despesas por Categoria</h3><span id="topCatSub"></span></div><svg id="chartCat" viewBox="0 0 700 320" style="width:100%;height:auto"></svg></div>
 <div class="card"><div class="card-head"><h3>Saldo Acumulado</h3><span id="saldoSub"></span></div><svg id="chartSaldo" viewBox="0 0 700 320" style="width:100%;height:auto"></svg></div>
 </div>
-<div class="card" style="margin-top:var(--gap)">
-<div class="card-head"><h3>Resumo Mensal Consolidado</h3><span>Período filtrado</span></div>
-<div class="table-wrap"><table id="tblResumo"></table></div>
-</div>
+<div class="card" style="margin-top:var(--gap)"><div class="card-head"><h3>Resumo Mensal Consolidado</h3><span>Período filtrado</span></div><div class="table-wrap"><table id="tblResumo"></table></div></div>
 </section>
 
 <section class="panel" id="panel-mensal">
@@ -221,15 +218,16 @@ svg text{font-family:var(--font)}
 
 <section class="panel" id="panel-recorrentes">
 <div class="note">
-<strong>🔔 Controle de Vencimentos.</strong> Monitore as despesas fixas com alertas automáticos. Use o botão <strong>✏️ Editar</strong> em cada card para ajustar manualmente: data de vencimento, valor, número do boleto e linha digitável. Tudo é salvo no navegador.
+<strong>🚀 Lançamentos Futuros.</strong> Monitore as despesas fixas com alertas automáticos. Use <strong>✏️ Editar</strong> para ajustar data, valor (formato <code>1.250,80</code>), boleto e linha digitável. Use <strong>➕ Adicionar Novo</strong> para criar cartões personalizados. Tudo é salvo automaticamente no navegador.
 </div>
 <div id="alertasTopo"></div>
 <div class="grid kpis" id="kpiVenc" style="margin-bottom:var(--gap)"></div>
-<div class="venc-grid" id="vencGrid"></div>
-<div class="card" style="margin-top:var(--gap)">
-<div class="card-head"><h3>Histórico por Despesa Fixa</h3><span id="histInfo"></span></div>
-<div class="table-wrap"><table id="tblHist"></table></div>
+<div class="bar-actions">
+<button class="btn primary" id="btnNovoLancamento">➕ Adicionar Novo Lançamento</button>
+<span class="badge" id="badgeCustomInfo"></span>
 </div>
+<div class="venc-grid" id="vencGrid"></div>
+<div class="card" style="margin-top:var(--gap)"><div class="card-head"><h3>Histórico por Despesa Fixa</h3><span id="histInfo"></span></div><div class="table-wrap"><table id="tblHist"></table></div></div>
 </section>
 
 <section class="panel" id="panel-dados">
@@ -243,40 +241,19 @@ svg text{font-family:var(--font)}
 </section>
 </div>
 
-<!-- MODAL DE EDIÇÃO -->
+<!-- MODAL EDITAR DESPESA EXISTENTE -->
 <div class="modal-overlay" id="modalOverride">
 <div class="modal" role="dialog" aria-modal="true">
-<div class="modal-head">
-<h3 id="modalTitle">Editar Despesa Fixa</h3>
-<button class="close" id="btnFecharModal" aria-label="Fechar">×</button>
-</div>
+<div class="modal-head"><h3 id="modalTitle">Editar Despesa Fixa</h3><button class="close" id="btnFecharModal" aria-label="Fechar">×</button></div>
 <div class="modal-body">
 <div class="row">
-<div>
-<label for="editData">Data de vencimento</label>
-<input type="date" id="editData">
+<div><label for="editData">Data de vencimento</label><input type="date" id="editData"></div>
+<div><label for="editValor">Valor (R$)</label><input type="text" inputmode="decimal" id="editValor" placeholder="1.250,80"><div class="hint">Ex: 1.250,80 ou 1250,80</div></div>
 </div>
-<div>
-<label for="editValor">Valor (R$)</label>
-<input type="number" id="editValor" step="0.01" min="0" placeholder="0,00">
-</div>
-</div>
-<div>
-<label for="editBoleto">Número do boleto / identificação (opcional)</label>
-<input type="text" id="editBoleto" placeholder="Ex: 12345.67890 12345.678901 12345.678901 1 12345678901234">
-</div>
-<div>
-<label for="editLinha">Linha digitável / código de barras (opcional)</label>
-<textarea id="editLinha" placeholder="Cole aqui os 47 dígitos do boleto"></textarea>
-</div>
-<label class="checkbox-line">
-<input type="checkbox" id="editPago">
-<span>✓ Marcar como <strong>já pago</strong> neste ciclo</span>
-</label>
-<div>
-<label for="editObs">Observação (opcional)</label>
-<input type="text" id="editObs" placeholder="Ex: Pago via PIX, boleto reemitido...">
-</div>
+<div><label for="editBoleto">Número do boleto / identificação (opcional)</label><input type="text" id="editBoleto" placeholder="Ex: 12345678901234567890"></div>
+<div><label for="editLinha">Linha digitável / código de barras (opcional)</label><textarea id="editLinha" placeholder="Cole aqui os 47 dígitos do boleto"></textarea></div>
+<label class="checkbox-line"><input type="checkbox" id="editPago"><span>✓ Marcar como <strong>já pago</strong> neste ciclo</span></label>
+<div><label for="editObs">Observação (opcional)</label><input type="text" id="editObs" placeholder="Ex: Pago via PIX, boleto reemitido..."></div>
 </div>
 <div class="modal-foot">
 <button class="btn danger sm spacer" id="btnLimparOverride">🗑️ Limpar edição</button>
@@ -286,47 +263,61 @@ svg text{font-family:var(--font)}
 </div>
 </div>
 
+<!-- MODAL NOVO LANÇAMENTO PERSONALIZADO -->
+<div class="modal-overlay" id="modalNovo">
+<div class="modal" role="dialog" aria-modal="true">
+<div class="modal-head"><h3 id="modalNovoTitle">Novo Lançamento Personalizado</h3><button class="close" id="btnFecharNovo" aria-label="Fechar">×</button></div>
+<div class="modal-body">
+<div><label for="novoNome">Nome do lançamento</label><input type="text" id="novoNome" placeholder="Ex: Aluguel Galpão, Internet, Seguro..."><div class="hint">Este nome aparecerá no cartão</div></div>
+<div class="row">
+<div><label for="novoDia">Dia previsto no mês</label><input type="number" id="novoDia" min="1" max="31" value="10"></div>
+<div><label for="novoAlerta">Alertar antes de (dias)</label><input type="number" id="novoAlerta" min="0" max="30" value="3"></div>
+</div>
+<div><label for="novoCategoria">Categoria relacionada</label><select id="novoCategoria"></select><div class="hint">Usada para buscar pagamentos automaticamente</div></div>
+<div><label for="novoPadrao">Palavras-chave para localizar pagamentos (opcional)</label><input type="text" id="novoPadrao" placeholder="Ex: ALUGUEL, IMOVEL, LOCACAO"><div class="hint">Separe por vírgula. Se vazio, usa o próprio nome</div></div>
+</div>
+<div class="modal-foot">
+<button class="btn ghost" id="btnCancelarNovo">Cancelar</button>
+<button class="btn primary" id="btnSalvarNovo">💾 Salvar lançamento</button>
+</div>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
 <div class="drag-overlay" id="dragOverlay"><div class="msg"><span class="big">📊</span>Solte o arquivo Excel aqui</div></div>
 
 <script>
-/* ============================================================
-   Amostra mínima — dados reais migram do localStorage v7
-   ============================================================ */
 const EXTRATO_RAW = `2026-10-02|Transferência recebida NE|42000|C|02/10 NORDESTE COMERCIO
 2026-10-02|01 SALÁRIO / ENCARGOS|42033.5|D|FLASH APP - VA E VT OUTUBRO`;
 
 const RESUMO_ORIGINAL={mesesFull:['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],meses:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],receita:[247000,377036,382620,498373,267745.39,325675,420552.49,291284.27,317153.63,73700,0,0],despesa:[212602.75,402959.07,389317.63,497933.20,268658.40,326632.31,419291.73,290340.98,319458.66,73519.89,0,0],categorias:[{nome:'01 SALÁRIO / ENCARGOS',tipo:'Despesa',cor:'#4f8cff',valores:[115401.53,219631.92,244656.94,323409.18,231280.52,242958.30,292062.99,215857.17,216057.56,45396.37,0,0]},{nome:'02 OP. / TAR. BANCÁRIAS',tipo:'Despesa',cor:'#38bdf8',valores:[439.66,34556.56,637.25,58072.69,269.34,381.66,8085.37,400.05,1556.20,135.83,0,0]},{nome:'03 IMPOSTOS',tipo:'Despesa',cor:'#f59e0b',valores:[17874.40,22836.01,9706.18,41470.91,10024.63,7423.42,16552.49,15547.10,15516.07,0,0,0]},{nome:'04 OP. NLG',tipo:'Despesa',cor:'#a78bfa',valores:[75341.40,120018.07,130012.60,66617.64,20264.27,69890.48,49760.14,31442.50,44182.31,14190.00,0,0]},{nome:'05 OP. NORDESTE',tipo:'Despesa',cor:'#f472b6',valores:[0,0,0,0,0,0,42091.42,19725.50,37059.79,13408.79,0,0]},{nome:'06 CUSTOS ADM',tipo:'Despesa',cor:'#34d399',valores:[3545.76,5916.51,4304.66,8362.78,6819.64,5978.45,10739.32,7368.66,5086.73,388.90,0,0]},{nome:'Cobrança',tipo:'Receita',cor:'#2ecc8f',valores:[0,0,0,0,5700,0,16490,3887.04,5817.79,0,0,0]},{nome:'Dep dinheiro banco',tipo:'Receita',cor:'#22d3ee',valores:[0,0,720,0,0,0,1833,762.30,1084,0,0,0]},{nome:'Pix-Envio devolvido',tipo:'Receita',cor:'#fbbf24',valores:[0,0,0,0,0,0,7500,0,0,0,0,0]},{nome:'Transferência recebida',tipo:'Receita',cor:'#818cf8',valores:[0,0,0,0,2945.39,175,760,0,0,0,0,0]},{nome:'Transferência recebida NE',tipo:'Receita',cor:'#10b981',valores:[247000,377036,381900,498373,259100,325500,393969.49,286634.93,310251.84,73700,0,0]}]};
 
 /* ============================================================
-   LISTA DE DESPESAS FIXAS CADASTRADAS
+   DESPESAS FIXAS BASE (editáveis no código)
    ============================================================ */
-const DESPESAS_FIXAS = [
-  {id:'salario',  nome:'Folha Salário',           padroes:['SALÁRIO (01)','SALÁRIO'],                            dia:5,  alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
-  {id:'eas',      nome:'EAS Tech Solution',       padroes:['EAS TECH'],                                           dia:16, alertaDias:3, categoria:'06 CUSTOS ADM'},
-  {id:'vivo',     nome:'Vivo PE',                 padroes:['VIVO PE'],                                            dia:17, alertaDias:3, categoria:'06 CUSTOS ADM'},
-  {id:'fgts',     nome:'Guia FGTS Mensal',        padroes:['GUIA FGTS MENSAL','CEF MATRIZ - GUIA FGTS MENSAL'],   dia:20, alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
-  {id:'inss',     nome:'Guia INSS Mensal',        padroes:['GUIA INSS','RFB-DARF CODIGO DE BARRAS - GUIA INSS'],  dia:20, alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
-  {id:'vertice',  nome:'Verttice Gerenciamento',  padroes:['VERTTICE','VERTICE GERENCIAMENTO'],                   dia:16, alertaDias:3, categoria:'06 CUSTOS ADM'},
-  {id:'allianz',  nome:'Allianz Seguros',         padroes:['ALLIANZ'],                                            dia:20, alertaDias:3, categoria:'06 CUSTOS ADM'},
-  {id:'efrete',   nome:'E-Frete',                 padroes:['E-FRETE','E FRETE'],                                  dia:24, alertaDias:3, categoria:'06 CUSTOS ADM'}
+const DESPESAS_FIXAS_BASE = [
+  {id:'salario', nome:'Folha Salário',            padroes:['SALÁRIO (01)','SALÁRIO'],                              dia:5,  alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
+  {id:'eas',     nome:'EAS Tech Solution',        padroes:['EAS TECH','EAS TECH SOLUTION'],                      dia:16, alertaDias:3, categoria:'06 CUSTOS ADM'},
+  {id:'vivo',    nome:'Vivo PE',                  padroes:['VIVO PE','VIVO'],                                     dia:17, alertaDias:3, categoria:'06 CUSTOS ADM'},
+  {id:'fgts',    nome:'Guia FGTS Mensal',         padroes:['GUIA FGTS MENSAL','CEF MATRIZ - GUIA FGTS MENSAL'],  dia:20, alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
+  {id:'inss',    nome:'Guia INSS Mensal',         padroes:['GUIA INSS','RFB-DARF CODIGO DE BARRAS - GUIA INSS'], dia:20, alertaDias:3, categoria:'01 SALÁRIO / ENCARGOS'},
+  {id:'vertice', nome:'Verttice Gerenciamento',   padroes:['VERTTICE','VERTICE GERENCIAMENTO','VERTICE'],        dia:16, alertaDias:3, categoria:'06 CUSTOS ADM'},
+  {id:'allianz', nome:'Allianz Seguros',          padroes:['ALLIANZ'],                                            dia:20, alertaDias:3, categoria:'06 CUSTOS ADM'},
+  {id:'efrete',  nome:'E-FRETE Integração Sistema', padroes:['E-FRETE INTEGRAÇÃO SISTEMA','E-FRETE INTEGRACAO SISTEMA','E-FRETE','E FRETE'], dia:24, alertaDias:3, categoria:'06 CUSTOS ADM'}
 ];
 
 /* ============================================================
-   STORAGE v8 — migração automática de v7, v6, v5, v4
+   STORAGE v9 — migração automática
    ============================================================ */
-const STORAGE_KEY='dashboard-caixa-v8';
-const STORAGE_KEYS_OLD=['dashboard-caixa-v7','dashboard-caixa-v6','dashboard-caixa-v5','dashboard-caixa-v4'];
-const DATA_VERSION='2026-10-07-v8';
+const STORAGE_KEY='dashboard-caixa-v9';
+const STORAGE_KEYS_OLD=['dashboard-caixa-v8','dashboard-caixa-v7','dashboard-caixa-v6','dashboard-caixa-v5','dashboard-caixa-v4'];
+const DATA_VERSION='2026-10-07-v9';
 
 function salvarLocal(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      dados: STATE.dados,
-      resumo: STATE.resumo,
-      overrides: STATE.overrides,
-      versao: DATA_VERSION,
-      atualizado: new Date().toISOString()
+      dados: STATE.dados, resumo: STATE.resumo, overrides: STATE.overrides,
+      customFixos: STATE.customFixos, versao: DATA_VERSION, atualizado: new Date().toISOString()
     }));
     return true;
   }catch(e){ console.error(e); return false; }
@@ -338,6 +329,7 @@ function carregarLocal(){
       const o = JSON.parse(r);
       if(o && Array.isArray(o.dados) && o.dados.length){
         if(!o.overrides) o.overrides = {};
+        if(!Array.isArray(o.customFixos)) o.customFixos = [];
         return o;
       }
     }
@@ -347,6 +339,7 @@ function carregarLocal(){
         const o = JSON.parse(r);
         if(o && Array.isArray(o.dados) && o.dados.length){
           o.overrides = o.overrides || {};
+          o.customFixos = o.customFixos || [];
           localStorage.setItem(STORAGE_KEY, JSON.stringify(o));
           return o;
         }
@@ -369,12 +362,31 @@ const MESES_PT=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov
 const MESES_FULL=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 function parseData(s){s=String(s||'').trim();let m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);if(m)return`${m[1]}-${m[2]}-${m[3]}`;m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);if(m)return`${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;return null;}
 function parseValor(s){if(typeof s==='number')return s;s=String(s||'').replace(/[R$\s]/g,'');if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');const n=parseFloat(s);return isNaN(n)?0:n;}
+/* Parser BR: aceita 1.250,80 / 1250,80 / 1250.80 / 1250 / 1.250 */
+function parseValorBR(s){
+  if(typeof s === 'number') return isNaN(s)?null:s;
+  s = String(s||'').trim();
+  if(!s) return null;
+  s = s.replace(/[R$\s]/g,'');
+  if(s.includes(',')){
+    s = s.replace(/\./g,'').replace(',','.');
+  } else if(/^\d{1,3}(\.\d{3})+$/.test(s)){
+    s = s.replace(/\./g,'');
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+function formatValorBR(n){
+  if(n == null || isNaN(n)) return '';
+  return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
 function tipoNorm(s){const t=String(s||'').trim().toUpperCase();if(t==='C'||t==='CREDITO'||t==='CRÉDITO'||t==='RECEITA'||t==='ENTRADA')return'C';return'D';}
 function corCategoria(nome){const f=STATE.resumo.categorias.find(c=>c.nome===nome);if(f)return f.cor;const p=nome.slice(0,2);const m={'01':'#4f8cff','02':'#38bdf8','03':'#f59e0b','04':'#a78bfa','05':'#f472b6','06':'#34d399'};return m[p]||'#8899bb';}
 function parseExtrato(txt){const linhas=String(txt).split(/\r?\n/);const out=[];for(const linha of linhas){const raw=linha.trim();if(!raw)continue;let sep='|';if(!raw.includes('|')){if(raw.includes('\t'))sep='\t';else if(raw.includes(';'))sep=';';else if(raw.includes(','))sep=',';else continue;}const p=raw.split(sep).map(x=>x.trim());if(p.length<4)continue;const data=parseData(p[0]);if(!data)continue;if(/^(total|data)/i.test(p[0]))continue;out.push({data,categoria:p[1]||'Não classificado',valor:parseValor(p[2]),tipo:tipoNorm(p[3]),detalhe:p[4]||''});}out.sort((a,b)=>a.data.localeCompare(b.data));return out;}
 function toast(msg,tipo='ok'){const el=$('#toast');el.textContent=msg;el.className='toast show '+(tipo==='error'?'error':tipo==='info'?'info':'');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),3200);}
 
-const STATE={dados:[],resumo:null,overrides:{},saldoInicial:0,mesIni:0,mesFim:9,catGeral:'todas',tipoGeral:'todos',busca:'',origem:'original'};
+const STATE={dados:[],resumo:null,overrides:{},customFixos:[],saldoInicial:0,mesIni:0,mesFim:9,catGeral:'todas',tipoGeral:'todos',busca:'',origem:'original'};
+function getDespesasFixas(){ return [...DESPESAS_FIXAS_BASE, ...STATE.customFixos]; }
 function getMesesFiltrados(){const o=[];for(let i=STATE.mesIni;i<=STATE.mesFim;i++)o.push(i);return o;}
 function getCategoriasFiltradas(){return STATE.resumo.categorias.filter(c=>STATE.catGeral==='todas'||c.nome===STATE.catGeral);}
 function categoriaPassaFiltro(nome){return STATE.catGeral==='todas'||nome===STATE.catGeral;}
@@ -396,7 +408,7 @@ function renderRanking(){const meses=getMesesFiltrados(),cats=getCategoriasFiltr
 function renderMov(){const filtrado=getMovimentosFiltrados();let saldo=0;const comSaldo=filtrado.map(d=>{saldo+=(d.tipo==='C'?d.valor:-d.valor);return{...d,saldo};});const totR=filtrado.filter(d=>d.tipo==='C').reduce((s,d)=>s+d.valor,0);const totD=filtrado.filter(d=>d.tipo==='D').reduce((s,d)=>s+d.valor,0);$('#movInfo').innerHTML=`${filtrado.length} lançamentos · <span class="pos">${fmtBRL(totR)}</span> · <span class="neg">${fmtBRL(totD)}</span>`;let html=`<thead><tr><th>Data</th><th>Categoria</th><th>Detalhamento</th><th>Tipo</th><th>Receita</th><th>Despesa</th><th>Saldo</th></tr></thead><tbody>`;if(!filtrado.length){html+=`<tr><td colspan="7" style="text-align:center;padding:40px" class="muted">Nenhum lançamento.</td></tr>`;}else{comSaldo.forEach(d=>{const[a,m,dia]=d.data.split('-');html+=`<tr><td>${dia}/${m}/${a}</td><td><span class="cat-dot" style="background:${corCategoria(d.categoria)}"></span>${d.categoria}</td><td style="text-align:left;max-width:420px;white-space:normal;color:var(--muted);font-weight:400">${d.detalhe||'—'}</td><td><span class="tag ${d.tipo}">${d.tipo==='C'?'Receita':'Despesa'}</span></td><td class="pos">${d.tipo==='C'?fmtNum(d.valor):'—'}</td><td class="neg">${d.tipo==='D'?fmtNum(d.valor):'—'}</td><td style="font-weight:700">${fmtNum(d.saldo)}</td></tr>`;});}html+=`<tr class="total-row"><td colspan="4">TOTAL</td><td class="pos">${fmtNum(totR)}</td><td class="neg">${fmtNum(totD)}</td><td class="${totR-totD>=0?'pos':'neg'}">${fmtNum(totR-totD)}</td></tr></tbody>`;$('#tblMov').innerHTML=html;}
 
 /* ============================================================
-   VENCIMENTOS + OVERRIDES MANUAIS
+   LANÇAMENTOS FUTUROS
    ============================================================ */
 function dataReferencia(){
   const hoje = new Date();
@@ -407,16 +419,12 @@ function dataReferencia(){
   }
   return hoje;
 }
-function chaveOverride(id, refDate){
-  return `${id}_${refDate.getFullYear()}-${String(refDate.getMonth()+1).padStart(2,'0')}`;
-}
-function getOverride(id, refDate){
-  return STATE.overrides[chaveOverride(id, refDate)] || null;
-}
+function chaveOverride(id, refDate){ return `${id}_${refDate.getFullYear()}-${String(refDate.getMonth()+1).padStart(2,'0')}`; }
+function getOverride(id, refDate){ return STATE.overrides[chaveOverride(id, refDate)] || null; }
+
 function acharPagamentoMes(fixo, refDate){
-  const ano = refDate.getFullYear();
-  const mes = refDate.getMonth();
-  const padroes = fixo.padroes.map(p => p.toUpperCase());
+  const ano = refDate.getFullYear(), mes = refDate.getMonth();
+  const padroes = (fixo.padroes && fixo.padroes.length ? fixo.padroes : [fixo.nome]).map(p => String(p).toUpperCase()).filter(Boolean);
   const matches = STATE.dados.filter(d => {
     if(d.tipo !== 'D') return false;
     const dt = new Date(d.data + 'T12:00:00');
@@ -433,28 +441,20 @@ function calcularStatus(fixo, refDate){
   const pagoAuto = acharPagamentoMes(fixo, refDate);
   const hoje = refDate.getDate();
   const mesRef = refDate.getMonth() + 1;
-
   let diaVenc = fixo.dia;
   let dataVencISO = `${refDate.getFullYear()}-${String(mesRef).padStart(2,'0')}-${String(fixo.dia).padStart(2,'0')}`;
-  let valorOv = null, boletoOv = null, linhaOv = null, obsOv = null;
-  let marcadoPago = false;
+  let valorOv = null, boletoOv = null, linhaOv = null, obsOv = null, marcadoPago = false;
   if(ov){
-    if(ov.dataVenc){
-      const [a,m,d] = ov.dataVenc.split('-').map(Number);
-      diaVenc = d;
-      dataVencISO = ov.dataVenc;
-    }
+    if(ov.dataVenc){ const [a,m,d] = ov.dataVenc.split('-').map(Number); diaVenc = d; dataVencISO = ov.dataVenc; }
     if(ov.valor != null) valorOv = ov.valor;
     boletoOv = ov.boleto || null;
     linhaOv = ov.linha || null;
     obsOv = ov.obs || null;
     marcadoPago = ov.pago === true;
   }
-
   const pago = marcadoPago
     ? {data: dataVencISO, dia: diaVenc, valor: valorOv ?? (pagoAuto ? pagoAuto.valor : 0), manual: true}
     : pagoAuto;
-
   if(pago){
     return {estado:'pago', pago, override: !!ov, diasRestantes:0, mensagem:`Pago em ${pago.dia}/${String(mesRef).padStart(2,'0')} · ${fmtBRL(pago.valor)}${marcadoPago?' (manual)':''}`, diaVenc, dataVencISO, valorOv, boletoOv, linhaOv, obsOv};
   }
@@ -469,12 +469,13 @@ function calcularStatus(fixo, refDate){
   return {estado:'atrasado', pago:null, override: !!ov, diasRestantes:-atraso, mensagem:`Atrasado há ${atraso} dia${atraso===1?'':'s'}`, diaVenc, dataVencISO, valorOv, boletoOv, linhaOv, obsOv};
 }
 
-function renderVencimentos(){
+function renderLancamentosFuturos(){
   const refDate = dataReferencia();
   const ano = refDate.getFullYear();
   const mes = refDate.getMonth();
   const nomeMes = MESES_FULL[mes] + ' ' + ano;
-  const resultados = DESPESAS_FIXAS.map(f => ({...f, status: calcularStatus(f, refDate)}));
+  const todasFixas = getDespesasFixas();
+  const resultados = todasFixas.map(f => ({...f, status: calcularStatus(f, refDate)}));
   resultados.sort((a,b) => a.status.diaVenc - b.status.diaVenc);
 
   const pagos = resultados.filter(r => r.status.estado === 'pago');
@@ -482,7 +483,6 @@ function renderVencimentos(){
   const atrasados = resultados.filter(r => r.status.estado === 'atrasado');
   const aguardando = resultados.filter(r => r.status.estado === 'aguardando');
   const totalPago = pagos.reduce((s,r) => s + r.status.pago.valor, 0);
-  const totalPendenteValor = pendentes.reduce((s,r) => s + (r.status.valorOv ?? 0), 0);
 
   $('#kpiVenc').innerHTML = `
     <div class="card green"><div class="kpi-label">✅ Pagos no Ciclo</div><div class="kpi-value">${pagos.length}/${resultados.length}</div><div class="kpi-sub">Total desembolsado: ${fmtBRL(totalPago)}</div></div>
@@ -496,10 +496,19 @@ function renderVencimentos(){
     banner.innerHTML = `<div class="alert-banner danger"><span class="big">🚨</span><div><strong>${atrasados.length} despesa${atrasados.length===1?'':'s'} em atraso!</strong><br><span class="small">${atrasados.map(a=>`${a.nome} (dia ${a.status.diaVenc})`).join(' · ')}</span></div></div>`;
   } else if(pendentes.length){
     banner.innerHTML = `<div class="alert-banner warn"><span class="big">⚠️</span><div><strong>${pendentes.length} vencimento${pendentes.length===1?'':'s'} nos próximos dias</strong><br><span class="small">${pendentes.map(p=>`${p.nome} (${p.status.mensagem})`).join(' · ')}</span></div></div>`;
-  } else if(pagos.length === resultados.length){
-    banner.innerHTML = `<div class="alert-banner ok"><span class="big">✅</span><div><strong>Todas as despesas fixas do ciclo estão pagas!</strong><br><span class="small">Último pagamento em ${pagos.sort((a,b)=>b.status.pago.dia-a.status.pago.dia)[0].status.pago.dia}/${String(mes+1).padStart(2,'0')}</span></div></div>`;
+  } else if(pagos.length === resultados.length && resultados.length > 0){
+    banner.innerHTML = `<div class="alert-banner ok"><span class="big">✅</span><div><strong>Todas as despesas fixas do ciclo estão pagas!</strong></div></div>`;
   } else {
     banner.innerHTML = `<div class="alert-banner info"><span class="big">ℹ️</span><div><strong>Sem alertas ativos no momento.</strong><br><span class="small">${aguardando.length} despesa${aguardando.length===1?'':'s'} fora da janela de alerta</span></div></div>`;
+  }
+
+  const badgeCustom = $('#badgeCustomInfo');
+  if(badgeCustom){
+    if(STATE.customFixos.length > 0){
+      badgeCustom.textContent = `${STATE.customFixos.length} personalizado${STATE.customFixos.length===1?'':'s'}`;
+    } else {
+      badgeCustom.textContent = 'Nenhum personalizado';
+    }
   }
 
   $('#vencGrid').innerHTML = resultados.map(r => {
@@ -507,6 +516,7 @@ function renderVencimentos(){
     const st = s.estado;
     const stLabel = st === 'pago' ? '✓ Pago' : st === 'pendente' ? '⏳ A vencer' : st === 'atrasado' ? '⚠ Atrasado' : '○ Aguardando';
     const diasTxt = st === 'pago' ? 'Pago' : st === 'atrasado' ? `${Math.abs(s.diasRestantes)}d em atraso` : st === 'pendente' ? `${s.diasRestantes}d` : `Em ${s.diasRestantes}d`;
+    const isCustom = !!r.custom;
     const temOverride = !!s.override;
 
     let valorTxt = '—';
@@ -519,25 +529,23 @@ function renderVencimentos(){
     let boletoHtml = '';
     if(s.boletoOv || s.linhaOv){
       const conteudo = s.boletoOv || s.linhaOv;
-      boletoHtml = `
-        <div class="boleto-box">
-          <button class="copy-btn" data-copy="${conteudo.replace(/"/g,'&quot;')}">📋 Copiar</button>
-          ${s.boletoOv ? `<div style="margin-bottom:4px"><span class="muted">Boleto:</span> ${s.boletoOv}</div>` : ''}
-          ${s.linhaOv ? `<div><span class="muted">Linha:</span> ${s.linhaOv}</div>` : ''}
-        </div>`;
+      boletoHtml = `<div class="boleto-box"><button class="copy-btn" data-copy="${String(conteudo).replace(/"/g,'&quot;')}">📋 Copiar</button>${s.boletoOv ? `<div style="margin-bottom:4px"><span class="muted">Boleto:</span> ${s.boletoOv}</div>` : ''}${s.linhaOv ? `<div><span class="muted">Linha:</span> ${s.linhaOv}</div>` : ''}</div>`;
     }
 
     const obsHtml = s.obsOv ? `<div class="info" style="color:var(--amber);font-style:italic;margin-top:4px">📌 ${s.obsOv}</div>` : '';
+    const catHtml = r.categoria ? `<div><strong>Categoria:</strong> ${r.categoria}</div>` : '';
 
     return `
       <div class="venc-card ${st}">
         <div class="titulo">
           <div class="nome">${r.nome}</div>
+          ${isCustom ? `<span class="stamp custom">⭐ Personalizado</span>` : ''}
           ${temOverride ? `<span class="stamp">✏️ Editado</span>` : ''}
         </div>
         <div class="status">${stLabel}</div>
         <div class="dias-restantes">${diasTxt}</div>
         <div class="info">
+          ${catHtml}
           <div><strong>Vencimento:</strong> dia ${s.diaVenc}${s.dataVencISO ? ' <span class="muted">(' + s.dataVencISO.split('-').reverse().join('/') + ')</span>' : ''}</div>
           <div><strong>Valor:</strong> ${valorTxt}</div>
           <div>${s.mensagem}</div>
@@ -546,14 +554,15 @@ function renderVencimentos(){
         ${boletoHtml}
         <div class="acoes">
           <button class="btn sm primary" data-editar="${r.id}">✏️ Editar</button>
-          ${temOverride ? `<button class="btn sm danger" data-limpar="${r.id}">Limpar</button>` : ''}
+          ${temOverride ? `<button class="btn sm danger" data-limpar="${r.id}">Limpar edição</button>` : ''}
+          ${isCustom ? `<button class="btn sm ghost" data-config="${r.id}">⚙️ Ajustar</button><button class="btn sm danger" data-remover="${r.id}">🗑️ Remover</button>` : ''}
         </div>
       </div>`;
   }).join('');
 
   // Histórico
-  const hist = DESPESAS_FIXAS.map(f => {
-    const padroes = f.padroes.map(p => p.toUpperCase());
+  const hist = todasFixas.map(f => {
+    const padroes = (f.padroes && f.padroes.length ? f.padroes : [f.nome]).map(p => String(p).toUpperCase()).filter(Boolean);
     const todos = STATE.dados.filter(d => {
       if(d.tipo !== 'D') return false;
       const blob = `${d.categoria} ${d.detalhe}`.toUpperCase();
@@ -581,103 +590,82 @@ function renderVencimentos(){
     const primeiro = h.valores[0] || 0;
     const variacao = primeiro > 0 ? ((ultimo - primeiro) / primeiro * 100) : 0;
     const clsVar = variacao > 0 ? 'pos' : variacao < 0 ? 'neg' : 'muted';
-    html += `<tr>
-      <td><strong>${h.nome}</strong></td>
-      <td class="muted">${h.meses.length} meses</td>
-      <td>dia ${h.diaMedio}</td>
-      <td style="font-weight:700">${fmtNum(h.media)}</td>
-      <td>${fmtNum(ultimo)}</td>
-      <td class="${clsVar}">${(variacao>0?'+':'')}${variacao.toFixed(1)}%</td>
-    </tr>`;
+    html += `<tr><td><strong>${h.nome}</strong></td><td class="muted">${h.meses.length} meses</td><td>dia ${h.diaMedio}</td><td style="font-weight:700">${fmtNum(h.media)}</td><td>${fmtNum(ultimo)}</td><td class="${clsVar}">${(variacao>0?'+':'')}${variacao.toFixed(1)}%</td></tr>`;
   });
   html += '</tbody>';
   $('#tblHist').innerHTML = html;
-  $('#histInfo').textContent = `${DESPESAS_FIXAS.length} despesas monitoradas · referência: ${nomeMes}`;
+  $('#histInfo').textContent = `${todasFixas.length} despesas monitoradas · referência: ${nomeMes}`;
 
   // Listeners dinâmicos
-  $$('[data-editar]').forEach(btn => {
-    btn.addEventListener('click', () => abrirModal(btn.dataset.editar));
-  });
-  $$('[data-limpar]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if(!confirm('Remover a edição manual desta despesa neste ciclo?')) return;
-      const ref = dataReferencia();
-      delete STATE.overrides[chaveOverride(btn.dataset.limpar, ref)];
-      salvarLocal();
-      renderVencimentos();
-      toast('Edição removida','info');
-    });
-  });
-  $$('[data-copy]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const txt = btn.dataset.copy;
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(txt).then(() => toast('Copiado!')).catch(() => fallbackCopy(txt));
-      } else {
-        fallbackCopy(txt);
-      }
-    });
-  });
+  $$('[data-editar]').forEach(btn => btn.addEventListener('click', () => abrirModalOverride(btn.dataset.editar)));
+  $$('[data-limpar]').forEach(btn => btn.addEventListener('click', () => {
+    if(!confirm('Remover a edição manual desta despesa neste ciclo?')) return;
+    const ref = dataReferencia();
+    delete STATE.overrides[chaveOverride(btn.dataset.limpar, ref)];
+    salvarLocal(); renderLancamentosFuturos();
+    toast('Edição removida','info');
+  }));
+  $$('[data-config]').forEach(btn => btn.addEventListener('click', () => abrirModalNovo(btn.dataset.config)));
+  $$('[data-remover]').forEach(btn => btn.addEventListener('click', () => {
+    if(!confirm('Remover este lançamento personalizado? Esta ação não pode ser desfeita.')) return;
+    const idx = STATE.customFixos.findIndex(f => f.id === btn.dataset.remover);
+    if(idx >= 0){ STATE.customFixos.splice(idx, 1); salvarLocal(); renderLancamentosFuturos(); toast('Removido','info'); }
+  }));
+  $$('[data-copy]').forEach(btn => btn.addEventListener('click', () => {
+    const txt = btn.dataset.copy;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(() => toast('Copiado!')).catch(() => fallbackCopy(txt));
+    } else fallbackCopy(txt);
+  }));
 }
-
 function fallbackCopy(txt){
-  const ta = document.createElement('textarea');
-  ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+  const ta = document.createElement('textarea'); ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
   document.body.appendChild(ta); ta.select();
-  try{ document.execCommand('copy'); toast('Copiado!'); }catch(e){ toast('Não foi possível copiar','error'); }
+  try{ document.execCommand('copy'); toast('Copiado!'); }catch(e){ toast('Falha ao copiar','error'); }
   document.body.removeChild(ta);
 }
 
 /* ============================================================
-   MODAL
+   MODAL OVERRIDE (editar despesa existente)
    ============================================================ */
 let modalFixoIdAtual = null;
-
-function abrirModal(fixoId){
-  const fixo = DESPESAS_FIXAS.find(f => f.id === fixoId);
+function abrirModalOverride(fixoId){
+  const todas = getDespesasFixas();
+  const fixo = todas.find(f => f.id === fixoId);
   if(!fixo) return;
   const ref = dataReferencia();
   const ov = getOverride(fixoId, ref);
   modalFixoIdAtual = fixoId;
-
   $('#modalTitle').textContent = `Editar — ${fixo.nome}`;
   const y = ref.getFullYear(), m = ref.getMonth()+1;
   const diaDefault = String(fixo.dia).padStart(2,'0');
   const mesStr = String(m).padStart(2,'0');
   $('#editData').value = ov && ov.dataVenc ? ov.dataVenc : `${y}-${mesStr}-${diaDefault}`;
-  $('#editValor').value = ov && ov.valor != null ? ov.valor : '';
+  $('#editValor').value = ov && ov.valor != null ? formatValorBR(ov.valor) : '';
   $('#editBoleto').value = ov && ov.boleto ? ov.boleto : '';
   $('#editLinha').value = ov && ov.linha ? ov.linha : '';
   $('#editPago').checked = !!(ov && ov.pago);
   $('#editObs').value = ov && ov.obs ? ov.obs : '';
-
   $('#modalOverride').classList.add('active');
   setTimeout(() => $('#editValor').focus(), 100);
 }
-function fecharModal(){
-  $('#modalOverride').classList.remove('active');
-  modalFixoIdAtual = null;
-}
+function fecharModalOverride(){ $('#modalOverride').classList.remove('active'); modalFixoIdAtual = null; }
 function salvarOverride(){
   if(!modalFixoIdAtual) return;
   const ref = dataReferencia();
   const key = chaveOverride(modalFixoIdAtual, ref);
   const dataVenc = $('#editData').value || null;
-  const valorStr = $('#editValor').value;
-  const valor = valorStr !== '' ? parseFloat(valorStr) : null;
+  const valor = parseValorBR($('#editValor').value);
   const boleto = $('#editBoleto').value.trim() || null;
   const linha = $('#editLinha').value.trim() || null;
   const pago = $('#editPago').checked;
   const obs = $('#editObs').value.trim() || null;
-
   if(!dataVenc && valor == null && !boleto && !linha && !pago && !obs){
     delete STATE.overrides[key];
   } else {
     STATE.overrides[key] = {dataVenc, valor, boleto, linha, pago, obs};
   }
-  salvarLocal();
-  fecharModal();
-  renderVencimentos();
+  salvarLocal(); fecharModalOverride(); renderLancamentosFuturos();
   toast('✓ Edição salva');
 }
 function limparOverrideModal(){
@@ -685,29 +673,93 @@ function limparOverrideModal(){
   if(!confirm('Limpar todas as edições desta despesa neste ciclo?')) return;
   const ref = dataReferencia();
   delete STATE.overrides[chaveOverride(modalFixoIdAtual, ref)];
-  salvarLocal();
-  fecharModal();
-  renderVencimentos();
+  salvarLocal(); fecharModalOverride(); renderLancamentosFuturos();
   toast('Edição removida','info');
 }
-
-$('#btnFecharModal').addEventListener('click', fecharModal);
-$('#btnCancelarOverride').addEventListener('click', fecharModal);
+$('#btnFecharModal').addEventListener('click', fecharModalOverride);
+$('#btnCancelarOverride').addEventListener('click', fecharModalOverride);
 $('#btnSalvarOverride').addEventListener('click', salvarOverride);
 $('#btnLimparOverride').addEventListener('click', limparOverrideModal);
-$('#modalOverride').addEventListener('click', e => { if(e.target.id === 'modalOverride') fecharModal(); });
-document.addEventListener('keydown', e => { if(e.key === 'Escape' && $('#modalOverride').classList.contains('active')) fecharModal(); });
+$('#modalOverride').addEventListener('click', e => { if(e.target.id === 'modalOverride') fecharModalOverride(); });
+
+/* ============================================================
+   MODAL NOVO / EDITAR CUSTOM
+   ============================================================ */
+let modalEditandoCustomId = null;
+function popularSelectCategorias(){
+  const sel = $('#novoCategoria');
+  const cats = STATE.resumo.categorias.filter(c => c.tipo === 'Despesa').map(c => c.nome);
+  const opcoes = ['<option value="">— Sem categoria específica —</option>']
+    .concat(cats.map(c => `<option value="${c}">${c}</option>`)).join('');
+  sel.innerHTML = opcoes;
+}
+function abrirModalNovo(customId){
+  popularSelectCategorias();
+  modalEditandoCustomId = customId || null;
+  if(customId){
+    const c = STATE.customFixos.find(f => f.id === customId);
+    if(!c) return;
+    $('#modalNovoTitle').textContent = `Ajustar — ${c.nome}`;
+    $('#novoNome').value = c.nome;
+    $('#novoDia').value = c.dia;
+    $('#novoAlerta').value = c.alertaDias;
+    $('#novoCategoria').value = c.categoria || '';
+    $('#novoPadrao').value = (c.padroes || []).join(', ');
+  } else {
+    $('#modalNovoTitle').textContent = 'Novo Lançamento Personalizado';
+    $('#novoNome').value = '';
+    $('#novoDia').value = 10;
+    $('#novoAlerta').value = 3;
+    $('#novoCategoria').value = '';
+    $('#novoPadrao').value = '';
+  }
+  $('#modalNovo').classList.add('active');
+  setTimeout(() => $('#novoNome').focus(), 100);
+}
+function fecharModalNovo(){ $('#modalNovo').classList.remove('active'); modalEditandoCustomId = null; }
+function salvarNovo(){
+  const nome = $('#novoNome').value.trim();
+  if(!nome){ toast('Informe o nome do lançamento','error'); return; }
+  const dia = Math.max(1, Math.min(31, parseInt($('#novoDia').value,10) || 1));
+  const alerta = Math.max(0, Math.min(30, parseInt($('#novoAlerta').value,10) || 0));
+  const categoria = $('#novoCategoria').value || '';
+  const padraoTxt = $('#novoPadrao').value.trim();
+  let padroes;
+  if(padraoTxt){ padroes = padraoTxt.split(',').map(s => s.trim().toUpperCase()).filter(Boolean); }
+  else { padroes = [nome.toUpperCase()]; }
+  if(modalEditandoCustomId){
+    const c = STATE.customFixos.find(f => f.id === modalEditandoCustomId);
+    if(c){ c.nome = nome; c.dia = dia; c.alertaDias = alerta; c.categoria = categoria; c.padroes = padroes; }
+    toast('✓ Lançamento atualizado');
+  } else {
+    const id = 'custom_' + Date.now();
+    STATE.customFixos.push({id, nome, padroes, dia, alertaDias: alerta, categoria, custom: true});
+    toast('✓ Lançamento criado');
+  }
+  salvarLocal(); fecharModalNovo(); renderLancamentosFuturos();
+}
+$('#btnNovoLancamento').addEventListener('click', () => abrirModalNovo(null));
+$('#btnFecharNovo').addEventListener('click', fecharModalNovo);
+$('#btnCancelarNovo').addEventListener('click', fecharModalNovo);
+$('#btnSalvarNovo').addEventListener('click', salvarNovo);
+$('#modalNovo').addEventListener('click', e => { if(e.target.id === 'modalNovo') fecharModalNovo(); });
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    if($('#modalOverride').classList.contains('active')) fecharModalOverride();
+    if($('#modalNovo').classList.contains('active')) fecharModalNovo();
+  }
+});
 
 /* ============================================================
    STATS / STORAGE / STATUS
    ============================================================ */
 function renderStats(){const d=STATE.dados;if(!d.length){$('#statsBox').innerHTML='<p class="muted small">Sem dados.</p>';return;}const datas=d.map(x=>x.data).sort();const cats=new Set(d.map(x=>x.categoria));const rec=d.filter(x=>x.tipo==='C').reduce((s,x)=>s+x.valor,0);const des=d.filter(x=>x.tipo==='D').reduce((s,x)=>s+x.valor,0);const linhas=[['Período',`${datas[0].split('-').reverse().join('/')} → ${datas[datas.length-1].split('-').reverse().join('/')}`],['Lançamentos',d.length.toLocaleString('pt-BR')],['Categorias',cats.size],['Receitas',fmtBRL(rec)],['Despesas',fmtBRL(des)],['Resultado',fmtBRL(rec-des)]];$('#statsBox').innerHTML=linhas.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid var(--border)"><span class="muted small">${k}</span><strong class="small">${v}</strong></div>`).join('');}
-function renderStorage(){const t=(()=>{try{const r=localStorage.getItem(STORAGE_KEY);return r?(r.length/1024).toFixed(1)+' KB':'—';}catch(e){return'—';}})();const numOv = Object.keys(STATE.overrides).length;const l=[['Origem',STATE.origem==='local'?'💾 Salvos':'📦 Originais'],['Versão',DATA_VERSION],['Lançamentos',STATE.dados.length.toLocaleString('pt-BR')],['Edições manuais',numOv],['Espaço',t]];$('#storageBox').innerHTML=l.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)"><span class="muted small">${k}</span><strong class="small">${v}</strong></div>`).join('');}
+function renderStorage(){const t=(()=>{try{const r=localStorage.getItem(STORAGE_KEY);return r?(r.length/1024).toFixed(1)+' KB':'—';}catch(e){return'—';}})();const numOv=Object.keys(STATE.overrides).length;const numC=STATE.customFixos.length;const l=[['Origem',STATE.origem==='local'?'💾 Salvos':'📦 Originais'],['Versão',DATA_VERSION],['Lançamentos',STATE.dados.length.toLocaleString('pt-BR')],['Edições manuais',numOv],['Personalizados',numC],['Espaço',t]];$('#storageBox').innerHTML=l.map(([k,v])=>`<div style="display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)"><span class="muted small">${k}</span><strong class="small">${v}</strong></div>`).join('');}
 function atualizarStatusSave(){const el=$('#saveStatus');if(STATE.origem==='local'){el.className='save-status saved';el.textContent='💾 Salvo';}else{el.className='save-status';el.textContent='📦 Originais';}}
 function mesesComDados(){const set=new Set();STATE.resumo.categorias.forEach(c=>{c.valores.forEach((v,i)=>{if(v>0)set.add(i);});});return Array.from(set).sort((a,b)=>a-b);}
 function popularSelects(){const meses=mesesComDados();if(!meses.length){$('#fMesIni').innerHTML='<option>—</option>';$('#fMesFim').innerHTML='<option>—</option>';return;}const opts=meses.map(i=>`<option value="${i}">${MESES_FULL[i]}</option>`).join('');$('#fMesIni').innerHTML=opts;$('#fMesFim').innerHTML=opts;const ini=meses.includes(STATE.mesIni)?STATE.mesIni:meses[0];const fim=meses.includes(STATE.mesFim)?STATE.mesFim:meses[meses.length-1];STATE.mesIni=ini;STATE.mesFim=fim;$('#fMesIni').value=ini;$('#fMesFim').value=fim;const cats=STATE.resumo.categorias.map(c=>`<option value="${c.nome}">${c.nome}</option>`).join('');const catAtual=STATE.catGeral;$('#fCat').innerHTML=`<option value="todas">Todas</option>${cats}`;if(STATE.resumo.categorias.some(c=>c.nome===catAtual))$('#fCat').value=catAtual;else{$('#fCat').value='todas';STATE.catGeral='todas';}}
 function atualizarBadge(){const badge=$('#filterBadge');const partes=[];const u=mesesComDados().slice(-1)[0];if(STATE.mesIni!==0||STATE.mesFim!==u)partes.push(`<strong>${MESES_PT[STATE.mesIni]}–${MESES_PT[STATE.mesFim]}</strong>`);if(STATE.catGeral!=='todas')partes.push(`<strong>${STATE.catGeral}</strong>`);if(STATE.tipoGeral!=='todos')partes.push(`<strong>${STATE.tipoGeral}</strong>`);if(STATE.busca)partes.push(`"<strong>${STATE.busca}</strong>"`);if(partes.length){badge.style.display='inline-flex';badge.innerHTML=`Filtros: ${partes.join(' · ')}`;}else{badge.style.display='none';}}
-function renderAll(){renderKPIs();renderChartMensal();renderBarrasH('#chartCat','Despesa',6);renderBarrasH('#chartCatFull','Despesa',null);renderBarrasH('#chartRecFull','Receita',null);renderSaldo();renderResumoMensal();renderMatriz();renderRanking();renderMov();renderVencimentos();renderStats();renderStorage();atualizarStatusSave();atualizarBadge();$('#topCatSub').textContent=`${MESES_PT[STATE.mesIni]} — ${MESES_PT[STATE.mesFim]}`;$('#saldoSub').textContent=`${MESES_PT[STATE.mesIni]} — ${MESES_PT[STATE.mesFim]}`;$('#brandSub').textContent=`${MESES_PT[STATE.mesIni]} a ${MESES_PT[STATE.mesFim]} · ${STATE.dados.length} lançamentos`;}
+function renderAll(){renderKPIs();renderChartMensal();renderBarrasH('#chartCat','Despesa',6);renderBarrasH('#chartCatFull','Despesa',null);renderBarrasH('#chartRecFull','Receita',null);renderSaldo();renderResumoMensal();renderMatriz();renderRanking();renderMov();renderLancamentosFuturos();renderStats();renderStorage();atualizarStatusSave();atualizarBadge();$('#topCatSub').textContent=`${MESES_PT[STATE.mesIni]} — ${MESES_PT[STATE.mesFim]}`;$('#saldoSub').textContent=`${MESES_PT[STATE.mesIni]} — ${MESES_PT[STATE.mesFim]}`;$('#brandSub').textContent=`${MESES_PT[STATE.mesIni]} a ${MESES_PT[STATE.mesFim]} · ${STATE.dados.length} lançamentos`;}
 
 function parseExtratoSheet(wb){const names=wb.SheetNames;const prefer=['Controle de Caixa Unificado','EXTRATO BASE','Extrato Base','Extrato'];let sn=prefer.find(n=>names.includes(n));if(!sn)sn=names.find(n=>/controle.*caixa|extrato/i.test(n));if(!sn)return null;const sheet=wb.Sheets[sn];const data=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:null});const out=[];for(let i=0;i<data.length;i++){const row=data[i];if(!row||row.length<4)continue;const c0=row[0];if(c0==null)continue;let dISO=null;if(c0 instanceof Date){const y=c0.getUTCFullYear(),m=String(c0.getUTCMonth()+1).padStart(2,'0'),d=String(c0.getUTCDate()).padStart(2,'0');dISO=`${y}-${m}-${d}`;}else{dISO=parseData(String(c0));}if(!dISO)continue;if(/^(total|data)/i.test(String(c0)))continue;const c1=String(row[1]||'').trim();const c3=String(row[3]||'').trim();const isU=/^(receita|despesa)$/i.test(c1);let cat,val,tip,det;if(isU){tip=tipoNorm(c1);cat=String(row[2]||'').trim();det=String(row[3]||'').trim();const rv=parseValor(row[4]),dv=parseValor(row[5]);val=tip==='C'?rv:dv;if(!val)continue;}else{cat=c1;val=parseValor(row[2]);if(val===0)continue;tip=tipoNorm(c3);det=String(row[4]||'').trim();}if(!cat)continue;out.push({data:dISO,categoria:cat,valor:val,tipo:tip,detalhe:det});}out.sort((a,b)=>a.data.localeCompare(b.data));return out;}
 function parseRelatorioSheet(wb){const names=wb.SheetNames;let sn=names.find(n=>/relat[óo]rio/i.test(n));if(!sn)return null;const sheet=wb.Sheets[sn];const data=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:null});const ms=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];let mR=-1,mC=[];for(let i=0;i<data.length;i++){const row=data[i];if(!row)continue;const f=[];const s=new Set();for(let c=0;c<row.length;c++){const v=String(row[c]||'').toLowerCase().trim();if(!v)continue;const idx=ms.indexOf(v.slice(0,3));if(idx>=0&&!s.has(idx)){f.push({m:idx,col:c});s.add(idx);}}if(f.length>=3){mR=i;mC=f.sort((a,b)=>a.col-b.col);break;}}if(mR<0||mC.length<3)return null;const map=new Map();for(let r=mR+1;r<data.length;r++){const row=data[r];if(!row)continue;const nome=String(row[0]||'').trim();if(!nome)continue;if(/^(total|r[óo]tulos|soma)/i.test(nome))continue;const recs=new Array(12).fill(0),desps=new Array(12).fill(0);let tem=false;mC.forEach(({m,col})=>{const rv=parseValor(row[col]),dv=parseValor(row[col+1]);if(rv>0){recs[m]=rv;tem=true;}if(dv>0){desps[m]=dv;tem=true;}});if(!tem)continue;if(!map.has(nome))map.set(nome,{receitas:new Array(12).fill(0),despesas:new Array(12).fill(0)});const e=map.get(nome);for(let i=0;i<12;i++){if(recs[i]>0)e.receitas[i]=recs[i];if(desps[i]>0)e.despesas[i]=desps[i];}}if(!map.size)return null;const cores=['#4f8cff','#38bdf8','#f59e0b','#a78bfa','#f472b6','#34d399','#2ecc8f','#22d3ee','#fbbf24','#818cf8','#10b981','#f87171'];let ci=0;const categorias=[];map.forEach((e,nome)=>{const tr=e.receitas.some(v=>v>0),td=e.despesas.some(v=>v>0);const tipo=tr&&!td?'Receita':'Despesa';const valores=tipo==='Receita'?e.receitas:e.despesas;const o=RESUMO_ORIGINAL.categorias.find(c=>c.nome===nome);const cor=o?o.cor:cores[ci++%cores.length];categorias.push({nome,tipo,cor,valores});});return{meses:[...MESES_PT],mesesFull:[...MESES_FULL],receita:new Array(12).fill(0),despesa:new Array(12).fill(0),categorias};}
@@ -729,9 +781,9 @@ $('#fileExcel').addEventListener('change',e=>{const f=e.target.files[0];if(!f)re
 const dz=$('#dropExcel');['dragenter','dragover'].forEach(ev=>{dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('dragover');});});['dragleave','drop'].forEach(ev=>{dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('dragover');});});dz.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)importarArquivoExcel(f);});
 const ov=$('#dragOverlay');let dc=0;window.addEventListener('dragenter',e=>{e.preventDefault();dc++;if(e.dataTransfer.types.includes('Files'))ov.classList.add('active');});window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('dragleave',()=>{dc--;if(dc<=0){dc=0;ov.classList.remove('active');}});window.addEventListener('drop',e=>{e.preventDefault();dc=0;ov.classList.remove('active');const f=e.dataTransfer.files[0];if(f)importarArquivoExcel(f);});
 $('#btnAplicar').addEventListener('click',()=>{const n=parseExtrato($('#txtDados').value);if(!n.length){toast('Nenhum lançamento válido.','error');return;}STATE.dados=n;STATE.origem='local';const m=mesesComDados();if(m.length){STATE.mesIni=m[0];STATE.mesFim=m[m.length-1];}salvarLocal();popularSelects();renderAll();toast(`✓ ${n.length} lançamentos aplicados`);});
-$('#btnRestaurar').addEventListener('click',()=>{if(!confirm('Restaurar originais?'))return;limparLocal();STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.overrides={};STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();popularSelects();renderAll();toast('Restaurado');});
-$('#btnLimpar').addEventListener('click',()=>{if(!confirm('Apagar tudo? Isso inclui edições manuais de vencimentos.'))return;limparLocal();STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.overrides={};STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();popularSelects();renderAll();toast('Limpo','info');});
-(function init(){const s=carregarLocal();if(s){STATE.dados=s.dados;STATE.resumo=s.resumo||parseResumoFallback();STATE.overrides=s.overrides||{};STATE.origem='local';$('#txtDados').value=s.dados.map(d=>`${d.data}|${d.categoria}|${d.valor}|${d.tipo}|${d.detalhe}`).join('\n');$('#txtInfo').textContent=`${s.dados.length} lançamentos`;setTimeout(()=>toast(`💾 ${s.dados.length} restaurados · ${Object.keys(STATE.overrides).length} edições`,'info'),500);}else{STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.overrides={};STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();$('#txtInfo').textContent=`${STATE.dados.length} lançamentos`;}popularSelects();renderAll();})();
+$('#btnRestaurar').addEventListener('click',()=>{if(!confirm('Restaurar originais? Edições manuais e personalizados serão mantidos.'))return;limparLocal();STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();popularSelects();renderAll();toast('Restaurado');});
+$('#btnLimpar').addEventListener('click',()=>{if(!confirm('Apagar TUDO? Isso inclui edições manuais e cartões personalizados.'))return;limparLocal();STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.overrides={};STATE.customFixos=[];STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();popularSelects();renderAll();toast('Limpo','info');});
+(function init(){const s=carregarLocal();if(s){STATE.dados=s.dados;STATE.resumo=s.resumo||parseResumoFallback();STATE.overrides=s.overrides||{};STATE.customFixos=s.customFixos||[];STATE.origem='local';$('#txtDados').value=s.dados.map(d=>`${d.data}|${d.categoria}|${d.valor}|${d.tipo}|${d.detalhe}`).join('\n');$('#txtInfo').textContent=`${s.dados.length} lançamentos`;setTimeout(()=>toast(`💾 ${s.dados.length} restaurados · ${Object.keys(STATE.overrides).length} edições · ${STATE.customFixos.length} personalizados`,'info'),500);}else{STATE.dados=parseExtrato(EXTRATO_RAW);STATE.resumo=parseResumoFallback();STATE.overrides={};STATE.customFixos=[];STATE.origem='original';$('#txtDados').value=EXTRATO_RAW.trim();$('#txtInfo').textContent=`${STATE.dados.length} lançamentos`;}popularSelects();renderAll();})();
 </script>
 </body>
 </html>
