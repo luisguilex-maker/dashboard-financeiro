@@ -165,12 +165,38 @@ svg text{font-family:var(--font)}
 @media(max-width:520px){.modal-body .row{grid-template-columns:1fr}}
 .hint{font-size:11px;color:var(--muted);margin-top:4px;font-style:italic}
 
-/* Botão de alternância do gráfico mensal */
 .toggle-saldo{display:inline-flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);font-family:inherit;font-size:12px;font-weight:700;padding:7px 13px;border-radius:20px;cursor:pointer;transition:.2s}
 .toggle-saldo:hover{border-color:var(--accent);color:var(--text)}
 .toggle-saldo.ativo{background:linear-gradient(135deg,rgba(255,179,71,.20),rgba(255,179,71,.08));border-color:var(--amber);color:var(--amber);box-shadow:0 4px 14px rgba(255,179,71,.25)}
 .toggle-saldo .indicador{width:8px;height:8px;border-radius:50%;background:var(--muted);transition:.2s}
 .toggle-saldo.ativo .indicador{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+
+/* Agrupamento por dia na aba Movimentações */
+tbody tr.day-header td{
+  position:static !important;
+  left:auto !important;
+  text-align:left !important;
+  background:var(--surface-3) !important;
+  padding:11px 14px !important;
+  border-top:2px solid var(--border);
+  border-bottom:1px solid var(--border);
+  font-weight:800;
+  letter-spacing:.3px;
+}
+tbody tr.day-close td{
+  background:linear-gradient(90deg,rgba(79,140,255,.14),rgba(79,140,255,.04)) !important;
+  border-top:1px solid rgba(79,140,255,.35);
+  border-bottom:1px solid rgba(79,140,255,.35);
+  padding:12px 14px !important;
+}
+tbody tr.day-close td:first-child{
+  background:linear-gradient(90deg,rgba(79,140,255,.20),rgba(79,140,255,.06)) !important;
+}
+tbody tr.day-close .saldo-destaque{
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:-.3px;
+}
 </style>
 </head>
 <body>
@@ -208,7 +234,7 @@ svg text{font-family:var(--font)}
 <h3>Receitas × Despesas por mês</h3>
 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
 <span id="chartModoLabel">Barras: valores mensais · Linha: resultado do mês</span>
-<button class="toggle-saldo" id="btnToggleSaldo" type="button" title="Quando ativado, a linha mostra o saldo acumulado (saldo do mês anterior + resultado do mês atual)">
+<button class="toggle-saldo" id="btnToggleSaldo" type="button" title="Quando ativado, a linha mostra o saldo acumulado">
 <span class="indicador"></span>
 <span id="btnToggleSaldoTxt">💰 Incluir saldo anterior</span>
 </button>
@@ -242,7 +268,13 @@ svg text{font-family:var(--font)}
 </section>
 
 <section class="panel" id="panel-mov">
-<div class="card"><div class="card-head"><h3>Histórico de Movimentação</h3><span id="movInfo"></span></div><div class="table-wrap"><table id="tblMov"></table></div></div>
+<div class="card">
+<div class="card-head">
+<h3>Histórico de Movimentação</h3>
+<span id="movInfo"></span>
+</div>
+<div class="table-wrap"><table id="tblMov"></table></div>
+</div>
 </section>
 
 <section class="panel" id="panel-recorrentes">
@@ -330,9 +362,9 @@ const DESPESAS_FIXAS_BASE = [
   {id:'efrete',  nome:'E-FRETE Integração Sistema', padroes:['E-FRETE INTEGRAÇÃO SISTEMA','E-FRETE INTEGRACAO SISTEMA','E-FRETE','E FRETE'], dia:24, alertaDias:3, categoria:'06 CUSTOS ADM', categoriaObrigatoria:'06 CUSTOS ADM'}
 ];
 
-const STORAGE_KEY='dashboard-caixa-v11';
-const STORAGE_KEYS_OLD=['dashboard-caixa-v10','dashboard-caixa-v9','dashboard-caixa-v8','dashboard-caixa-v7','dashboard-caixa-v6','dashboard-caixa-v5','dashboard-caixa-v4'];
-const DATA_VERSION='2026-10-07-v11';
+const STORAGE_KEY='dashboard-caixa-v12';
+const STORAGE_KEYS_OLD=['dashboard-caixa-v11','dashboard-caixa-v10','dashboard-caixa-v9','dashboard-caixa-v8','dashboard-caixa-v7','dashboard-caixa-v6','dashboard-caixa-v5','dashboard-caixa-v4'];
+const DATA_VERSION='2026-10-07-v12';
 
 function salvarLocal(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({dados:STATE.dados,resumo:STATE.resumo,overrides:STATE.overrides,customFixos:STATE.customFixos,versao:DATA_VERSION,atualizado:new Date().toISOString()}));return true;}catch(e){console.error(e);return false;}}
 function carregarLocal(){try{let r=localStorage.getItem(STORAGE_KEY);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length){if(!o.overrides)o.overrides={};if(!Array.isArray(o.customFixos))o.customFixos=[];return o;}}for(const k of STORAGE_KEYS_OLD){r=localStorage.getItem(k);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length){o.overrides=o.overrides||{};o.customFixos=o.customFixos||[];localStorage.setItem(STORAGE_KEY,JSON.stringify(o));return o;}}}return null;}catch(e){return null;}}
@@ -367,9 +399,6 @@ const NS='http://www.w3.org/2000/svg';
 function svgEl(tag,attrs={}){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
 function clearSvg(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
 
-/* ============================================================
-   GRÁFICO MENSAL com toggle de saldo acumulado
-   ============================================================ */
 function renderChartMensal(){
   const svg=$('#chartMensal');clearSvg(svg);
   const W=900,H=340,P={t:22,r:20,b:46,l:66};
@@ -378,41 +407,25 @@ function renderChartMensal(){
   const cats=getCategoriasFiltradas();
   const rec=meses.map(m=>cats.filter(c=>c.tipo==='Receita'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='receita')).reduce((s,c)=>s+(c.valores[m]||0),0));
   const des=meses.map(m=>cats.filter(c=>c.tipo==='Despesa'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa')).reduce((s,c)=>s+(c.valores[m]||0),0));
-
-  /* Linha: resultado do mês ou saldo acumulado (com saldo anterior) */
   const modoSaldo = STATE.mostrarSaldoAnterior;
   let res;
   if(modoSaldo){
-    res = [];
-    let acumulado = 0;
+    res = []; let acumulado = 0;
     meses.forEach((_,i)=>{ acumulado += rec[i]-des[i]; res.push(acumulado); });
   } else {
     res = meses.map((_,i)=>rec[i]-des[i]);
   }
-
   const maxV=Math.max(1,...rec,...des)*1.12;
   let minR=Math.min(0,...res), maxR=Math.max(1,...res);
-  if(modoSaldo){
-    /* No modo acumulado, damos mais respiro para o range de negativos/positivos */
-    const spread = Math.max(Math.abs(minR), Math.abs(maxR)) * 1.25;
-    minR = -spread;
-    maxR = spread;
-  } else {
-    minR = minR*1.2;
-    maxR = maxR*1.2;
-  }
-
+  if(modoSaldo){ const spread = Math.max(Math.abs(minR), Math.abs(maxR)) * 1.25; minR = -spread; maxR = spread; }
+  else { minR = minR*1.2; maxR = maxR*1.2; }
   const n=meses.length,slot=iw/n,bw=Math.min(26,slot*0.32);
-
-  /* Grid horizontal (valores) */
   for(let i=0;i<=5;i++){
     const y=P.t+ih-(ih*i/5);
     svg.appendChild(svgEl('line',{x1:P.l,y1:y,x2:W-P.r,y2:y,stroke:'var(--chart-grid)','stroke-width':1,'stroke-dasharray':i===0?'0':'3 4'}));
     const t=svgEl('text',{x:P.l-10,y:y+4,fill:'var(--chart-text)','font-size':11,'text-anchor':'end'});
     t.textContent=fmtK(maxV*i/5);svg.appendChild(t);
   }
-
-  /* Barras de receita e despesa */
   meses.forEach((mi,idx)=>{
     const cx=P.l+slot*idx+slot/2;
     const hR=(rec[idx]/maxV)*ih,hD=(des[idx]/maxV)*ih;
@@ -423,32 +436,20 @@ function renderChartMensal(){
     const t=svgEl('text',{x:cx,y:H-P.b+22,fill:'var(--chart-text)','font-size':12,'text-anchor':'middle','font-weight':600});
     t.textContent=MESES_PT[mi];svg.appendChild(t);
   });
-
-  /* Linha do resultado / saldo acumulado */
   const rangeR=(maxR-minR)||1;
-  const pts=res.map((v,i)=>{
-    const cx=P.l+slot*i+slot/2;
-    const cy=P.t+ih-((v-minR)/rangeR)*ih;
-    return {x:cx,y:cy,v};
-  });
-  if(pts.length>1){
-    svg.appendChild(svgEl('polyline',{points:pts.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:'var(--amber)','stroke-width':2.4,'stroke-linejoin':'round','stroke-linecap':'round'}));
-  }
+  const pts=res.map((v,i)=>{const cx=P.l+slot*i+slot/2;const cy=P.t+ih-((v-minR)/rangeR)*ih;return{x:cx,y:cy,v};});
+  if(pts.length>1)svg.appendChild(svgEl('polyline',{points:pts.map(p=>`${p.x},${p.y}`).join(' '),fill:'none',stroke:'var(--amber)','stroke-width':2.4,'stroke-linejoin':'round','stroke-linecap':'round'}));
   pts.forEach((p,i)=>{
     const c=svgEl('circle',{cx:p.x,cy:p.y,r:4,fill:'var(--amber)',stroke:'var(--surface)','stroke-width':2});
-    const t=svgEl('title');
-    t.textContent = modoSaldo ? `${MESES_FULL[meses[i]]} — Saldo acumulado: ${fmtBRL(p.v)}` : `Resultado: ${fmtBRL(p.v)}`;
+    const t=svgEl('title');t.textContent = modoSaldo ? `${MESES_FULL[meses[i]]} — Saldo acumulado: ${fmtBRL(p.v)}` : `Resultado: ${fmtBRL(p.v)}`;
     c.appendChild(t);svg.appendChild(c);
   });
-
-  /* Legenda dinâmica */
   $('#chartLegendLabel').textContent = modoSaldo ? 'Saldo acumulado (c/ saldo anterior)' : 'Resultado do mês';
   $('#chartModoLabel').textContent = modoSaldo ? 'Barras: valores mensais · Linha: saldo acumulado' : 'Barras: valores mensais · Linha: resultado do mês';
 }
 
 function renderBarrasH(targetId,tipo,topN){const svg=$(targetId);if(!svg)return;clearSvg(svg);const W=700,meses=getMesesFiltrados();const cats=STATE.resumo.categorias.filter(c=>c.tipo===tipo).filter(c=>categoriaPassaFiltro(c.nome));const itens=cats.map(c=>{let s=0;meses.forEach(m=>s+=c.valores[m]||0);return{nome:c.nome,cor:c.cor,val:s};}).filter(x=>x.val>0).sort((a,b)=>b.val-a.val);const lista=topN?itens.slice(0,topN):itens;const rowH=40,H=Math.max(120,lista.length*rowH+30);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);if(!lista.length){const t=svgEl('text',{x:W/2,y:60,fill:'var(--chart-text)','font-size':13,'text-anchor':'middle'});t.textContent='Sem dados no período';svg.appendChild(t);return;}const maxV=lista[0].val,labelW=190,barW=W-labelW-110;lista.forEach((it,i)=>{const y=14+i*rowH,w=Math.max(2,(it.val/maxV)*barW);const lb=svgEl('text',{x:0,y:y+18,fill:'var(--chart-text)','font-size':12,'font-weight':600});lb.textContent=it.nome.length>26?it.nome.slice(0,25)+'…':it.nome;svg.appendChild(lb);svg.appendChild(svgEl('rect',{x:labelW,y:y+4,width:barW,height:20,rx:6,fill:'var(--surface-3)'}));const bar=svgEl('rect',{x:labelW,y:y+4,width:w,height:20,rx:6,fill:it.cor,opacity:.9});const ti=svgEl('title');ti.textContent=`${it.nome}: ${fmtBRL(it.val)}`;bar.appendChild(ti);svg.appendChild(bar);const v=svgEl('text',{x:labelW+barW+10,y:y+19,fill:'var(--text)','font-size':12,'font-weight':700,'text-anchor':'start'});v.textContent=fmtBRL0(it.val);svg.appendChild(v);});}
 
-/* KPIs — sem o card "Resultado" */
 function renderKPIs(){
   const{rec,desp}=getTotaisFiltrados();
   const nMeses=STATE.mesFim-STATE.mesIni+1;
@@ -470,7 +471,84 @@ function renderKPIs(){
 function renderResumoMensal(){const meses=getMesesFiltrados(),cats=getCategoriasFiltradas();let html='<thead><tr><th>Mês</th><th>Receita</th><th>Despesa</th><th>Resultado</th><th>Margem</th></tr></thead><tbody>';let tR=0,tD=0;meses.forEach(i=>{const r=cats.filter(c=>c.tipo==='Receita'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='receita')).reduce((s,c)=>s+(c.valores[i]||0),0);const d=cats.filter(c=>c.tipo==='Despesa'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa')).reduce((s,c)=>s+(c.valores[i]||0),0);const res=r-d;tR+=r;tD+=d;html+=`<tr><td>${MESES_FULL[i]}</td><td class="pos">${fmtNum(r)}</td><td class="neg">${fmtNum(d)}</td><td class="${res>=0?'pos':'neg'}">${fmtNum(res)}</td><td class="muted">${r>0?((res/r)*100).toFixed(1):'0,0'}%</td></tr>`;});const tRes=tR-tD;html+=`<tr class="total-row"><td>TOTAL</td><td class="pos">${fmtNum(tR)}</td><td class="neg">${fmtNum(tD)}</td><td class="${tRes>=0?'pos':'neg'}">${fmtNum(tRes)}</td><td>${tR>0?((tRes/tR)*100).toFixed(2):'0,00'}%</td></tr></tbody>`;$('#tblResumo').innerHTML=html;}
 function renderMatriz(){const meses=getMesesFiltrados(),todasCats=getCategoriasFiltradas();const desps=todasCats.filter(c=>c.tipo==='Despesa'),recs=todasCats.filter(c=>c.tipo==='Receita');let head='<thead><tr><th>Categoria</th>';meses.forEach(i=>head+=`<th>${MESES_PT[i]}</th>`);head+='<th>Total</th></tr></thead>';const linha=(c)=>{let soma=0,cols='';meses.forEach(i=>{const v=c.valores[i]||0;soma+=v;cols+=`<td>${v?fmtNum(v):'<span class="muted">—</span>'}</td>`;});return`<tr><td><span class="cat-dot" style="background:${c.cor}"></span>${c.nome}</td>${cols}<td style="font-weight:800">${fmtNum(soma)}</td></tr>`;};let body='<tbody>';if(desps.length){body+=`<tr class="total-row"><td colspan="${meses.length+2}" style="text-align:left;color:var(--red)">DESPESAS</td></tr>`;desps.forEach(c=>body+=linha(c));}if(recs.length){body+=`<tr class="total-row"><td colspan="${meses.length+2}" style="text-align:left;color:var(--green)">RECEITAS</td></tr>`;recs.forEach(c=>body+=linha(c));}body+='</tbody>';$('#tblMatriz').innerHTML=head+body;$('#matrizSub').textContent=`${desps.length+recs.length} categorias · ${meses.length} meses`;}
 function renderRanking(){const meses=getMesesFiltrados(),cats=getCategoriasFiltradas();const itens=cats.map(c=>{let s=0;meses.forEach(m=>s+=c.valores[m]||0);return{...c,total:s};}).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);const totDesp=itens.filter(x=>x.tipo==='Despesa').reduce((a,b)=>a+b.total,0);const totRec=itens.filter(x=>x.tipo==='Receita').reduce((a,b)=>a+b.total,0);let html=`<thead><tr><th>Categoria</th><th>Tipo</th><th>Total</th><th>% do Tipo</th><th>Média/Mês</th></tr></thead><tbody>`;const nMeses=meses.length;itens.forEach(c=>{const base=c.tipo==='Despesa'?totDesp:totRec;const pct=base>0?(c.total/base*100):0;html+=`<tr><td><span class="cat-dot" style="background:${c.cor}"></span>${c.nome}</td><td><span class="tag ${c.tipo==='Receita'?'C':'D'}">${c.tipo}</span></td><td style="font-weight:700">${fmtNum(c.total)}</td><td>${pct.toFixed(1)}%</td><td class="muted">${fmtNum(c.total/nMeses)}</td></tr>`;});html+='</tbody>';$('#tblCat').innerHTML=html;}
-function renderMov(){const filtrado=getMovimentosFiltrados();let saldo=0;const comSaldo=filtrado.map(d=>{saldo+=(d.tipo==='C'?d.valor:-d.valor);return{...d,saldo};});const totR=filtrado.filter(d=>d.tipo==='C').reduce((s,d)=>s+d.valor,0);const totD=filtrado.filter(d=>d.tipo==='D').reduce((s,d)=>s+d.valor,0);$('#movInfo').innerHTML=`${filtrado.length} lançamentos · <span class="pos">${fmtBRL(totR)}</span> · <span class="neg">${fmtBRL(totD)}</span>`;let html=`<thead><tr><th>Data</th><th>Categoria</th><th>Detalhamento</th><th>Tipo</th><th>Receita</th><th>Despesa</th><th>Saldo</th></tr></thead><tbody>`;if(!filtrado.length){html+=`<tr><td colspan="7" style="text-align:center;padding:40px" class="muted">Nenhum lançamento.</td></tr>`;}else{comSaldo.forEach(d=>{const[a,m,dia]=d.data.split('-');html+=`<tr><td>${dia}/${m}/${a}</td><td><span class="cat-dot" style="background:${corCategoria(d.categoria)}"></span>${d.categoria}</td><td style="text-align:left;max-width:420px;white-space:normal;color:var(--muted);font-weight:400">${d.detalhe||'—'}</td><td><span class="tag ${d.tipo}">${d.tipo==='C'?'Receita':'Despesa'}</span></td><td class="pos">${d.tipo==='C'?fmtNum(d.valor):'—'}</td><td class="neg">${d.tipo==='D'?fmtNum(d.valor):'—'}</td><td style="font-weight:700">${fmtNum(d.saldo)}</td></tr>`;});}html+=`<tr class="total-row"><td colspan="4">TOTAL</td><td class="pos">${fmtNum(totR)}</td><td class="neg">${fmtNum(totD)}</td><td class="${totR-totD>=0?'pos':'neg'}">${fmtNum(totR-totD)}</td></tr></tbody>`;$('#tblMov').innerHTML=html;}
+
+/* ============================================================
+   MOVIMENTAÇÕES — agrupamento por dia com fechamento destacado
+   ============================================================ */
+function renderMov(){
+  const filtrado = getMovimentosFiltrados();
+  const totR = filtrado.filter(d=>d.tipo==='C').reduce((s,d)=>s+d.valor,0);
+  const totD = filtrado.filter(d=>d.tipo==='D').reduce((s,d)=>s+d.valor,0);
+  const saldoPeriodo = totR - totD;
+  const clsSaldo = saldoPeriodo >= 0 ? 'pos' : 'neg';
+
+  if(!filtrado.length){
+    $('#movInfo').innerHTML = `0 lançamentos`;
+    $('#tblMov').innerHTML = `<thead><tr><th>Data</th><th>Categoria</th><th>Detalhamento</th><th>Tipo</th><th>Receita</th><th>Despesa</th><th>Saldo</th></tr></thead><tbody><tr><td colspan="7" style="text-align:center;padding:40px" class="muted">Nenhum lançamento encontrado com os filtros atuais.</td></tr></tbody>`;
+    return;
+  }
+
+  /* Agrupa por dia */
+  const porDia = new Map();
+  filtrado.forEach(d => {
+    if(!porDia.has(d.data)) porDia.set(d.data, []);
+    porDia.get(d.data).push(d);
+  });
+  const dias = Array.from(porDia.keys()).sort();
+
+  /* Info do topo */
+  $('#movInfo').innerHTML = `${filtrado.length} lançamentos em ${dias.length} dia${dias.length===1?'':'s'} · <span class="pos">${fmtBRL(totR)}</span> · <span class="neg">${fmtBRL(totD)}</span> · <strong class="${clsSaldo}">Saldo do período: ${fmtBRL(saldoPeriodo)}</strong>`;
+
+  let html = `<thead><tr><th>Data</th><th>Categoria</th><th>Detalhamento</th><th>Tipo</th><th>Receita</th><th>Despesa</th><th>Saldo</th></tr></thead><tbody>`;
+  let saldoAcumulado = 0;
+
+  dias.forEach(dia => {
+    const movs = porDia.get(dia).slice().sort((a,b) => a.categoria.localeCompare(b.categoria));
+    const [ano, m, day] = dia.split('-');
+    const dataFmt = `${day}/${m}/${ano}`;
+    let rDia = 0, dDia = 0;
+    movs.forEach(d => { if(d.tipo === 'C') rDia += d.valor; else dDia += d.valor; });
+    const resultadoDia = rDia - dDia;
+
+    /* Divisor do dia */
+    html += `<tr class="day-header"><td colspan="7">📅 ${dataFmt} <span class="muted" style="font-weight:500;margin-left:10px">${movs.length} lançamento${movs.length===1?'':'s'} · resultado do dia: <strong class="${resultadoDia>=0?'pos':'neg'}">${fmtBRL(resultadoDia)}</strong></span></td></tr>`;
+
+    /* Lançamentos do dia */
+    movs.forEach((d, i) => {
+      saldoAcumulado += (d.tipo === 'C' ? d.valor : -d.valor);
+      html += `<tr>
+        <td class="muted" style="font-weight:400;font-size:12px">${i === 0 ? dataFmt : '↳'}</td>
+        <td><span class="cat-dot" style="background:${corCategoria(d.categoria)}"></span>${d.categoria}</td>
+        <td style="text-align:left;max-width:420px;white-space:normal;color:var(--muted);font-weight:400">${d.detalhe||'—'}</td>
+        <td><span class="tag ${d.tipo}">${d.tipo==='C'?'Receita':'Despesa'}</span></td>
+        <td class="pos">${d.tipo==='C'?fmtNum(d.valor):'—'}</td>
+        <td class="neg">${d.tipo==='D'?fmtNum(d.valor):'—'}</td>
+        <td style="font-weight:600">${fmtNum(saldoAcumulado)}</td>
+      </tr>`;
+    });
+
+    /* Fechamento do dia — destaque */
+    const clsDia = saldoAcumulado >= 0 ? 'pos' : 'neg';
+    html += `<tr class="day-close">
+      <td colspan="4" style="text-align:left;font-weight:800">
+        🔒 Fechamento de ${dataFmt}
+      </td>
+      <td class="pos" style="font-weight:800">${fmtNum(rDia)}</td>
+      <td class="neg" style="font-weight:800">${fmtNum(dDia)}</td>
+      <td class="saldo-destaque ${clsDia}">${fmtNum(saldoAcumulado)}</td>
+    </tr>`;
+  });
+
+  /* Total do período */
+  html += `<tr class="total-row">
+    <td colspan="4">TOTAL DO PERÍODO</td>
+    <td class="pos">${fmtNum(totR)}</td>
+    <td class="neg">${fmtNum(totD)}</td>
+    <td class="${clsSaldo}" style="font-size:14px">${fmtNum(saldoPeriodo)}</td>
+  </tr></tbody>`;
+
+  $('#tblMov').innerHTML = html;
+}
 
 /* LANÇAMENTOS FUTUROS */
 function dataReferencia(){const hoje=new Date();const ultimaData=STATE.dados.length?STATE.dados[STATE.dados.length-1].data:null;if(ultimaData){const dUlt=new Date(ultimaData+'T12:00:00');if(dUlt>hoje)return dUlt;}return hoje;}
@@ -744,18 +822,11 @@ function renderAll(){
   $('#brandSub').textContent=`${MESES_PT[STATE.mesIni]} a ${MESES_PT[STATE.mesFim]} · ${STATE.dados.length} lançamentos`;
 }
 
-/* Toggle do saldo acumulado */
 $('#btnToggleSaldo').addEventListener('click', () => {
   STATE.mostrarSaldoAnterior = !STATE.mostrarSaldoAnterior;
-  const btn = $('#btnToggleSaldo');
-  const txt = $('#btnToggleSaldoTxt');
-  if(STATE.mostrarSaldoAnterior){
-    btn.classList.add('ativo');
-    txt.textContent = '💰 Saldo acumulado ATIVO';
-  } else {
-    btn.classList.remove('ativo');
-    txt.textContent = '💰 Incluir saldo anterior';
-  }
+  const btn = $('#btnToggleSaldo'); const txt = $('#btnToggleSaldoTxt');
+  if(STATE.mostrarSaldoAnterior){ btn.classList.add('ativo'); txt.textContent = '💰 Saldo acumulado ATIVO'; }
+  else { btn.classList.remove('ativo'); txt.textContent = '💰 Incluir saldo anterior'; }
   renderChartMensal();
 });
 
