@@ -184,10 +184,6 @@ tbody tr.saldo-anterior td:first-child{background:linear-gradient(90deg,rgba(46,
 <button class="btn" id="btnPrint">🖨️</button>
 <button class="btn primary" id="btnExport">⬇️ CSV</button>
 </header>
-
-<!-- ============================================================
-     ORDEM DAS ABAS: Visão Geral → Lançamentos Futuros → Mensal → Categorias → Movimentações → Dados
-     ============================================================ -->
 <nav class="tabs">
 <button class="tab active" data-tab="geral">📊 Visão Geral</button>
 <button class="tab" data-tab="recorrentes">🚀 Lançamentos Futuros</button>
@@ -196,7 +192,6 @@ tbody tr.saldo-anterior td:first-child{background:linear-gradient(90deg,rgba(46,
 <button class="tab" data-tab="mov">📋 Movimentações</button>
 <button class="tab" data-tab="dados">⚙️ Dados</button>
 </nav>
-
 <div class="global-filters" id="globalFilters">
 <div class="field"><label>Mês inicial</label><select id="fMesIni"></select></div>
 <div class="field"><label>Mês final</label><select id="fMesFim"></select></div>
@@ -214,10 +209,7 @@ tbody tr.saldo-anterior td:first-child{background:linear-gradient(90deg,rgba(46,
 <h3>Receitas × Despesas por mês</h3>
 <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
 <span id="chartModoLabel">Barras: valores mensais · Linha: resultado do mês</span>
-<button class="toggle-saldo" id="btnToggleSaldo" type="button">
-<span class="indicador"></span>
-<span id="btnToggleSaldoTxt">💰 Incluir saldo acumulado</span>
-</button>
+<button class="toggle-saldo" id="btnToggleSaldo" type="button"><span class="indicador"></span><span id="btnToggleSaldoTxt">💰 Incluir saldo acumulado</span></button>
 </div>
 </div>
 <svg id="chartMensal" viewBox="0 0 900 340" style="width:100%;height:auto"></svg>
@@ -235,15 +227,10 @@ tbody tr.saldo-anterior td:first-child{background:linear-gradient(90deg,rgba(46,
 </section>
 
 <section class="panel" id="panel-recorrentes">
-<div class="note">
-<strong>🚀 Lançamentos Futuros.</strong> Acompanhe as despesas fixas previstas para o mês. Use <strong>✏️ Preencher</strong> para registrar data, valor, boleto e linha digitável. Cartões personalizados podem ser criados com <strong>➕ Adicionar Novo</strong>.
-</div>
+<div class="note"><strong>🚀 Lançamentos Futuros.</strong> Acompanhe as despesas fixas previstas para o mês. Use <strong>✏️ Preencher</strong> para registrar data, valor, boleto e linha digitável. Cartões personalizados podem ser criados com <strong>➕ Adicionar Novo</strong>.</div>
 <div id="alertasTopo"></div>
 <div class="grid kpis" id="kpiVenc" style="margin-bottom:var(--gap)"></div>
-<div class="bar-actions">
-<button class="btn primary" id="btnNovoLancamento">➕ Adicionar Novo Lançamento</button>
-<span class="badge" id="badgeCustomInfo"></span>
-</div>
+<div class="bar-actions"><button class="btn primary" id="btnNovoLancamento">➕ Adicionar Novo Lançamento</button><span class="badge" id="badgeCustomInfo"></span></div>
 <div class="venc-grid" id="vencGrid"></div>
 <div class="card" style="margin-top:var(--gap)"><div class="card-head"><h3>Histórico por Despesa Fixa</h3><span id="histInfo"></span></div><div class="table-wrap"><table id="tblHist"></table></div></div>
 </section>
@@ -292,11 +279,7 @@ tbody tr.saldo-anterior td:first-child{background:linear-gradient(90deg,rgba(46,
 <label class="checkbox-line"><input type="checkbox" id="editPago"><span>✓ Marcar como <strong>já pago</strong> neste ciclo</span></label>
 <div><label for="editObs">Observação (opcional)</label><input type="text" id="editObs" placeholder="Ex: Pago via PIX, boleto reemitido..."></div>
 </div>
-<div class="modal-foot">
-<button class="btn danger sm spacer" id="btnLimparOverride">🗑️ Limpar preenchimento</button>
-<button class="btn ghost" id="btnCancelarOverride">Cancelar</button>
-<button class="btn primary" id="btnSalvarOverride">💾 Salvar</button>
-</div>
+<div class="modal-foot"><button class="btn danger sm spacer" id="btnLimparOverride">🗑️ Limpar preenchimento</button><button class="btn ghost" id="btnCancelarOverride">Cancelar</button><button class="btn primary" id="btnSalvarOverride">💾 Salvar</button></div>
 </div>
 </div>
 
@@ -304,18 +287,15 @@ tbody tr.saldo-anterior td:first-child{background:linear-gradient(90deg,rgba(46,
 <div class="modal" role="dialog" aria-modal="true">
 <div class="modal-head"><h3 id="modalNovoTitle">Novo Lançamento Personalizado</h3><button class="close" id="btnFecharNovo" aria-label="Fechar">×</button></div>
 <div class="modal-body">
-<div><label for="novoNome">Nome do lançamento</label><input type="text" id="novoNome" placeholder="Ex: Aluguel Galpão, Internet, Seguro..."><div class="hint">Este nome aparecerá no cartão</div></div>
+<div><label for="novoNome">Nome do lançamento</label><input type="text" id="novoNome" placeholder="Ex: Aluguel Galpão, Internet, Seguro..."></div>
 <div class="row">
 <div><label for="novoDia">Dia previsto no mês</label><input type="number" id="novoDia" min="1" max="31" value="10"></div>
 <div><label for="novoAlerta">Alertar antes de (dias)</label><input type="number" id="novoAlerta" min="0" max="30" value="3"></div>
 </div>
-<div><label for="novoCategoria">Categoria relacionada</label><select id="novoCategoria"></select><div class="hint">Usada para buscar pagamentos automaticamente</div></div>
-<div><label for="novoPadrao">Palavras-chave para localizar pagamentos (opcional)</label><input type="text" id="novoPadrao" placeholder="Ex: ALUGUEL, IMOVEL, LOCACAO"><div class="hint">Separe por vírgula. Se vazio, usa o próprio nome</div></div>
+<div><label for="novoCategoria">Categoria relacionada</label><select id="novoCategoria"></select></div>
+<div><label for="novoPadrao">Palavras-chave (opcional)</label><input type="text" id="novoPadrao" placeholder="Ex: ALUGUEL, IMOVEL"><div class="hint">Separe por vírgula. Se vazio, usa o próprio nome</div></div>
 </div>
-<div class="modal-foot">
-<button class="btn ghost" id="btnCancelarNovo">Cancelar</button>
-<button class="btn primary" id="btnSalvarNovo">💾 Salvar lançamento</button>
-</div>
+<div class="modal-foot"><button class="btn ghost" id="btnCancelarNovo">Cancelar</button><button class="btn primary" id="btnSalvarNovo">💾 Salvar lançamento</button></div>
 </div>
 </div>
 
@@ -339,9 +319,9 @@ const DESPESAS_FIXAS_BASE = [
   {id:'efrete',  nome:'E-FRETE Integração Sistema', padroes:['E-FRETE INTEGRAÇÃO SISTEMA','E-FRETE INTEGRACAO SISTEMA','E-FRETE','E FRETE'], dia:24, alertaDias:3, categoria:'06 CUSTOS ADM', categoriaObrigatoria:'06 CUSTOS ADM'}
 ];
 
-const STORAGE_KEY='dashboard-caixa-v16';
-const STORAGE_KEYS_OLD=['dashboard-caixa-v15','dashboard-caixa-v14','dashboard-caixa-v13','dashboard-caixa-v12','dashboard-caixa-v11','dashboard-caixa-v10','dashboard-caixa-v9','dashboard-caixa-v8','dashboard-caixa-v7','dashboard-caixa-v6','dashboard-caixa-v5','dashboard-caixa-v4'];
-const DATA_VERSION='2026-10-08-v16';
+const STORAGE_KEY='dashboard-caixa-v17';
+const STORAGE_KEYS_OLD=['dashboard-caixa-v16','dashboard-caixa-v15','dashboard-caixa-v14','dashboard-caixa-v13','dashboard-caixa-v12','dashboard-caixa-v11','dashboard-caixa-v10','dashboard-caixa-v9','dashboard-caixa-v8','dashboard-caixa-v7','dashboard-caixa-v6','dashboard-caixa-v5','dashboard-caixa-v4'];
+const DATA_VERSION='2026-10-08-v17';
 
 function salvarLocal(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({dados:STATE.dados,resumo:STATE.resumo,overrides:STATE.overrides,customFixos:STATE.customFixos,versao:DATA_VERSION,atualizado:new Date().toISOString()}));return true;}catch(e){console.error(e);return false;}}
 function carregarLocal(){try{let r=localStorage.getItem(STORAGE_KEY);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length){if(!o.overrides)o.overrides={};if(!Array.isArray(o.customFixos))o.customFixos=[];return o;}}for(const k of STORAGE_KEYS_OLD){r=localStorage.getItem(k);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length){o.overrides=o.overrides||{};o.customFixos=o.customFixos||[];localStorage.setItem(STORAGE_KEY,JSON.stringify(o));return o;}}}return null;}catch(e){return null;}}
@@ -371,6 +351,31 @@ function categoriaPassaFiltro(nome){return STATE.catGeral==='todas'||nome===STAT
 function tipoPassaFiltro(t){if(STATE.tipoGeral==='todos')return true;if(STATE.tipoGeral==='receita'&&t==='C')return true;if(STATE.tipoGeral==='despesa'&&t==='D')return true;return false;}
 function getTotaisFiltrados(){const meses=getMesesFiltrados(),cats=getCategoriasFiltradas();let rec=0,desp=0;meses.forEach(m=>cats.forEach(c=>{const v=c.valores[m]||0;if(c.tipo==='Receita'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='receita'))rec+=v;if(c.tipo==='Despesa'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa'))desp+=v;}));return{rec,desp,resultado:rec-desp};}
 function getMovimentosFiltrados(){return STATE.dados.filter(d=>{const m=parseInt(d.data.slice(5,7),10)-1;if(m<STATE.mesIni||m>STATE.mesFim)return false;if(STATE.catGeral!=='todas'&&d.categoria!==STATE.catGeral)return false;if(!tipoPassaFiltro(d.tipo))return false;if(STATE.busca){const b=`${d.categoria} ${d.detalhe} ${d.data} ${d.valor}`.toLowerCase();if(!b.includes(STATE.busca.toLowerCase()))return false;}return true;});}
+
+/* ============================================================
+   SALDO FINAL ACUMULADO DO PERÍODO FILTRADO
+   Soma todos os lançamentos desde o início do dataset até o 
+   último dia do último mês filtrado, aplicando apenas os filtros
+   de categoria, tipo e busca (não o de mês).
+   ============================================================ */
+function calcularSaldoFinalPeriodo(){
+  if(!STATE.dados.length) return 0;
+  const primeiroDado = STATE.dados[0];
+  const ano = parseInt(primeiroDado.data.slice(0,4), 10);
+  const ultimoDiaMes = new Date(ano, STATE.mesFim + 1, 0).getDate();
+  const dataLimite = `${ano}-${String(STATE.mesFim+1).padStart(2,'0')}-${String(ultimoDiaMes).padStart(2,'0')}`;
+  const filtrados = STATE.dados.filter(d => {
+    if(d.data > dataLimite) return false;
+    if(STATE.catGeral !== 'todas' && d.categoria !== STATE.catGeral) return false;
+    if(!tipoPassaFiltro(d.tipo)) return false;
+    if(STATE.busca){
+      const b = `${d.categoria} ${d.detalhe} ${d.data} ${d.valor}`.toLowerCase();
+      if(!b.includes(STATE.busca.toLowerCase())) return false;
+    }
+    return true;
+  });
+  return filtrados.reduce((s,d) => s + (d.tipo === 'C' ? d.valor : -d.valor), STATE.saldoInicial || 0);
+}
 
 const NS='http://www.w3.org/2000/svg';
 function svgEl(tag,attrs={}){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
@@ -429,6 +434,9 @@ function renderChartMensal(){
 
 function renderBarrasH(targetId,tipo,topN){const svg=$(targetId);if(!svg)return;clearSvg(svg);const W=700,meses=getMesesFiltrados();const cats=STATE.resumo.categorias.filter(c=>c.tipo===tipo).filter(c=>categoriaPassaFiltro(c.nome));const itens=cats.map(c=>{let s=0;meses.forEach(m=>s+=c.valores[m]||0);return{nome:c.nome,cor:c.cor,val:s};}).filter(x=>x.val>0).sort((a,b)=>b.val-a.val);const lista=topN?itens.slice(0,topN):itens;const rowH=40,H=Math.max(120,lista.length*rowH+30);svg.setAttribute('viewBox',`0 0 ${W} ${H}`);if(!lista.length){const t=svgEl('text',{x:W/2,y:60,fill:'var(--chart-text)','font-size':13,'text-anchor':'middle'});t.textContent='Sem dados no período';svg.appendChild(t);return;}const maxV=lista[0].val,labelW=190,barW=W-labelW-110;lista.forEach((it,i)=>{const y=14+i*rowH,w=Math.max(2,(it.val/maxV)*barW);const lb=svgEl('text',{x:0,y:y+18,fill:'var(--chart-text)','font-size':12,'font-weight':600});lb.textContent=it.nome.length>26?it.nome.slice(0,25)+'…':it.nome;svg.appendChild(lb);svg.appendChild(svgEl('rect',{x:labelW,y:y+4,width:barW,height:20,rx:6,fill:'var(--surface-3)'}));const bar=svgEl('rect',{x:labelW,y:y+4,width:w,height:20,rx:6,fill:it.cor,opacity:.9});const ti=svgEl('title');ti.textContent=`${it.nome}: ${fmtBRL(it.val)}`;bar.appendChild(ti);svg.appendChild(bar);const v=svgEl('text',{x:labelW+barW+10,y:y+19,fill:'var(--text)','font-size':12,'font-weight':700,'text-anchor':'start'});v.textContent=fmtBRL0(it.val);svg.appendChild(v);});}
 
+/* ============================================================
+   KPIs — Saldo do Período agora é o saldo ACUMULADO final do período
+   ============================================================ */
 function renderKPIs(){
   const{rec,desp}=getTotaisFiltrados();
   const nMeses=STATE.mesFim-STATE.mesIni+1;
@@ -436,13 +444,16 @@ function renderKPIs(){
   const volExtrato=movs.reduce((s,d)=>s+d.valor,0);
   const catsDesp=getCategoriasFiltradas().filter(c=>c.tipo==='Despesa'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa'));
   const topDesp=catsDesp.map(c=>{let t=0;getMesesFiltrados().forEach(m=>t+=c.valores[m]||0);return{nome:c.nome,val:t};}).sort((a,b)=>b.val-a.val)[0];
-  const saldoExtrato=movs.reduce((s,d)=>s+(d.tipo==='C'?d.valor:-d.valor),0);
+
+  /* Saldo final acumulado do período (saldo do último dia do último mês filtrado) */
+  const saldoFinalPeriodo = calcularSaldoFinalPeriodo();
+
   const cards=[
     {label:'💰 Receita Total',cls:'green',valor:fmtBRL(rec),sub:`${nMeses} meses · média ${fmtBRL(rec/nMeses)}/mês`},
     {label:'💸 Despesa Total',cls:'red',valor:fmtBRL(desp),sub:topDesp?`maior: ${topDesp.nome}`:`média ${fmtBRL(desp/nMeses)}/mês`},
     {label:'🧾 Movimentações',cls:'purple',valor:movs.length.toLocaleString('pt-BR'),sub:`volume de ${fmtBRL(volExtrato)}`},
     {label:'📊 Média Diária',cls:'amber',valor:fmtBRL(desp/(nMeses*30)),sub:'estimativa 30 dias/mês'},
-    {label:'🏦 Saldo do Período',cls:'green',valor:fmtBRL(saldoExtrato),sub:`base: ${movs.length} lançamentos no extrato`}
+    {label:'🏦 Saldo do Período',cls: saldoFinalPeriodo>=0?'green':'red', valor:fmtBRL(saldoFinalPeriodo), sub:`saldo acumulado final de ${MESES_PT[STATE.mesFim]}/${new Date().getFullYear()}`}
   ];
   $('#kpiBox').innerHTML=cards.map(c=>`<div class="card ${c.cls}"><div class="kpi-label">${c.label}</div><div class="kpi-value">${c.valor}</div><div class="kpi-sub">${c.sub}</div></div>`).join('');
 }
@@ -451,7 +462,9 @@ function renderResumoMensal(){const meses=getMesesFiltrados(),cats=getCategorias
 function renderMatriz(){const meses=getMesesFiltrados(),todasCats=getCategoriasFiltradas();const desps=todasCats.filter(c=>c.tipo==='Despesa'),recs=todasCats.filter(c=>c.tipo==='Receita');let head='<thead><tr><th>Categoria</th>';meses.forEach(i=>head+=`<th>${MESES_PT[i]}</th>`);head+='<th>Total</th></tr></thead>';const linha=(c)=>{let soma=0,cols='';meses.forEach(i=>{const v=c.valores[i]||0;soma+=v;cols+=`<td>${v?fmtNum(v):'<span class="muted">—</span>'}</td>`;});return`<tr><td><span class="cat-dot" style="background:${c.cor}"></span>${c.nome}</td>${cols}<td style="font-weight:800">${fmtNum(soma)}</td></tr>`;};let body='<tbody>';if(desps.length){body+=`<tr class="total-row"><td colspan="${meses.length+2}" style="text-align:left;color:var(--red)">DESPESAS</td></tr>`;desps.forEach(c=>body+=linha(c));}if(recs.length){body+=`<tr class="total-row"><td colspan="${meses.length+2}" style="text-align:left;color:var(--green)">RECEITAS</td></tr>`;recs.forEach(c=>body+=linha(c));}body+='</tbody>';$('#tblMatriz').innerHTML=head+body;$('#matrizSub').textContent=`${desps.length+recs.length} categorias · ${meses.length} meses`;}
 function renderRanking(){const meses=getMesesFiltrados(),cats=getCategoriasFiltradas();const itens=cats.map(c=>{let s=0;meses.forEach(m=>s+=c.valores[m]||0);return{...c,total:s};}).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);const totDesp=itens.filter(x=>x.tipo==='Despesa').reduce((a,b)=>a+b.total,0);const totRec=itens.filter(x=>x.tipo==='Receita').reduce((a,b)=>a+b.total,0);let html=`<thead><tr><th>Categoria</th><th>Tipo</th><th>Total</th><th>% do Tipo</th><th>Média/Mês</th></tr></thead><tbody>`;const nMeses=meses.length;itens.forEach(c=>{const base=c.tipo==='Despesa'?totDesp:totRec;const pct=base>0?(c.total/base*100):0;html+=`<tr><td><span class="cat-dot" style="background:${c.cor}"></span>${c.nome}</td><td><span class="tag ${c.tipo==='Receita'?'C':'D'}">${c.tipo}</span></td><td style="font-weight:700">${fmtNum(c.total)}</td><td>${pct.toFixed(1)}%</td><td class="muted">${fmtNum(c.total/nMeses)}</td></tr>`;});html+='</tbody>';$('#tblCat').innerHTML=html;}
 
-/* MOVIMENTAÇÕES — sem o "resultado do dia" no cabeçalho */
+/* ============================================================
+   MOVIMENTAÇÕES — contagem no cabeçalho conta apenas DESPESAS
+   ============================================================ */
 function renderMov(){
   const todos = STATE.dados.filter(d => {
     if(STATE.catGeral !== 'todas' && d.categoria !== STATE.catGeral) return false;
@@ -495,8 +508,9 @@ function renderMov(){
     const movs = visPorDia.get(dia).slice().sort((a,b) => a.categoria.localeCompare(b.categoria));
     const [ano, mm, dd] = dia.split('-');
     const dataFmt = `${dd}/${mm}/${ano}`;
-    /* Cabeçalho do dia SEM o "resultado do dia" */
-    html += `<tr class="day-header"><td colspan="7">📅 ${dataFmt} <span class="muted" style="font-weight:500;margin-left:10px">${movs.length} lançamento${movs.length === 1 ? '' : 's'}</span></td></tr>`;
+    /* Conta apenas despesas no cabeçalho */
+    const numDespesas = movs.filter(m => m.tipo === 'D').length;
+    html += `<tr class="day-header"><td colspan="7">📅 ${dataFmt} <span class="muted" style="font-weight:500;margin-left:10px">${numDespesas} despesa${numDespesas === 1 ? '' : 's'}</span></td></tr>`;
     let saldoLinha = info.saldoInicioDia;
     movs.forEach((d, i) => {
       saldoLinha += (d.tipo === 'C' ? d.valor : -d.valor);
