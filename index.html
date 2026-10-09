@@ -36,15 +36,68 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .tab{flex:1;min-width:110px;background:transparent;border:0;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;padding:11px 14px;border-radius:10px;cursor:pointer;transition:.18s;white-space:nowrap}
 .tab:hover{color:var(--text);background:var(--surface-2)}
 .tab.active{background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff}
-.global-filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:18px;position:relative}
+.global-filters{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:18px;position:relative}
 .global-filters.hidden{display:none}
 .global-filters::before{content:'Filtros';position:absolute;top:-9px;left:16px;background:var(--bg);padding:0 8px;font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;color:var(--accent)}
-.field{display:flex;flex-direction:column;gap:5px}
-.field label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.field select,.field input{background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:8px 11px;border-radius:var(--radius-sm);outline:none;min-width:130px}
-.field input[type=date]{min-width:160px;color-scheme:dark}
-[data-theme="light"] .field input[type=date]{color-scheme:light}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;display:flex;align-items:center;gap:5px}
+.field label .lbl-ico{font-size:12px;line-height:1}
+.field select,.field input{background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:8px 11px;border-radius:var(--radius-sm);outline:none;min-width:130px;transition:all .18s}
+.field select:hover,.field input:hover{border-color:var(--border)}
+.field select:focus,.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.15)}
 .field input[type=search]{min-width:260px}
+/* ===== Calendários elegantes ===== */
+.field-date{position:relative}
+.field-date input[type=date]{
+  min-width:172px;
+  padding:11px 14px 11px 40px;
+  font-size:13.5px;
+  font-weight:700;
+  letter-spacing:.3px;
+  color:var(--text);
+  background:linear-gradient(180deg,var(--surface-2),var(--surface-3));
+  border:1px solid var(--border);
+  border-radius:12px;
+  color-scheme:dark;
+  transition:all .2s;
+  cursor:pointer;
+  font-variant-numeric:tabular-nums;
+}
+[data-theme="light"] .field-date input[type=date]{color-scheme:light}
+.field-date input[type=date]:hover{
+  border-color:rgba(var(--accent-rgb),.5);
+  box-shadow:0 4px 12px rgba(var(--accent-rgb),.10);
+  transform:translateY(-1px);
+}
+.field-date input[type=date]:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(var(--accent-rgb),.22), 0 6px 16px rgba(var(--accent-rgb),.15);
+  background:linear-gradient(180deg,var(--surface-2),var(--surface-2));
+}
+.field-date::after{
+  content:'📅';
+  position:absolute;
+  left:13px;
+  top:calc(100% - 35px);
+  font-size:15px;
+  pointer-events:none;
+  opacity:.9;
+  transition:.2s;
+}
+.field-date:focus-within::after{
+  transform:scale(1.15);
+  opacity:1;
+}
+.field-date input[type=date]::-webkit-calendar-picker-indicator{
+  cursor:pointer;
+  opacity:.6;
+  transition:.15s;
+  padding:2px;
+  margin-left:2px;
+}
+.field-date input[type=date]:hover::-webkit-calendar-picker-indicator{
+  opacity:1;
+}
 .filter-badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface-3);border-radius:20px;font-size:11px;font-weight:600;padding:4px 10px;color:var(--muted)}
 .panel{display:none;animation:fade .25s ease}.panel.active{display:block}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -194,8 +247,8 @@ tbody tr.saldo-anterior td{background:rgba(34,197,94,.08) !important;padding:12p
 <button class="tab" data-tab="dados">⚙️ Dados</button>
 </nav>
 <div class="global-filters" id="globalFilters">
-<div class="field"><label>Data inicial</label><input type="date" id="fDataIni"></div>
-<div class="field"><label>Data final</label><input type="date" id="fDataFim"></div>
+<div class="field field-date"><label><span class="lbl-ico">📆</span>Data inicial</label><input type="date" id="fDataIni"></div>
+<div class="field field-date"><label><span class="lbl-ico">📆</span>Data final</label><input type="date" id="fDataFim"></div>
 <div class="field"><label>Categoria</label><select id="fCat"><option value="todas">Todas</option></select></div>
 <div class="field"><label>Tipo</label><select id="fTipo"><option value="todos">Todos</option><option value="receita">Somente Receitas</option><option value="despesa">Somente Despesas</option></select></div>
 <div class="field"><label>Buscar</label><input type="search" id="fBusca" placeholder="Descrição, detalhe, valor..."></div>
@@ -324,10 +377,10 @@ tbody tr.saldo-anterior td{background:rgba(34,197,94,.08) !important;padding:12p
 const EXTRATO_RAW="2026-10-02|Transferência recebida NE|42000|C|02/10 NORDESTE COMERCIO\n2026-10-02|01 SALÁRIO / ENCARGOS|42033.5|D|FLASH APP - VA E VT OUTUBRO";
 const RESUMO_ORIGINAL={mesesFull:['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],meses:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],receita:[247000,377036,382620,498373,267745.39,325675,420552.49,291284.27,317153.63,73700,0,0],despesa:[212602.75,402959.07,389317.63,497933.20,268658.40,326632.31,419291.73,290340.98,319458.66,73519.89,0,0],categorias:[{nome:'01 SALÁRIO / ENCARGOS',tipo:'Despesa',cor:'#FF7A00',valores:[115401.53,219631.92,244656.94,323409.18,231280.52,242958.30,292062.99,215857.17,216057.56,45396.37,0,0]},{nome:'02 OP. / TAR. BANCÁRIAS',tipo:'Despesa',cor:'#38bdf8',valores:[439.66,34556.56,637.25,58072.69,269.34,381.66,8085.37,400.05,1556.20,135.83,0,0]},{nome:'03 IMPOSTOS',tipo:'Despesa',cor:'#f59e0b',valores:[17874.40,22836.01,9706.18,41470.91,10024.63,7423.42,16552.49,15547.10,15516.07,0,0,0]},{nome:'04 OP. NLG',tipo:'Despesa',cor:'#a78bfa',valores:[75341.40,120018.07,130012.60,66617.64,20264.27,69890.48,49760.14,31442.50,44182.31,14190.00,0,0]},{nome:'05 OP. NORDESTE',tipo:'Despesa',cor:'#f472b6',valores:[0,0,0,0,0,0,42091.42,19725.50,37059.79,13408.79,0,0]},{nome:'06 CUSTOS ADM',tipo:'Despesa',cor:'#34d399',valores:[3545.76,5916.51,4304.66,8362.78,6819.64,5978.45,10739.32,7368.66,5086.73,388.90,0,0]},{nome:'Cobrança',tipo:'Receita',cor:'#2ecc8f',valores:[0,0,0,0,5700,0,16490,3887.04,5817.79,0,0,0]},{nome:'Dep dinheiro banco',tipo:'Receita',cor:'#22d3ee',valores:[0,0,720,0,0,0,1833,762.30,1084,0,0,0]},{nome:'Pix-Envio devolvido',tipo:'Receita',cor:'#fbbf24',valores:[0,0,0,0,0,0,7500,0,0,0,0,0]},{nome:'Transferência recebida',tipo:'Receita',cor:'#818cf8',valores:[0,0,0,0,2945.39,175,760,0,0,0,0,0]},{nome:'Transferência recebida NE',tipo:'Receita',cor:'#10b981',valores:[247000,377036,381900,498373,259100,325500,393969.49,286634.93,310251.84,73700,0,0]}]};
 const DESPESAS_FIXAS_BASE=[{id:'salario',nome:'Folha Salário',padroes:['SALÁRIO (01)','SALÁRIO'],dia:5,alertaDias:3,categoria:'01 SALÁRIO / ENCARGOS'},{id:'eas',nome:'EAS Tech Solution',padroes:['EAS TECH','EAS TECH SOLUTION'],dia:16,alertaDias:3,categoria:'06 CUSTOS ADM'},{id:'vivo',nome:'Vivo PE',padroes:['VIVO PE','VIVO'],dia:17,alertaDias:3,categoria:'06 CUSTOS ADM'},{id:'fgts',nome:'Guia FGTS Mensal',padroes:['GUIA FGTS MENSAL','CEF MATRIZ - GUIA FGTS MENSAL'],dia:20,alertaDias:3,categoria:'01 SALÁRIO / ENCARGOS'},{id:'inss',nome:'Guia INSS Mensal',padroes:['GUIA INSS','RFB-DARF CODIGO DE BARRAS - GUIA INSS'],dia:20,alertaDias:3,categoria:'01 SALÁRIO / ENCARGOS'},{id:'vertice',nome:'Verttice Gerenciamento',padroes:['VERTTICE','VERTICE GERENCIAMENTO','VERTICE'],dia:16,alertaDias:3,categoria:'06 CUSTOS ADM'},{id:'allianz',nome:'Allianz Seguros',padroes:['ALLIANZ'],dia:20,alertaDias:3,categoria:'06 CUSTOS ADM'},{id:'efrete',nome:'E-FRETE Integração Sistema',padroes:['E-FRETE INTEGRAÇÃO SISTEMA','E-FRETE INTEGRACAO SISTEMA','E-FRETE','E FRETE'],dia:24,alertaDias:3,categoria:'06 CUSTOS ADM',categoriaObrigatoria:'06 CUSTOS ADM'}];
-const STORAGE_KEY='dashboard-caixa-v30';
-const STORAGE_KEYS_OLD=['dashboard-caixa-v29','dashboard-caixa-v28','dashboard-caixa-v27'];
+const STORAGE_KEY='dashboard-caixa-v31';
+const STORAGE_KEYS_OLD=['dashboard-caixa-v30','dashboard-caixa-v29','dashboard-caixa-v28'];
 const CLOUD_LS_KEY='nlg-firebase-url';
-const DATA_VERSION='2026-10-09-v30';
+const DATA_VERSION='2026-10-09-v31';
 let CLOUD_URL='';
 function salvarLocal(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({dados:STATE.dados,resumo:STATE.resumo,overrides:STATE.overrides,customFixos:STATE.customFixos,ctes:STATE.ctes,dataIni:STATE.dataIni,dataFim:STATE.dataFim,versao:DATA_VERSION,atualizado:new Date().toISOString()}));return true}catch(e){return false}}
 function carregarLocal(){try{let r=localStorage.getItem(STORAGE_KEY);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length){o.overrides=o.overrides||{};o.customFixos=Array.isArray(o.customFixos)?o.customFixos:[];o.ctes=Array.isArray(o.ctes)?o.ctes:[];return o}}for(const k of STORAGE_KEYS_OLD){r=localStorage.getItem(k);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length){o.overrides=o.overrides||{};o.customFixos=Array.isArray(o.customFixos)?o.customFixos:[];o.ctes=Array.isArray(o.ctes)?o.ctes:[];try{localStorage.setItem(STORAGE_KEY,JSON.stringify(o))}catch(e){}return o}}}return null}catch(e){return null}}
@@ -361,6 +414,12 @@ function getCategoriasFiltradas(){return STATE.resumo.categorias.filter(c=>STATE
 function categoriaPassaFiltro(nome){return STATE.catGeral==='todas'||nome===STATE.catGeral}
 function tipoPassaFiltro(t){if(STATE.tipoGeral==='todos')return true;if(STATE.tipoGeral==='receita'&&t==='C')return true;if(STATE.tipoGeral==='despesa'&&t==='D')return true;return false}
 function dataPassaFiltro(dataISO){if(STATE.dataIni&&dataISO<STATE.dataIni)return false;if(STATE.dataFim&&dataISO>STATE.dataFim)return false;return true}
+function passaFiltrosSemData(d){
+  if(STATE.catGeral!=='todas'&&d.categoria!==STATE.catGeral)return false;
+  if(!tipoPassaFiltro(d.tipo))return false;
+  if(STATE.busca){const b=(d.categoria+' '+d.detalhe+' '+d.data+' '+d.valor).toLowerCase();if(!b.includes(STATE.busca.toLowerCase()))return false}
+  return true;
+}
 function atualizarRangeDeDatas(){
   if(!STATE.dataIni||!STATE.dataFim){const m=mesesComDados();if(m.length){STATE.mesIni=m[0];STATE.mesFim=m[m.length-1]}return}
   const mI=parseInt(STATE.dataIni.slice(5,7),10)-1;
@@ -369,8 +428,15 @@ function atualizarRangeDeDatas(){
   STATE.mesFim=Math.max(mI,mF);
 }
 function getTotaisFiltrados(){const meses=getMesesFiltrados(),cats=getCategoriasFiltradas();let rec=0,desp=0;meses.forEach(m=>cats.forEach(c=>{const v=c.valores[m]||0;if(c.tipo==='Receita'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='receita'))rec+=v;if(c.tipo==='Despesa'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa'))desp+=v}));return{rec,desp,resultado:rec-desp}}
-function getMovimentosFiltrados(){return STATE.dados.filter(d=>{if(!dataPassaFiltro(d.data))return false;if(STATE.catGeral!=='todas'&&d.categoria!==STATE.catGeral)return false;if(!tipoPassaFiltro(d.tipo))return false;if(STATE.busca){const b=(d.categoria+' '+d.detalhe+' '+d.data+' '+d.valor).toLowerCase();if(!b.includes(STATE.busca.toLowerCase()))return false}return true})}
-function calcularSaldoFinalPeriodo(){if(!STATE.dados.length)return 0;const dataLim=STATE.dataFim||'9999-12-31';const filtrados=STATE.dados.filter(d=>{if(d.data>dataLim)return false;if(STATE.catGeral!=='todas'&&d.categoria!==STATE.catGeral)return false;if(!tipoPassaFiltro(d.tipo))return false;if(STATE.busca){const b=(d.categoria+' '+d.detalhe+' '+d.data+' '+d.valor).toLowerCase();if(!b.includes(STATE.busca.toLowerCase()))return false}return true});return filtrados.reduce((s,d)=>s+(d.tipo==='C'?d.valor:-d.valor),STATE.saldoInicial||0)}
+function getMovimentosFiltrados(){return STATE.dados.filter(d=>{if(!dataPassaFiltro(d.data))return false;if(!passaFiltrosSemData(d))return false;return true})}
+function calcularSaldoFinalPeriodo(){if(!STATE.dados.length)return 0;const dataLim=STATE.dataFim||'9999-12-31';const filtrados=STATE.dados.filter(d=>{if(d.data>dataLim)return false;if(!passaFiltrosSemData(d))return false;return true});return filtrados.reduce((s,d)=>s+(d.tipo==='C'?d.valor:-d.valor),STATE.saldoInicial||0)}
+/* ✅ NOVO: calcula o saldo acumulado ANTES do período filtrado (respeitando os filtros de categoria/tipo/busca, mas ignorando o filtro de data) */
+function calcularSaldoAntesDoPeriodo(){
+  if(!STATE.dados.length)return STATE.saldoInicial||0;
+  const dataRef=STATE.dataIni||'0000-01-01';
+  const anteriores=STATE.dados.filter(d=>{if(d.data>=dataRef)return false;if(!passaFiltrosSemData(d))return false;return true});
+  return anteriores.reduce((s,d)=>s+(d.tipo==='C'?d.valor:-d.valor),STATE.saldoInicial||0);
+}
 const NS='http://www.w3.org/2000/svg';
 function svgEl(tag,attrs){attrs=attrs||{};const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e}
 function clearSvg(svg){while(svg.firstChild)svg.removeChild(svg.firstChild)}
@@ -380,19 +446,27 @@ function renderKPIs(){const t=getTotaisFiltrados();const rec=t.rec,desp=t.desp;c
 function renderResumoMensal(){const meses=getMesesFiltrados();const cats=getCategoriasFiltradas();const primeiroMesComDados=(mesesComDados()[0]!==undefined?mesesComDados()[0]:0);let acumuladoAnterior=STATE.saldoInicial||0;for(let i=primeiroMesComDados;i<STATE.mesIni;i++){let r=0,d=0;cats.forEach(c=>{if(c.tipo==='Receita'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='receita'))r+=c.valores[i]||0;if(c.tipo==='Despesa'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa'))d+=c.valores[i]||0});acumuladoAnterior+=(r-d)}let html='<thead><tr><th>Mês</th><th>Receita</th><th>Despesa</th><th>Resultado do Mês</th><th>Resultado Acumulado</th><th>Margem</th></tr></thead><tbody>';if(STATE.mesIni>primeiroMesComDados){const refAnt=MESES_FULL[STATE.mesIni-1]||'—';html+='<tr class="saldo-anterior"><td colspan="4" style="text-align:left">💰 Acumulado até '+refAnt+'</td><td class="'+(acumuladoAnterior>=0?'pos':'neg')+'" style="font-weight:800">'+fmtNum(acumuladoAnterior)+'</td><td>—</td></tr>'}let tR=0,tD=0,acumulado=acumuladoAnterior;meses.forEach(i=>{const r=cats.filter(c=>c.tipo==='Receita'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='receita')).reduce((s,c)=>s+(c.valores[i]||0),0);const d=cats.filter(c=>c.tipo==='Despesa'&&(STATE.tipoGeral==='todos'||STATE.tipoGeral==='despesa')).reduce((s,c)=>s+(c.valores[i]||0),0);const resMes=r-d;acumulado+=resMes;tR+=r;tD+=d;html+='<tr><td>'+MESES_FULL[i]+'</td><td class="pos">'+fmtNum(r)+'</td><td class="neg">'+fmtNum(d)+'</td><td class="'+(resMes>=0?'pos':'neg')+'">'+fmtNum(resMes)+'</td><td class="'+(acumulado>=0?'pos':'neg')+'" style="font-weight:700">'+fmtNum(acumulado)+'</td><td class="muted">'+(r>0?((resMes/r)*100).toFixed(1):'0,0')+'%</td></tr>'});const tRes=tR-tD;html+='<tr class="total-row"><td>TOTAL</td><td class="pos">'+fmtNum(tR)+'</td><td class="neg">'+fmtNum(tD)+'</td><td class="'+(tRes>=0?'pos':'neg')+'">'+fmtNum(tRes)+'</td><td class="'+(acumulado>=0?'pos':'neg')+'">'+fmtNum(acumulado)+'</td><td>'+(tR>0?((tRes/tR)*100).toFixed(2):'0,00')+'%</td></tr></tbody>';$('#tblResumo').innerHTML=html}
 function renderMatriz(){const meses=getMesesFiltrados(),todasCats=getCategoriasFiltradas();const desps=todasCats.filter(c=>c.tipo==='Despesa'),recs=todasCats.filter(c=>c.tipo==='Receita');let head='<thead><tr><th>Categoria</th>';meses.forEach(i=>head+='<th>'+MESES_PT[i]+'</th>');head+='<th>Total</th></tr></thead>';const linha=c=>{let soma=0,cols='';meses.forEach(i=>{const v=c.valores[i]||0;soma+=v;cols+='<td>'+(v?fmtNum(v):'<span class="muted">—</span>')+'</td>'});return'<tr><td><span class="cat-dot" style="background:'+c.cor+'"></span>'+c.nome+'</td>'+cols+'<td style="font-weight:800">'+fmtNum(soma)+'</td></tr>'};let body='<tbody>';if(desps.length){body+='<tr class="total-row"><td colspan="'+(meses.length+2)+'" style="text-align:left;color:var(--red)">DESPESAS</td></tr>';desps.forEach(c=>body+=linha(c))}if(recs.length){body+='<tr class="total-row"><td colspan="'+(meses.length+2)+'" style="text-align:left;color:var(--green)">RECEITAS</td></tr>';recs.forEach(c=>body+=linha(c))}body+='</tbody>';$('#tblMatriz').innerHTML=head+body;$('#matrizSub').textContent=(desps.length+recs.length)+' categorias · '+meses.length+' meses'}
 function renderRanking(){const meses=getMesesFiltrados(),cats=getCategoriasFiltradas();const itens=cats.map(c=>{let s=0;meses.forEach(m=>s+=c.valores[m]||0);return{nome:c.nome,tipo:c.tipo,cor:c.cor,total:s}}).filter(x=>x.total>0).sort((a,b)=>b.total-a.total);const totDesp=itens.filter(x=>x.tipo==='Despesa').reduce((a,b)=>a+b.total,0);const totRec=itens.filter(x=>x.tipo==='Receita').reduce((a,b)=>a+b.total,0);let html='<thead><tr><th>Categoria</th><th>Tipo</th><th>Total</th><th>% do Tipo</th><th>Média/Mês</th></tr></thead><tbody>';const nMeses=meses.length;itens.forEach(c=>{const base=c.tipo==='Despesa'?totDesp:totRec;const pct=base>0?(c.total/base*100):0;html+='<tr><td><span class="cat-dot" style="background:'+c.cor+'"></span>'+c.nome+'</td><td><span class="tag '+(c.tipo==='Receita'?'C':'D')+'">'+c.tipo+'</span></td><td style="font-weight:700">'+fmtNum(c.total)+'</td><td>'+pct.toFixed(1)+'%</td><td class="muted">'+fmtNum(c.total/nMeses)+'</td></tr>'});html+='</tbody>';$('#tblCat').innerHTML=html}
+/* ============================================================
+   MOVIMENTAÇÕES — Saldo do período calculado corretamente:
+   - Saldo anterior ao período = acumulado de TODOS os lançamentos
+     anteriores à data inicial (respeitando filtros de cat/tipo/busca)
+   - Cada dia: saldo do dia anterior + receita do dia - despesa do dia
+   ============================================================ */
 function renderMov(){
   const todos=STATE.dados.filter(d=>{
     if(!dataPassaFiltro(d.data))return false;
-    if(STATE.catGeral!=='todas'&&d.categoria!==STATE.catGeral)return false;
-    if(!tipoPassaFiltro(d.tipo))return false;
-    if(STATE.busca){const b=(d.categoria+' '+d.detalhe+' '+d.data+' '+d.valor).toLowerCase();if(!b.includes(STATE.busca.toLowerCase()))return false}
+    if(!passaFiltrosSemData(d))return false;
     return true;
   });
   todos.sort((a,b)=>a.data.localeCompare(b.data));
   const porDia=new Map();
   todos.forEach(d=>{if(!porDia.has(d.data))porDia.set(d.data,[]);porDia.get(d.data).push(d)});
+  
+  // ✅ Saldo acumulado real ANTES do período filtrado
+  const saldoAntesDoPeriodo=calcularSaldoAntesDoPeriodo();
+  
   const saldoPorDia=new Map();
-  let saldoCorrente=STATE.saldoInicial||0;
+  let saldoCorrente=saldoAntesDoPeriodo;
   Array.from(porDia.keys()).sort().forEach(dia=>{
     const movs=porDia.get(dia);
     const saldoInicioDia=saldoCorrente;
@@ -401,9 +475,11 @@ function renderMov(){
     saldoCorrente=saldoInicioDia+r-desp;
     saldoPorDia.set(dia,{saldoInicioDia,saldoFinalDia:saldoCorrente,receitaDia:r,despesaDia:desp});
   });
+  
   const visivel=getMovimentosFiltrados();
   const emptyEl=$('#movEmpty');
   const tbl=$('#tblMov');
+  
   if(!visivel.length){
     let msg='Nenhum lançamento encontrado com os filtros atuais.';
     if(STATE.dataIni&&STATE.dataFim){
@@ -419,18 +495,26 @@ function renderMov(){
   }
   if(emptyEl)emptyEl.innerHTML='';
   $('#movTitulo').textContent='Histórico de Movimentação';
+  
   const visPorDia=new Map();
   visivel.forEach(d=>{if(!visPorDia.has(d.data))visPorDia.set(d.data,[]);visPorDia.get(d.data).push(d)});
   const diasVis=Array.from(visPorDia.keys()).sort();
+  
   const totR=visivel.filter(d=>d.tipo==='C').reduce((s,d)=>s+d.valor,0);
   const totD=visivel.filter(d=>d.tipo==='D').reduce((s,d)=>s+d.valor,0);
+  
   const primeiroDia=saldoPorDia.get(diasVis[0]);
   const ultimoDia=saldoPorDia.get(diasVis[diasVis.length-1]);
-  const saldoInicialPeriodo=primeiroDia?primeiroDia.saldoInicioDia:0;
-  const saldoFinalPeriodo=ultimoDia?ultimoDia.saldoFinalDia:0;
+  const saldoInicialPeriodo=primeiroDia?primeiroDia.saldoInicioDia:saldoAntesDoPeriodo;
+  const saldoFinalPeriodo=ultimoDia?ultimoDia.saldoFinalDia:saldoAntesDoPeriodo;
+  
   $('#movInfo').innerHTML=visivel.length+' lançamentos em '+diasVis.length+' dia'+(diasVis.length===1?'':'s')+' · <span class="pos">'+fmtBRL(totR)+'</span> · <span class="neg">'+fmtBRL(totD)+'</span> · <strong class="'+(saldoFinalPeriodo>=0?'pos':'neg')+'">Saldo: '+fmtBRL(saldoFinalPeriodo)+'</strong>';
+  
   let html='<thead><tr><th>Data</th><th>Categoria</th><th>Detalhamento</th><th>Tipo</th><th>Receita</th><th>Despesa</th><th>Saldo</th></tr></thead><tbody>';
-  html+='<tr class="saldo-anterior"><td colspan="6" style="text-align:left">💰 Saldo anterior</td><td class="'+(saldoInicialPeriodo>=0?'pos':'neg')+'" style="font-size:14px">'+fmtNum(saldoInicialPeriodo)+'</td></tr>';
+  // Saldo anterior ao período — label indica se é do período ou global
+  const labelSaldoAnt=(STATE.dataIni?'Saldo anterior ao período':'Saldo inicial');
+  html+='<tr class="saldo-anterior"><td colspan="6" style="text-align:left">💰 '+labelSaldoAnt+'</td><td class="'+(saldoInicialPeriodo>=0?'pos':'neg')+'" style="font-size:14px">'+fmtNum(saldoInicialPeriodo)+'</td></tr>';
+  
   diasVis.forEach(dia=>{
     const info=saldoPorDia.get(dia);
     const movs=visPorDia.get(dia).slice().sort((a,b)=>a.categoria.localeCompare(b.categoria));
@@ -444,9 +528,9 @@ function renderMov(){
       html+='<tr><td class="muted" style="font-weight:400;font-size:12px">'+(i===0?dataFmt:'↳')+'</td><td><span class="cat-dot" style="background:'+corCategoria(d.categoria)+'"></span>'+d.categoria+'</td><td style="text-align:left;max-width:420px;white-space:normal;color:var(--muted);font-weight:400">'+(d.detalhe||'—')+'</td><td><span class="tag '+d.tipo+'">'+(d.tipo==='C'?'Receita':'Despesa')+'</span></td><td class="pos">'+(d.tipo==='C'?fmtNum(d.valor):'—')+'</td><td class="neg">'+(d.tipo==='D'?fmtNum(d.valor):'—')+'</td><td style="font-weight:600">'+fmtNum(saldoLinha)+'</td></tr>';
     });
     const clsDia=info.saldoFinalDia>=0?'pos':'neg';
-    html+='<tr class="day-close"><td colspan="4" style="text-align:left;font-weight:800">🔒 Fechamento</td><td class="pos" style="font-weight:800">'+fmtNum(info.receitaDia)+'</td><td class="neg" style="font-weight:800">'+fmtNum(info.despesaDia)+'</td><td class="saldo-destaque '+clsDia+'">'+fmtNum(info.saldoFinalDia)+'</td></tr>';
+    html+='<tr class="day-close"><td colspan="4" style="text-align:left;font-weight:800">🔒 Fechamento de '+dataFmt+'</td><td class="pos" style="font-weight:800">'+fmtNum(info.receitaDia)+'</td><td class="neg" style="font-weight:800">'+fmtNum(info.despesaDia)+'</td><td class="saldo-destaque '+clsDia+'">'+fmtNum(info.saldoFinalDia)+'</td></tr>';
   });
-  html+='<tr class="total-row"><td colspan="4">TOTAL</td><td class="pos">'+fmtNum(totR)+'</td><td class="neg">'+fmtNum(totD)+'</td><td class="'+(saldoFinalPeriodo>=0?'pos':'neg')+'" style="font-size:14px">'+fmtNum(saldoFinalPeriodo)+'</td></tr></tbody>';
+  html+='<tr class="total-row"><td colspan="4">TOTAL DO PERÍODO</td><td class="pos">'+fmtNum(totR)+'</td><td class="neg">'+fmtNum(totD)+'</td><td class="'+(saldoFinalPeriodo>=0?'pos':'neg')+'" style="font-size:14px">'+fmtNum(saldoFinalPeriodo)+'</td></tr></tbody>';
   tbl.innerHTML=html;
 }
 function renderFaturados(){
@@ -460,7 +544,6 @@ function renderFaturados(){
   const ticket=totQtd>0?totFat/totQtd:0;
   const nMesesComFat=meses.filter((_,i)=>faturadoArr[i]>0).length;
   const mediaMes=nMesesComFat>0?totFat/nMesesComFat:0;
-  // ===== Receita Nordeste do mês vigente (calendário) =====
   const hoje=new Date();
   const mesVigente=hoje.getMonth();
   const anoVigente=hoje.getFullYear();
