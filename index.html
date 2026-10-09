@@ -324,10 +324,10 @@ tbody tr.saldo-anterior td{background:rgba(34,197,94,.08) !important;padding:12p
 const EXTRATO_RAW="2026-10-02|Transferência recebida NE|42000|C|02/10 NORDESTE COMERCIO\n2026-10-02|01 SALÁRIO / ENCARGOS|42033.5|D|FLASH APP - VA E VT OUTUBRO";
 const RESUMO_ORIGINAL={mesesFull:['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'],meses:['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],receita:[247000,377036,382620,498373,267745.39,325675,420552.49,291284.27,317153.63,73700,0,0],despesa:[212602.75,402959.07,389317.63,497933.20,268658.40,326632.31,419291.73,290340.98,319458.66,73519.89,0,0],categorias:[{nome:'01 SALÁRIO / ENCARGOS',tipo:'Despesa',cor:'#FF7A00',valores:[115401.53,219631.92,244656.94,323409.18,231280.52,242958.30,292062.99,215857.17,216057.56,45396.37,0,0]},{nome:'02 OP. / TAR. BANCÁRIAS',tipo:'Despesa',cor:'#38bdf8',valores:[439.66,34556.56,637.25,58072.69,269.34,381.66,8085.37,400.05,1556.20,135.83,0,0]},{nome:'03 IMPOSTOS',tipo:'Despesa',cor:'#f59e0b',valores:[17874.40,22836.01,9706.18,41470.91,10024.63,7423.42,16552.49,15547.10,15516.07,0,0,0]},{nome:'04 OP. NLG',tipo:'Despesa',cor:'#a78bfa',valores:[75341.40,120018.07,130012.60,66617.64,20264.27,69890.48,49760.14,31442.50,44182.31,14190.00,0,0]},{nome:'05 OP. NORDESTE',tipo:'Despesa',cor:'#f472b6',valores:[0,0,0,0,0,0,42091.42,19725.50,37059.79,13408.79,0,0]},{nome:'06 CUSTOS ADM',tipo:'Despesa',cor:'#34d399',valores:[3545.76,5916.51,4304.66,8362.78,6819.64,5978.45,10739.32,7368.66,5086.73,388.90,0,0]},{nome:'Cobrança',tipo:'Receita',cor:'#2ecc8f',valores:[0,0,0,0,5700,0,16490,3887.04,5817.79,0,0,0]},{nome:'Dep dinheiro banco',tipo:'Receita',cor:'#22d3ee',valores:[0,0,720,0,0,0,1833,762.30,1084,0,0,0]},{nome:'Pix-Envio devolvido',tipo:'Receita',cor:'#fbbf24',valores:[0,0,0,0,0,0,7500,0,0,0,0,0]},{nome:'Transferência recebida',tipo:'Receita',cor:'#818cf8',valores:[0,0,0,0,2945.39,175,760,0,0,0,0,0]},{nome:'Transferência recebida NE',tipo:'Receita',cor:'#10b981',valores:[247000,377036,381900,498373,259100,325500,393969.49,286634.93,310251.84,73700,0,0]}]};
 const DESPESAS_FIXAS_BASE=[{id:'salario',nome:'Folha Salário',padroes:['SALÁRIO (01)','SALÁRIO'],dia:5,alertaDias:3,categoria:'01 SALÁRIO / ENCARGOS'},{id:'eas',nome:'EAS Tech Solution',padroes:['EAS TECH','EAS TECH SOLUTION'],dia:16,alertaDias:3,categoria:'06 CUSTOS ADM'},{id:'vivo',nome:'Vivo PE',padroes:['VIVO PE','VIVO'],dia:17,alertaDias:3,categoria:'06 CUSTOS ADM'},{id:'fgts',nome:'Guia FGTS Mensal',padroes:['GUIA FGTS MENSAL','CEF MATRIZ - GUIA FGTS MENSAL'],dia:20,alertaDias:3,categoria:'01 SALÁRIO / ENCARGOS'},{id:'inss',nome:'Guia INSS Mensal',padroes:['GUIA INSS','RFB-DARF CODIGO DE BARRAS - GUIA INSS'],dia:20,alertaDias:3,categoria:'01 SALÁRIO / ENCARGOS'},{id:'vertice',nome:'Verttice Gerenciamento',padroes:['VERTTICE','VERTICE GERENCIAMENTO','VERTICE'],dia:16,alertaDias:3,categoria:'06 CUSTOS ADM'},{id:'allianz',nome:'Allianz Seguros',padroes:['ALLIANZ'],dia:20,alertaDias:3,categoria:'06 CUSTOS ADM'},{id:'efrete',nome:'E-FRETE Integração Sistema',padroes:['E-FRETE INTEGRAÇÃO SISTEMA','E-FRETE INTEGRACAO SISTEMA','E-FRETE','E FRETE'],dia:24,alertaDias:3,categoria:'06 CUSTOS ADM',categoriaObrigatoria:'06 CUSTOS ADM'}];
-const STORAGE_KEY='dashboard-caixa-v29';
-const STORAGE_KEYS_OLD=['dashboard-caixa-v28','dashboard-caixa-v27','dashboard-caixa-v26'];
+const STORAGE_KEY='dashboard-caixa-v30';
+const STORAGE_KEYS_OLD=['dashboard-caixa-v29','dashboard-caixa-v28','dashboard-caixa-v27'];
 const CLOUD_LS_KEY='nlg-firebase-url';
-const DATA_VERSION='2026-10-09-v29';
+const DATA_VERSION='2026-10-09-v30';
 let CLOUD_URL='';
 function salvarLocal(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify({dados:STATE.dados,resumo:STATE.resumo,overrides:STATE.overrides,customFixos:STATE.customFixos,ctes:STATE.ctes,dataIni:STATE.dataIni,dataFim:STATE.dataFim,versao:DATA_VERSION,atualizado:new Date().toISOString()}));return true}catch(e){return false}}
 function carregarLocal(){try{let r=localStorage.getItem(STORAGE_KEY);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length){o.overrides=o.overrides||{};o.customFixos=Array.isArray(o.customFixos)?o.customFixos:[];o.ctes=Array.isArray(o.ctes)?o.ctes:[];return o}}for(const k of STORAGE_KEYS_OLD){r=localStorage.getItem(k);if(r){const o=JSON.parse(r);if(o&&Array.isArray(o.dados)&&o.dados.length){o.overrides=o.overrides||{};o.customFixos=Array.isArray(o.customFixos)?o.customFixos:[];o.ctes=Array.isArray(o.ctes)?o.ctes:[];try{localStorage.setItem(STORAGE_KEY,JSON.stringify(o))}catch(e){}return o}}}return null}catch(e){return null}}
@@ -460,11 +460,19 @@ function renderFaturados(){
   const ticket=totQtd>0?totFat/totQtd:0;
   const nMesesComFat=meses.filter((_,i)=>faturadoArr[i]>0).length;
   const mediaMes=nMesesComFat>0?totFat/nMesesComFat:0;
+  // ===== Receita Nordeste do mês vigente (calendário) =====
+  const hoje=new Date();
+  const mesVigente=hoje.getMonth();
+  const anoVigente=hoje.getFullYear();
+  const catNE=STATE.resumo.categorias.find(c=>c.nome==='Transferência recebida NE');
+  const receitaNE=catNE?(catNE.valores[mesVigente]||0):0;
+  const nomeMesVigente=MESES_FULL[mesVigente]+' '+anoVigente;
   const cards=[
     {label:'🚚 Total Faturado',cls:'purple',valor:fmtBRL(totFat),sub:'no período filtrado'},
+    {label:'🏭 Receita Nordeste',cls:'green',valor:fmtBRL(receitaNE),sub:'mês vigente · '+nomeMesVigente},
     {label:'📦 Qtd CT-es',cls:'blue',valor:totQtd.toLocaleString('pt-BR'),sub:'emitidos e faturados'},
-    {label:'🎫 Ticket Médio',cls:'green',valor:fmtBRL(ticket),sub:'média por CT-e'},
-    {label:'📈 Média Mensal',cls:'amber',valor:fmtBRL(mediaMes),sub:nMesesComFat+' mês(es) com movimento'}
+    {label:'🎫 Ticket Médio',cls:'amber',valor:fmtBRL(ticket),sub:'média por CT-e'},
+    {label:'📈 Média Mensal',cls:'blue',valor:fmtBRL(mediaMes),sub:nMesesComFat+' mês(es) com movimento'}
   ];
   $('#kpiFat').innerHTML=cards.map(c=>'<div class="card '+c.cls+'"><div class="kpi-label">'+c.label+'</div><div class="kpi-value">'+c.valor+'</div><div class="kpi-sub">'+c.sub+'</div></div>').join('');
   $('#chartFatSub').textContent=MESES_PT[STATE.mesIni]+' — '+MESES_PT[STATE.mesFim];
@@ -566,7 +574,6 @@ function aplicarEstado(rec,origem){
   STATE.customFixos=Array.isArray(rec.customFixos)?rec.customFixos:[];
   STATE.ctes=Array.isArray(rec.ctes)?rec.ctes:[];
   STATE.origem=origem;
-  // Definir datas: se vieram do cloud/local, usar; senão, derivar dos dados
   const datas=STATE.dados.map(d=>d.data).sort();
   if(rec.dataIni&&rec.dataFim){STATE.dataIni=rec.dataIni;STATE.dataFim=rec.dataFim}
   else if(datas.length){STATE.dataIni=datas[0];STATE.dataFim=datas[datas.length-1]}
